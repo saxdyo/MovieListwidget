@@ -39,3 +39,56 @@ WidgetMetadata = {
     }
   ]
 };
+
+async function fetchTmdbGenres() {
+  if (global.tmdbGenresCache) return global.tmdbGenresCache;
+
+  const [movieGenres] = await Promise.all([
+    Widget.tmdb.get("/genre/movie/list", { params: { language: "zh-CN" } }),
+  ]);
+
+  global.tmdbGenresCache = {
+    movie: movieGenres.genres.reduce((acc, g) => ({ ...acc, [g.id]: g.name }), {}),
+  };
+  return global.tmdbGenresCache;
+}
+
+function getGenreNames(genreIds, genreMap) {
+  return genreIds.map(id => genreMap[id] || `未知(${id})`).join(" / ");
+}
+
+function formatTmdbItem(item, genreMap) {
+  return {
+    id: item.id,
+    type: "tmdb",
+    title: item.title || item.name,
+    description: item.overview || "",
+    releaseDate: item.release_date || item.first_air_date || "",
+    posterPath: item.poster_path,
+    backdropPath: item.backdrop_path,
+    rating: item.vote_average,
+    mediaType: item.media_type || (item.title ? "movie" : "tv"),
+    genreTitle: getGenreNames(item.genre_ids || [], genreMap)
+  };
+}
+
+async function loadTodayTrending(params = {}) {
+  const { language = "zh-CN" } = params;
+  const res = await Widget.tmdb.get("/trending/all/day", { params: { language } });
+  const genreMap = (await fetchTmdbGenres()).movie;
+  return res.results.map(item => formatTmdbItem(item, genreMap));
+}
+
+async function loadPopularMovies(params = {}) {
+  const { language = "zh-CN", page = 1 } = params;
+  const res = await Widget.tmdb.get("/movie/popular", { params: { language, page } });
+  const genreMap = (await fetchTmdbGenres()).movie;
+  return res.results.map(item => formatTmdbItem(item, genreMap));
+}
+
+async function loadTopRatedMovies(params = {}) {
+  const { language = "zh-CN", page = 1 } = params;
+  const res = await Widget.tmdb.get("/movie/top_rated", { params: { language, page } });
+  const genreMap = (await fetchTmdbGenres()).movie;
+  return res.results.map(item => formatTmdbItem(item, genreMap));
+}
