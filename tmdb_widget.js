@@ -3,7 +3,7 @@ WidgetMetadata = {
   title: "TMDB 榜单",
   description: "来自 TMDB 的热门影视榜单",
   author: "saxdyo",
-  site: "https://github.com/saxdyo/MovieListwidget",
+  site: "https://github.com/saxdyo/main/MovieListwidget",
   version: "1.0.0",
   requiredVersion: "0.0.1",
   detailCacheDuration: 300,
