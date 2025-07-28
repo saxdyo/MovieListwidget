@@ -3,7 +3,8 @@ WidgetMetadata = {
   title: "TMDB 榜单",
   description: "来自 TMDB 的热门影视榜单",
   author: "saxdyo",
-  site: "https://github.com/saxdyo/blob/main/MovieListwidget",
+  site: "https://github.com/saxdyo/MovieListwidget
+",
   version: "1.0.0",
   requiredVersion: "0.0.1",
   detailCacheDuration: 300,
@@ -40,17 +41,19 @@ WidgetMetadata = {
   ]
 };
 
+const API_KEY = 'f3ae69ddca232b56265600eb919d46ab'; // API Key
+
 async function fetchTmdbGenres() {
-  if (global.tmdbGenresCache) return global.tmdbGenresCache;
-
-  const [movieGenres] = await Promise.all([
-    Widget.tmdb.get("/genre/movie/list", { params: { language: "zh-CN" } }),
-  ]);
-
-  global.tmdbGenresCache = {
-    movie: movieGenres.genres.reduce((acc, g) => ({ ...acc, [g.id]: g.name }), {}),
-  };
-  return global.tmdbGenresCache;
+  try {
+    const res = await Widget.tmdb.get("/genre/movie/list", { 
+      params: { language: "zh-CN", api_key: API_KEY } 
+    });
+    console.log("Genres fetched successfully", res);  // 打印获取的分类
+    return res.genres.reduce((acc, g) => ({ ...acc, [g.id]: g.name }), {});
+  } catch (error) {
+    console.error("Error fetching genres:", error);  // 错误日志
+    return {};
+  }
 }
 
 function getGenreNames(genreIds, genreMap) {
@@ -62,11 +65,11 @@ function formatTmdbItem(item, genreMap) {
     id: item.id,
     type: "tmdb",
     title: item.title || item.name,
-    description: item.overview || "",
-    releaseDate: item.release_date || item.first_air_date || "",
-    posterPath: item.poster_path,
-    backdropPath: item.backdrop_path,
-    rating: item.vote_average,
+    description: item.overview || "暂无简介",
+    releaseDate: item.release_date || item.first_air_date || "未知日期",
+    posterPath: item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : "",
+    backdropPath: item.backdrop_path ? `https://image.tmdb.org/t/p/w1280${item.backdrop_path}` : "",
+    rating: item.vote_average || "无评分",
     mediaType: item.media_type || (item.title ? "movie" : "tv"),
     genreTitle: getGenreNames(item.genre_ids || [], genreMap)
   };
@@ -74,21 +77,42 @@ function formatTmdbItem(item, genreMap) {
 
 async function loadTodayTrending(params = {}) {
   const { language = "zh-CN" } = params;
-  const res = await Widget.tmdb.get("/trending/all/day", { params: { language } });
-  const genreMap = (await fetchTmdbGenres()).movie;
-  return res.results.map(item => formatTmdbItem(item, genreMap));
+  try {
+    const res = await Widget.tmdb.get("/trending/all/day", { 
+      params: { language, api_key: API_KEY }
+    });
+    const genreMap = await fetchTmdbGenres();
+    return res.results.map(item => formatTmdbItem(item, genreMap));
+  } catch (error) {
+    console.error("Error fetching trending movies:", error);
+    return [];
+  }
 }
 
 async function loadPopularMovies(params = {}) {
   const { language = "zh-CN", page = 1 } = params;
-  const res = await Widget.tmdb.get("/movie/popular", { params: { language, page } });
-  const genreMap = (await fetchTmdbGenres()).movie;
-  return res.results.map(item => formatTmdbItem(item, genreMap));
+  try {
+    const res = await Widget.tmdb.get("/movie/popular", { 
+      params: { language, page, api_key: API_KEY }
+    });
+    const genreMap = await fetchTmdbGenres();
+    return res.results.map(item => formatTmdbItem(item, genreMap));
+  } catch (error) {
+    console.error("Error fetching popular movies:", error);
+    return [];
+  }
 }
 
 async function loadTopRatedMovies(params = {}) {
   const { language = "zh-CN", page = 1 } = params;
-  const res = await Widget.tmdb.get("/movie/top_rated", { params: { language, page } });
-  const genreMap = (await fetchTmdbGenres()).movie;
-  return res.results.map(item => formatTmdbItem(item, genreMap));
+  try {
+    const res = await Widget.tmdb.get("/movie/top_rated", { 
+      params: { language, page, api_key: API_KEY }
+    });
+    const genreMap = await fetchTmdbGenres();
+    return res.results.map(item => formatTmdbItem(item, genreMap));
+  } catch (error) {
+    console.error("Error fetching top-rated movies:", error);
+    return [];
+  }
 }
