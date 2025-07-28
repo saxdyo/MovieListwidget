@@ -102,6 +102,81 @@ WidgetMetadata = {
         { name: "language", title: "语言", type: "language", value: "zh-CN" }
       ]
     },
+    {
+      title: "TMDB 出品公司",
+      description: "按出品公司筛选电影和剧集内容",
+      requiresWebView: false,
+      functionName: "tmdbDiscoverByCompany",
+      cacheDuration: 3600,
+      params: [
+        { 
+          name: "with_companies",
+          title: "出品公司",
+          type: "enumeration",
+          description: "选择一个出品公司查看其作品",
+          value: "",
+          enumOptions: [
+            { title: "全部", value: "" },
+            { title: "漫威影业 (Marvel Studios)", value: "420" },
+            { title: "华特迪士尼 (Walt Disney Pictures)", value: "2" },
+            { title: "华纳兄弟 (Warner Bros.)", value: "174" },
+            { title: "索尼影业 (Sony Pictures)", value: "5" },
+            { title: "环球影业 (Universal Pictures)", value: "33" },
+            { title: "20世纪福克斯 (20th Century Fox)", value: "25" },
+            { title: "派拉蒙影业 (Paramount Pictures)", value: "4" },
+            { title: "狮门影业 (Lionsgate)", value: "1632" },
+            { title: "新线影业 (New Line Cinema)", value: "12" },
+            { title: "哥伦比亚影业 (Columbia Pictures)", value: "5" },
+            { title: "梦工厂 (DreamWorks)", value: "521" },
+            { title: "米高梅 (Metro-Goldwyn-Mayer)", value: "8411" },
+            { title: "Netflix", value: "11073" },
+            { title: "Amazon Studios", value: "20580" },
+            { title: "Apple Original Films", value: "151347" }
+          ]
+        },
+        {
+          name: "type",
+          title: "🎭内容类型",
+          type: "enumeration",
+          description: "选择要筛选的内容类型",
+          value: "movie",
+          enumOptions: [
+            { title: "电影", value: "movie" },
+            { title: "剧集", value: "tv" }
+          ]
+        },
+        {
+          name: "with_genres",
+          title: "🎬题材类型",
+          type: "enumeration",
+          description: "选择要筛选的题材类型（可选）",
+          value: "",
+          enumOptions: [
+            { title: "全部类型", value: "" },
+            { title: "动作", value: "28" },
+            { title: "冒险", value: "12" },
+            { title: "动画", value: "16" },
+            { title: "喜剧", value: "35" },
+            { title: "犯罪", value: "80" },
+            { title: "纪录片", value: "99" },
+            { title: "剧情", value: "18" },
+            { title: "家庭", value: "10751" },
+            { title: "奇幻", value: "14" },
+            { title: "历史", value: "36" },
+            { title: "恐怖", value: "27" },
+            { title: "音乐", value: "10402" },
+            { title: "悬疑", value: "9648" },
+            { title: "爱情", value: "10749" },
+            { title: "科幻", value: "878" },
+            { title: "惊悚", value: "53" },
+            { title: "战争", value: "10752" },
+            { title: "西部", value: "37" }
+          ]
+        },
+        { name: "page", title: "页码", type: "page" },
+        { name: "language", title: "语言", type: "language", value: "zh-CN" }
+      ]
+    },
     // -------------豆瓣模块-------------
     {
       title: "豆瓣自定义片单",
@@ -241,6 +316,44 @@ async function tmdbDiscoverByNetwork(params = {}) {
     return res.results.map(item => formatTmdbItem(item, genreMap.tv));
   } catch (error) {
     console.error("Error fetching discover by network:", error);
+    return [];
+  }
+}
+
+// 获取出品公司内容
+async function tmdbDiscoverByCompany(params = {}) {
+  const { language = "zh-CN", page = 1, with_companies, type = "movie", with_genres } = params;
+  try {
+    // 构建API端点
+    const endpoint = type === "movie" ? "/discover/movie" : "/discover/tv";
+    
+    // 构建查询参数
+    const queryParams = { 
+      language, 
+      page, 
+      api_key: API_KEY,
+      sort_by: type === "movie" ? "popularity.desc" : "popularity.desc"
+    };
+    
+    // 添加出品公司过滤器
+    if (with_companies) {
+      queryParams.with_companies = with_companies;
+    }
+    
+    // 添加题材类型过滤器
+    if (with_genres) {
+      queryParams.with_genres = with_genres;
+    }
+    
+    // 发起API请求
+    const res = await Widget.tmdb.get(endpoint, {
+      params: queryParams
+    });
+    
+    const genreMap = await fetchTmdbGenres();
+    return res.results.map(item => formatTmdbItem(item, genreMap[type]));
+  } catch (error) {
+    console.error("Error fetching discover by company:", error);
     return [];
   }
 }
