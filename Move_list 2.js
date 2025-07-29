@@ -710,36 +710,61 @@ function formatTmdbItem(item, genreMap) {
 // 加载带标题横版海报的TMDB热门数据
 async function loadTmdbTrendingData() {
     try {
-        const response = await Widget.http.get("https://raw.githubusercontent.com/quantumultxx/ForwardWidgets/refs/heads/main/data/TMDB_Trending.json");
-        return response.data;
+        const response = await Widget.http.get("https://raw.githubusercontent.com/quantumultxx/ForwardWidgets/refs/heads/main/data/TMDB_Trending.json", {
+            timeout: 10000,
+            headers: {'Cache-Control': 'no-cache'}
+        });
+        
+        // 检查数据是否为空或过期
+        if (response.data && response.data.today_global && response.data.today_global.length > 0) {
+            console.log("[数据源] 成功获取预处理的热门数据");
+            return response.data;
+        } else {
+            console.warn("[数据源] 预处理数据为空，将使用备用方案");
+            throw new Error("预处理数据为空");
+        }
     } catch (error) {
-        console.error("Error loading trending data:", error);
-        return { today_global: [], week_global_all: [], popular_movies: [] };
+        console.error("[数据源] 获取预处理数据失败，使用备用方案:", error.message);
+        // 返回空数据，让函数回退到标准TMDB API
+        return null;
     }
 }
 
 // 获取当前热门电影与剧集（使用带标题的横版海报）
 async function loadTodayGlobalMedia(params = {}) {
+  const { language = "zh-CN" } = params;
   try {
     const data = await loadTmdbTrendingData();
-    return data.today_global.map(item => ({
-        id: item.id.toString(),
-        type: "tmdb",
-        title: item.title,
-        genreTitle: item.genreTitle,
-        rating: item.rating,
-        description: item.overview,
-        releaseDate: item.release_date,
-        posterPath: item.poster_url,
-        backdropPath: item.title_backdrop, // 这里是带标题的横版海报
-        coverUrl: item.poster_url,
-        mediaType: item.type,
-        link: null,
-        duration: 0,
-        durationText: "",
-        episode: 0,
-        childItems: []
-    }));
+    if (data && data.today_global && data.today_global.length > 0) {
+        return data.today_global.map(item => ({
+            id: item.id.toString(),
+            type: "tmdb",
+            title: item.title,
+            genreTitle: item.genreTitle,
+            rating: item.rating,
+            description: item.overview,
+            releaseDate: item.release_date,
+            posterPath: item.poster_url,
+            backdropPath: item.title_backdrop, // 这里是带标题的横版海报
+            coverUrl: item.poster_url,
+            mediaType: item.type,
+            link: null,
+            duration: 0,
+            durationText: "",
+            episode: 0,
+            childItems: []
+        }));
+    } else {
+        // 备用方案：使用标准TMDB API
+        console.log("[备用方案] 使用标准TMDB API获取今日热门");
+        const res = await Widget.tmdb.get("/trending/all/day", { 
+            params: { language, api_key: API_KEY }
+        });
+        const genreMap = await fetchTmdbGenres();
+        return res.results
+            .map(item => formatTmdbItem(item, genreMap.movie))
+            .filter(item => item.posterPath);
+    }
   } catch (error) {
     console.error("Error fetching trending media:", error);
     return [];
@@ -748,26 +773,39 @@ async function loadTodayGlobalMedia(params = {}) {
 
 // 获取当前本周热门电影与剧集（使用带标题的横版海报）
 async function loadWeekGlobalMovies(params = {}) {
+  const { language = "zh-CN" } = params;
   try {
     const data = await loadTmdbTrendingData();
-    return data.week_global_all.map(item => ({
-        id: item.id.toString(),
-        type: "tmdb",
-        title: item.title,
-        genreTitle: item.genreTitle,
-        rating: item.rating,
-        description: item.overview,
-        releaseDate: item.release_date,
-        posterPath: item.poster_url,
-        backdropPath: item.title_backdrop, // 这里是带标题的横版海报
-        coverUrl: item.poster_url,
-        mediaType: item.type,
-        link: null,
-        duration: 0,
-        durationText: "",
-        episode: 0,
-        childItems: []
-    }));
+    if (data && data.week_global_all && data.week_global_all.length > 0) {
+        return data.week_global_all.map(item => ({
+            id: item.id.toString(),
+            type: "tmdb",
+            title: item.title,
+            genreTitle: item.genreTitle,
+            rating: item.rating,
+            description: item.overview,
+            releaseDate: item.release_date,
+            posterPath: item.poster_url,
+            backdropPath: item.title_backdrop, // 这里是带标题的横版海报
+            coverUrl: item.poster_url,
+            mediaType: item.type,
+            link: null,
+            duration: 0,
+            durationText: "",
+            episode: 0,
+            childItems: []
+        }));
+    } else {
+        // 备用方案：使用标准TMDB API
+        console.log("[备用方案] 使用标准TMDB API获取本周热门");
+        const res = await Widget.tmdb.get("/trending/all/week", { 
+            params: { language, api_key: API_KEY }
+        });
+        const genreMap = await fetchTmdbGenres();
+        return res.results
+            .map(item => formatTmdbItem(item, genreMap.movie))
+            .filter(item => item.posterPath);
+    }
   } catch (error) {
     console.error("Error fetching weekly global movies:", error);
     return [];
