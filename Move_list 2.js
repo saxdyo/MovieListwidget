@@ -1299,7 +1299,19 @@ async function fetchImdbItemsForDouban(scItems) {
         }
     }
     
-    return allItems;
+    let filteredItems = allItems.filter(item => {
+        // 过滤掉综艺（真人秀、脱口秀、访谈、节目等）
+        const varietyGenreIds = [10764, 10767]; // 真人秀、脱口秀
+        if (item.genre_ids && item.genre_ids.some(id => varietyGenreIds.includes(id))) return false;
+        const lowerTitle = (item.title || '').toLowerCase();
+        const lowerDesc = (item.description || '').toLowerCase();
+        const showKeywords = ['综艺', '真人秀', '脱口秀', '访谈', '节目'];
+        if (showKeywords.some(k => lowerTitle.includes(k) || lowerDesc.includes(k))) return false;
+        // 过滤短剧（标题或副标题包含“短剧”）
+        if (lowerTitle.includes('短剧') || lowerDesc.includes('短剧')) return false;
+        return true;
+    });
+    return filteredItems;
 }
 
 async function loadDoubanHotListWithTmdb(params = {}) {
