@@ -743,65 +743,115 @@ WidgetMetadata = {
         { name: "language", title: "语言", type: "language", value: "zh-CN" }
       ]
     },
-    // -------------Trakt模块-------------
+    // -------------豆瓣模块-------------
     {
-      title: "Trakt 热门电影",
-      description: "来自Trakt的热门电影榜单",
+      title: "豆瓣电影Top250",
+      description: "豆瓣电影Top250榜单",
       requiresWebView: false,
-      functionName: "loadTraktPopularMovies",
+      functionName: "loadDoubanTop250Movies",
       cacheDuration: 3600,
       params: [
-        { name: "page", title: "页码", type: "page" },
-        { name: "limit", title: "每页数量", type: "enumeration", value: "20", enumOptions: [
-          { title: "10个", value: "10" },
-          { title: "20个", value: "20" },
-          { title: "50个", value: "50" }
-        ]}
+        { name: "page", title: "页码", type: "page" }
       ]
     },
     {
-      title: "Trakt 热门剧集",
-      description: "来自Trakt的热门剧集榜单",
+      title: "豆瓣剧集Top250",
+      description: "豆瓣剧集Top250榜单",
       requiresWebView: false,
-      functionName: "loadTraktPopularShows",
+      functionName: "loadDoubanTop250Shows",
       cacheDuration: 3600,
       params: [
-        { name: "page", title: "页码", type: "page" },
-        { name: "limit", title: "每页数量", type: "enumeration", value: "20", enumOptions: [
-          { title: "10个", value: "10" },
-          { title: "20个", value: "20" },
-          { title: "50个", value: "50" }
-        ]}
+        { name: "page", title: "页码", type: "page" }
       ]
     },
     {
-      title: "Trakt 趋势电影",
-      description: "来自Trakt的趋势电影榜单",
+      title: "豆瓣一周电影口碑榜",
+      description: "豆瓣一周电影口碑榜",
       requiresWebView: false,
-      functionName: "loadTraktTrendingMovies",
-      cacheDuration: 1800,
+      functionName: "loadDoubanWeeklyMovies",
+      cacheDuration: 3600,
       params: [
-        { name: "page", title: "页码", type: "page" },
-        { name: "limit", title: "每页数量", type: "enumeration", value: "20", enumOptions: [
-          { title: "10个", value: "10" },
-          { title: "20个", value: "20" },
-          { title: "50个", value: "50" }
-        ]}
+        { name: "page", title: "页码", type: "page" }
       ]
     },
     {
-      title: "Trakt 趋势剧集",
-      description: "来自Trakt的趋势剧集榜单",
+      title: "豆瓣华语口碑剧集榜",
+      description: "豆瓣华语口碑剧集榜",
       requiresWebView: false,
-      functionName: "loadTraktTrendingShows",
+      functionName: "loadDoubanChineseShows",
+      cacheDuration: 3600,
+      params: [
+        { name: "page", title: "页码", type: "page" }
+      ]
+    },
+    {
+      title: "豆瓣全球口碑剧集榜",
+      description: "豆瓣全球口碑剧集榜",
+      requiresWebView: false,
+      functionName: "loadDoubanGlobalShows",
+      cacheDuration: 3600,
+      params: [
+        { name: "page", title: "页码", type: "page" }
+      ]
+    },
+    {
+      title: "豆瓣国内热播综艺",
+      description: "豆瓣国内热播综艺榜",
+      requiresWebView: false,
+      functionName: "loadDoubanDomesticShows",
+      cacheDuration: 3600,
+      params: [
+        { name: "page", title: "页码", type: "page" }
+      ]
+    },
+    {
+      title: "豆瓣国外热播综艺",
+      description: "豆瓣国外热播综艺榜",
+      requiresWebView: false,
+      functionName: "loadDoubanForeignShows",
+      cacheDuration: 3600,
+      params: [
+        { name: "page", title: "页码", type: "page" }
+      ]
+    },
+    {
+      title: "豆瓣当地影院热映",
+      description: "豆瓣当地影院热映榜",
+      requiresWebView: false,
+      functionName: "loadDoubanShowingMovies",
       cacheDuration: 1800,
       params: [
-        { name: "page", title: "页码", type: "page" },
-        { name: "limit", title: "每页数量", type: "enumeration", value: "20", enumOptions: [
-          { title: "10个", value: "10" },
-          { title: "20个", value: "20" },
-          { title: "50个", value: "50" }
-        ]}
+        { name: "page", title: "页码", type: "page" }
+      ]
+    },
+    {
+      title: "豆瓣电影实时热榜",
+      description: "豆瓣电影实时热榜",
+      requiresWebView: false,
+      functionName: "loadDoubanRealTimeMovies",
+      cacheDuration: 1800,
+      params: [
+        { name: "page", title: "页码", type: "page" }
+      ]
+    },
+    {
+      title: "豆瓣剧集实时热榜",
+      description: "豆瓣剧集实时热榜",
+      requiresWebView: false,
+      functionName: "loadDoubanRealTimeShows",
+      cacheDuration: 1800,
+      params: [
+        { name: "page", title: "页码", type: "page" }
+      ]
+    },
+    {
+      title: "豆瓣书影音实时热榜",
+      description: "豆瓣书影音实时热榜",
+      requiresWebView: false,
+      functionName: "loadDoubanRealTimeAll",
+      cacheDuration: 1800,
+      params: [
+        { name: "page", title: "页码", type: "page" }
       ]
     }
   ]
@@ -1573,308 +1623,121 @@ function getTimePeriodName(time_period) {
   return nameMap[time_period] || "全部时期";
 }
 
-// ===============Trakt功能函数===============
+// ===============豆瓣功能函数===============
 
-// Trakt Cookie配置
-const TRAKT_COOKIE = 'Cc1XqM53DGwMdzN25etZLHn8YaUipfoV7qvtJpYjIL8Vc9ofD8t6Zi4ePLuAQpckSedHxvNCTZ8Rn9N4%2ByG773wTXtsrqUoLmtaFel0ioXLAP%2Br%2BEsIzXq2UGcYbwF5VrgmePHu%2FQwv0YY0TI98td%2FVbpZC6jO5p9ft7VXBXp2zZKMALNvB%2BdW3GER%2FSlNWn6Eo4KLi4iHIzFNuHn1aL7sBNbhfSTbSjOmB7AN7gTasOimdqhDQKOp1PECznFd3mskDKfjpM2BkKo%2BUBAVEQ%2F8AX1%2F%2Flj1yM%2B3iQh%2BGZ4odhQ67s%2FnNojBU2MWgIbGAVXFHXI56d%2FBqhrDznPmeUjQ9cBfxP3%2F3itBu58fWwcy2J6zNQIKf0%2Fm2HpOfbCMesFZXWMeQj7HCUmFuddw%3D%3D--08I2YGWyZrBmkgY8--ckrn%2F%2BJTxouBG3pYl5NZFg%3D%3D';
+// 豆瓣API配置
+const DOUBAN_API_BASE = "https://m.douban.com/rexxar/api/v2";
 
-// 解析Trakt电影HTML页面
-function parseTraktMoviesFromHTML(html) {
-  try {
-    const movies = [];
-    const doc = Widget.dom.parse(html);
-    
-    // 查找电影卡片
-    const movieCards = Widget.dom.select(doc, '.movie-card, .poster-card');
-    
-    for (const card of movieCards) {
-      try {
-        // 提取标题
-        const titleElement = Widget.dom.select(card, '.title, .movie-title, h3 a, .poster-title');
-        const title = titleElement.length > 0 ? Widget.dom.text(titleElement[0]).trim() : '';
-        
-        // 提取年份
-        const yearElement = Widget.dom.select(card, '.year, .movie-year, .poster-year');
-        const year = yearElement.length > 0 ? Widget.dom.text(yearElement[0]).trim() : '';
-        
-        // 提取评分
-        const ratingElement = Widget.dom.select(card, '.rating, .movie-rating, .poster-rating');
-        const rating = ratingElement.length > 0 ? Widget.dom.text(ratingElement[0]).trim() : '';
-        
-        // 提取观看数
-        const watchersElement = Widget.dom.select(card, '.watchers, .movie-watchers, .poster-watchers');
-        const watchers = watchersElement.length > 0 ? Widget.dom.text(watchersElement[0]).trim() : '';
-        
-        // 提取链接
-        const linkElement = Widget.dom.select(card, 'a[href*="/movies/"]');
-        const link = linkElement.length > 0 ? Widget.dom.attr(linkElement[0], 'href') : '';
-        
-        // 提取TMDB ID
-        const tmdbId = extractTmdbIdFromLink(link);
-        
-        if (title) {
-          movies.push({
-            movie: {
-              title: title,
-              year: year,
-              ids: {
-                tmdb: tmdbId,
-                trakt: extractTraktIdFromLink(link),
-                slug: extractSlugFromLink(link)
-              }
-            },
-            rating: rating,
-            watchers: watchers
-          });
-        }
-      } catch (error) {
-        console.error("Error parsing movie card:", error);
-        continue;
-      }
-    }
-    
-    return movies;
-  } catch (error) {
-    console.error("Error parsing Trakt movies HTML:", error);
-    return [];
-  }
-}
-
-// 解析Trakt剧集HTML页面
-function parseTraktShowsFromHTML(html) {
-  try {
-    const shows = [];
-    const doc = Widget.dom.parse(html);
-    
-    // 查找剧集卡片
-    const showCards = Widget.dom.select(doc, '.show-card, .poster-card');
-    
-    for (const card of showCards) {
-      try {
-        // 提取标题
-        const titleElement = Widget.dom.select(card, '.title, .show-title, h3 a, .poster-title');
-        const title = titleElement.length > 0 ? Widget.dom.text(titleElement[0]).trim() : '';
-        
-        // 提取年份
-        const yearElement = Widget.dom.select(card, '.year, .show-year, .poster-year');
-        const year = yearElement.length > 0 ? Widget.dom.text(yearElement[0]).trim() : '';
-        
-        // 提取评分
-        const ratingElement = Widget.dom.select(card, '.rating, .show-rating, .poster-rating');
-        const rating = ratingElement.length > 0 ? Widget.dom.text(ratingElement[0]).trim() : '';
-        
-        // 提取观看数
-        const watchersElement = Widget.dom.select(card, '.watchers, .show-watchers, .poster-watchers');
-        const watchers = watchersElement.length > 0 ? Widget.dom.text(watchersElement[0]).trim() : '';
-        
-        // 提取链接
-        const linkElement = Widget.dom.select(card, 'a[href*="/shows/"]');
-        const link = linkElement.length > 0 ? Widget.dom.attr(linkElement[0], 'href') : '';
-        
-        // 提取TMDB ID
-        const tmdbId = extractTmdbIdFromLink(link);
-        
-        if (title) {
-          shows.push({
-            show: {
-              title: title,
-              year: year,
-              ids: {
-                tmdb: tmdbId,
-                trakt: extractTraktIdFromLink(link),
-                slug: extractSlugFromLink(link)
-              }
-            },
-            rating: rating,
-            watchers: watchers
-          });
-        }
-      } catch (error) {
-        console.error("Error parsing show card:", error);
-        continue;
-      }
-    }
-    
-    return shows;
-  } catch (error) {
-    console.error("Error parsing Trakt shows HTML:", error);
-    return [];
-  }
-}
-
-// 从链接中提取TMDB ID
-function extractTmdbIdFromLink(link) {
-  if (!link) return null;
-  
-  // 尝试从链接中提取TMDB ID
-  const tmdbMatch = link.match(/tmdb_id=(\d+)/);
-  if (tmdbMatch) {
-    return tmdbMatch[1];
-  }
-  
-  // 如果没有找到，返回null，后续会通过TMDB搜索获取
-  return null;
-}
-
-// 从链接中提取Trakt ID
-function extractTraktIdFromLink(link) {
-  if (!link) return null;
-  
-  const traktMatch = link.match(/\/movies\/(\d+)/) || link.match(/\/shows\/(\d+)/);
-  return traktMatch ? traktMatch[1] : null;
-}
-
-// 从链接中提取Slug
-function extractSlugFromLink(link) {
-  if (!link) return null;
-  
-  const slugMatch = link.match(/\/movies\/([^\/\?]+)/) || link.match(/\/shows\/([^\/\?]+)/);
-  return slugMatch ? slugMatch[1] : null;
-}
-
-// 格式化Trakt项目
-function formatTraktItem(item, type = "movie") {
-  if (!item.movie && !item.show) {
+// 格式化豆瓣项目
+function formatDoubanItem(item, source = "豆瓣") {
+  if (!item.title) {
     return null;
   }
   
-  const mediaItem = item.movie || item.show;
-  const year = mediaItem.year || "未知年份";
-  const title = mediaItem.title || "未知标题";
-  
   return {
-    id: mediaItem.ids?.tmdb || mediaItem.ids?.trakt || mediaItem.ids?.slug,
-    type: "trakt",
-    title: title,
-    description: `年份: ${year} | 评分: ${item.rating || "无评分"} | 观看数: ${item.watchers || 0}`,
-    releaseDate: year,
-    posterPath: mediaItem.ids?.tmdb ? `https://image.tmdb.org/t/p/w500${mediaItem.ids.tmdb}` : "",
-    backdropPath: mediaItem.ids?.tmdb ? `https://image.tmdb.org/t/p/w1280${mediaItem.ids.tmdb}` : "",
-    rating: item.rating || "无评分",
-    mediaType: type,
-    genreTitle: "Trakt热门",
-    source: `Trakt ${type === "movie" ? "电影" : "剧集"}`,
-    watchers: item.watchers || 0,
-    playCount: item.play_count || 0
+    id: item.id || item.url || `douban_${Date.now()}_${Math.random()}`,
+    type: "douban",
+    title: item.title,
+    description: item.card_subtitle || item.description || item.abstract || "",
+    releaseDate: item.year || item.release_date || "未知年份",
+    posterPath: item.cover?.url || "",
+    backdropPath: item.cover?.url || "",
+    rating: item.rating?.value || "无评分",
+    mediaType: item.subtype || "movie",
+    genreTitle: item.genres?.join(" ") || "豆瓣热门",
+    source: source,
+    url: item.url || item.href || ""
   };
 }
 
-// 获取Trakt热门电影
-async function loadTraktPopularMovies(params = {}) {
-  const { page = 1, limit = 20 } = params;
+// 通用豆瓣榜单获取函数
+async function loadDoubanList(collectionId, params = {}) {
+  const { page = 1 } = params;
+  const start = (page - 1) * 20;
   
   try {
-    const response = await Widget.http.get("https://trakt.tv/movies/popular", {
+    const response = await Widget.http.get(`${DOUBAN_API_BASE}/subject_collection/${collectionId}/items`, {
       headers: {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
-        "Cookie": TRAKT_COOKIE,
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
-        "Accept-Language": "en-US,en;q=0.5",
+        "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Mobile/15E148 Safari/604.1",
+        "Referer": `https://m.douban.com/subject_collection/${collectionId}/`,
+        "Accept": "application/json, text/plain, */*",
+        "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8",
         "Accept-Encoding": "gzip, deflate, br",
-        "Connection": "keep-alive",
-        "Upgrade-Insecure-Requests": "1"
+        "Connection": "keep-alive"
       },
       params: {
-        page: page,
-        limit: limit
+        start: start,
+        count: 20,
+        updated_at: "",
+        items_only: 1,
+        for_mobile: 1
       }
     });
     
-    // 解析HTML页面获取电影数据
-    const movies = parseTraktMoviesFromHTML(response.data);
-    return movies.map(item => formatTraktItem(item, "movie")).filter(item => item !== null);
+    if (!response.data || !response.data.subject_collection_items) {
+      throw new Error("Invalid response format");
+    }
+    
+    return response.data.subject_collection_items
+      .map(item => formatDoubanItem(item))
+      .filter(item => item !== null);
   } catch (error) {
-    console.error("Error fetching Trakt popular movies:", error);
+    console.error(`Error fetching Douban list ${collectionId}:`, error);
     return [];
   }
 }
 
-// 获取Trakt热门剧集
-async function loadTraktPopularShows(params = {}) {
-  const { page = 1, limit = 20 } = params;
-  
-  try {
-    const response = await Widget.http.get("https://trakt.tv/shows/popular", {
-      headers: {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
-        "Cookie": TRAKT_COOKIE,
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
-        "Accept-Language": "en-US,en;q=0.5",
-        "Accept-Encoding": "gzip, deflate, br",
-        "Connection": "keep-alive",
-        "Upgrade-Insecure-Requests": "1"
-      },
-      params: {
-        page: page,
-        limit: limit
-      }
-    });
-    
-    // 解析HTML页面获取剧集数据
-    const shows = parseTraktShowsFromHTML(response.data);
-    return shows.map(item => formatTraktItem(item, "tv")).filter(item => item !== null);
-  } catch (error) {
-    console.error("Error fetching Trakt popular shows:", error);
-    return [];
-  }
+// 豆瓣电影Top250
+async function loadDoubanTop250Movies(params = {}) {
+  return await loadDoubanList("movie_top250", params);
 }
 
-// 获取Trakt趋势电影
-async function loadTraktTrendingMovies(params = {}) {
-  const { page = 1, limit = 20 } = params;
-  
-  try {
-    const response = await Widget.http.get("https://trakt.tv/movies/trending", {
-      headers: {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
-        "Cookie": TRAKT_COOKIE,
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
-        "Accept-Language": "en-US,en;q=0.5",
-        "Accept-Encoding": "gzip, deflate, br",
-        "Connection": "keep-alive",
-        "Upgrade-Insecure-Requests": "1"
-      },
-      params: {
-        page: page,
-        limit: limit
-      }
-    });
-    
-    // 解析HTML页面获取趋势电影数据
-    const movies = parseTraktMoviesFromHTML(response.data);
-    return movies.map(item => formatTraktItem(item, "movie")).filter(item => item !== null);
-  } catch (error) {
-    console.error("Error fetching Trakt trending movies:", error);
-    return [];
-  }
+// 豆瓣剧集Top250
+async function loadDoubanTop250Shows(params = {}) {
+  return await loadDoubanList("tv_top250", params);
 }
 
-// 获取Trakt趋势剧集
-async function loadTraktTrendingShows(params = {}) {
-  const { page = 1, limit = 20 } = params;
-  
-  try {
-    const response = await Widget.http.get("https://trakt.tv/shows/trending", {
-      headers: {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
-        "Cookie": TRAKT_COOKIE,
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
-        "Accept-Language": "en-US,en;q=0.5",
-        "Accept-Encoding": "gzip, deflate, br",
-        "Connection": "keep-alive",
-        "Upgrade-Insecure-Requests": "1"
-      },
-      params: {
-        page: page,
-        limit: limit
-      }
-    });
-    
-    // 解析HTML页面获取趋势剧集数据
-    const shows = parseTraktShowsFromHTML(response.data);
-    return shows.map(item => formatTraktItem(item, "tv")).filter(item => item !== null);
-  } catch (error) {
-    console.error("Error fetching Trakt trending shows:", error);
-    return [];
-  }
+// 豆瓣一周电影口碑榜
+async function loadDoubanWeeklyMovies(params = {}) {
+  return await loadDoubanList("movie_weekly_best", params);
+}
+
+// 豆瓣华语口碑剧集榜
+async function loadDoubanChineseShows(params = {}) {
+  return await loadDoubanList("tv_chinese_best_weekly", params);
+}
+
+// 豆瓣全球口碑剧集榜
+async function loadDoubanGlobalShows(params = {}) {
+  return await loadDoubanList("tv_global_best_weekly", params);
+}
+
+// 豆瓣国内热播综艺
+async function loadDoubanDomesticShows(params = {}) {
+  return await loadDoubanList("show_domestic", params);
+}
+
+// 豆瓣国外热播综艺
+async function loadDoubanForeignShows(params = {}) {
+  return await loadDoubanList("show_foreign", params);
+}
+
+// 豆瓣当地影院热映
+async function loadDoubanShowingMovies(params = {}) {
+  return await loadDoubanList("movie_showing", params);
+}
+
+// 豆瓣电影实时热榜
+async function loadDoubanRealTimeMovies(params = {}) {
+  return await loadDoubanList("movie_real_time_hotest", params);
+}
+
+// 豆瓣剧集实时热榜
+async function loadDoubanRealTimeShows(params = {}) {
+  return await loadDoubanList("tv_real_time_hotest", params);
+}
+
+// 豆瓣书影音实时热榜
+async function loadDoubanRealTimeAll(params = {}) {
+  return await loadDoubanList("subject_real_time_hotest", params);
 }
