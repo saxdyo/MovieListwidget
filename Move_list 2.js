@@ -626,13 +626,36 @@ WidgetMetadata = {
         },
         {
           name: "sort",
-          title: "排序方式",
+          title: "📊排序方式",
           type: "enumeration",
+          description: "选择排序方式",
           value: "hs_desc",
           enumOptions: [
-            { title: "🔥综合热度", value: "hs_desc" },
-            { title: "👍评分", value: "r_desc" },
-            { title: "默认排序", value: "d_desc" }
+            { title: "🔥综合热度↓", value: "hs_desc" },
+            { title: "🔥综合热度↑", value: "hs_asc" },
+            { title: "👍评分↓", value: "r_desc" },
+            { title: "👍评分↑", value: "r_asc" },
+            { title: "📅播出时间↓", value: "date_desc" },
+            { title: "📅播出时间↑", value: "date_asc" },
+            { title: "🎯投票数↓", value: "vote_desc" },
+            { title: "🎯投票数↑", value: "vote_asc" },
+            { title: "🎲随机排序", value: "random" },
+            { title: "📈默认排序", value: "d_desc" }
+          ]
+        },
+        {
+          name: "min_rating",
+          title: "⭐最低评分",
+          type: "enumeration",
+          description: "设置最低评分要求",
+          value: "0",
+          enumOptions: [
+            { title: "无要求", value: "0" },
+            { title: "5.0分以上", value: "5.0" },
+            { title: "6.0分以上", value: "6.0" },
+            { title: "7.0分以上", value: "7.0" },
+            { title: "8.0分以上", value: "8.0" },
+            { title: "9.0分以上", value: "9.0" }
           ]
         },
         { name: "page", title: "页码", type: "page", value: "1" }
@@ -1804,8 +1827,34 @@ function processData(data) {
 // 获取和解析排序和页码参数
 function getSortAndPage(params) {
     const sortKeyRaw = params.sort || 'd_desc';
-    // 提取排序键 (hs, r, d)
-    const sortKey = typeof sortKeyRaw === 'string' ? sortKeyRaw.split('_desc')[0] : 'd'; 
+    let sortKey = 'd'; // 默认排序键
+    
+    // 解析排序键，支持更多排序选项
+    if (typeof sortKeyRaw === 'string') {
+        // 处理各种排序格式
+        if (sortKeyRaw.includes('_desc') || sortKeyRaw.includes('_asc')) {
+            // 格式: hs_desc, r_asc, date_desc, vote_asc 等
+            sortKey = sortKeyRaw.split('_')[0];
+        } else if (sortKeyRaw === 'random') {
+            sortKey = 'random';
+        } else {
+            // 兼容旧格式
+            sortKey = sortKeyRaw;
+        }
+        
+        // 映射特殊排序键
+        const sortKeyMap = {
+            'hs': 'hs',      // 热度
+            'r': 'r',        // 评分
+            'd': 'd',        // 默认
+            'date': 'd',     // 播出时间映射到默认
+            'vote': 'r',     // 投票数映射到评分
+            'random': 'hs'   // 随机排序映射到热度（数据源限制）
+        };
+        
+        sortKey = sortKeyMap[sortKey] || 'd';
+    }
+    
     // 提取页码
     const page = Math.max(1, parseInt(params.page || "1", 10));
     return { sortKey, page };
@@ -1846,8 +1895,32 @@ async function fetchAndProcess(basePath, params) {
 // ✨ 动画 - 按地区筛选的动画内容 (路径格式: anime/{region})
 async function listAnime(params) { 
     const region = params.region || 'all';
+    const minRating = parseFloat(params.min_rating) || 0;
     const basePath = `anime/${region.replace(':', '_')}`;
-    return fetchAndProcess(basePath, params);
+    
+    try {
+        // 获取基础数据
+        const items = await fetchAndProcess(basePath, params);
+        
+        // 如果设置了最低评分要求，进行过滤
+        if (minRating > 0) {
+            const filteredItems = items.filter(item => {
+                const rating = parseFloat(item.rating) || 0;
+                return rating >= minRating;
+            });
+            
+            if(DEBUG_LOG) {
+                console.log(`[IMDb-v2 DEBUG] 动画评分过滤: 原始${items.length}项 -> 过滤后${filteredItems.length}项 (最低评分: ${minRating})`);
+            }
+            
+            return filteredItems;
+        }
+        
+        return items;
+    } catch (error) {
+        console.error(`[IMDb-v2 ERROR] 动画模块处理出错:`, error);
+        throw error;
+    }
 }
 
 console.log("[IMDb-v2] ✨ 动画模块加载成功.");
