@@ -758,16 +758,32 @@ WidgetMetadata = {
         { name: "language", title: "语言", type: "language", value: "zh-CN" }
       ]
     },
-    // -------------豆瓣榜单模块-------------
+    // -------------豆瓣片单模块-------------
+    // 1. 经典榜单
     {
       title: "豆瓣电影Top250",
       description: "豆瓣评分最高的250部电影",
       requiresWebView: false,
       functionName: "loadDoubanTop250",
       cacheDuration: 86400,
-      params: [
-        { name: "page", title: "页码", type: "page" }
-      ]
+      params: [ { name: "page", title: "页码", type: "page" } ]
+    },
+    {
+      title: "豆瓣年度电影榜单",
+      description: "每年豆瓣官方年度电影榜单",
+      requiresWebView: false,
+      functionName: "loadDoubanYearlyBest",
+      cacheDuration: 86400,
+      params: [ { name: "year", title: "年份", type: "input" }, { name: "page", title: "页码", type: "page" } ]
+    },
+    // 2. 热门榜单
+    {
+      title: "豆瓣实时热播电影榜",
+      description: "当前热播电影榜单",
+      requiresWebView: false,
+      functionName: "loadDoubanHotMovies",
+      cacheDuration: 3600,
+      params: [ { name: "page", title: "页码", type: "page" } ]
     },
     {
       title: "豆瓣电影口碑榜",
@@ -775,19 +791,7 @@ WidgetMetadata = {
       requiresWebView: false,
       functionName: "loadDoubanReputationMovies",
       cacheDuration: 3600,
-      params: [
-        { name: "page", title: "页码", type: "page" }
-      ]
-    },
-    {
-      title: "豆瓣热播电影榜",
-      description: "当前热播电影榜单",
-      requiresWebView: false,
-      functionName: "loadDoubanHotMovies",
-      cacheDuration: 3600,
-      params: [
-        { name: "page", title: "页码", type: "page" }
-      ]
+      params: [ { name: "page", title: "页码", type: "page" } ]
     },
     {
       title: "豆瓣新片榜",
@@ -795,9 +799,57 @@ WidgetMetadata = {
       requiresWebView: false,
       functionName: "loadDoubanNewMovies",
       cacheDuration: 3600,
-      params: [
-        { name: "page", title: "页码", type: "page" }
-      ]
+      params: [ { name: "page", title: "页码", type: "page" } ]
+    },
+    // 3. 主题片单
+    {
+      title: "豆瓣高分冷门电影",
+      description: "高分但冷门的优质电影",
+      requiresWebView: false,
+      functionName: "loadDoubanHiddenGems",
+      cacheDuration: 86400,
+      params: [ { name: "page", title: "页码", type: "page" } ]
+    },
+    {
+      title: "豆瓣动画电影榜",
+      description: "动画电影精选榜单",
+      requiresWebView: false,
+      functionName: "loadDoubanAnimationMovies",
+      cacheDuration: 86400,
+      params: [ { name: "page", title: "页码", type: "page" } ]
+    },
+    {
+      title: "豆瓣纪录片榜",
+      description: "优质纪录片榜单",
+      requiresWebView: false,
+      functionName: "loadDoubanDocumentaries",
+      cacheDuration: 86400,
+      params: [ { name: "page", title: "页码", type: "page" } ]
+    },
+    {
+      title: "豆瓣华语电影榜",
+      description: "华语电影精选榜单",
+      requiresWebView: false,
+      functionName: "loadDoubanChineseMovies",
+      cacheDuration: 86400,
+      params: [ { name: "page", title: "页码", type: "page" } ]
+    },
+    {
+      title: "豆瓣欧美电影榜",
+      description: "欧美电影精选榜单",
+      requiresWebView: false,
+      functionName: "loadDoubanWesternMovies",
+      cacheDuration: 86400,
+      params: [ { name: "page", title: "页码", type: "page" } ]
+    },
+    // 4. 用户自定义片单
+    {
+      title: "豆瓣自定义片单",
+      description: "输入任意豆瓣片单URL，自动解析展示内容",
+      requiresWebView: false,
+      functionName: "loadDoubanCustomList",
+      cacheDuration: 86400,
+      params: [ { name: "url", title: "片单URL", type: "input" }, { name: "page", title: "页码", type: "page" } ]
     }
   ]
 };
@@ -1461,33 +1513,20 @@ function getTimePeriodName(time_period) {
   return nameMap[time_period] || "全部时期";
 }
 
-// -------------豆瓣榜单函数实现（待补充）-------------
+// -------------豆瓣片单函数结构（待补充实现）-------------
 
-// 豆瓣电影Top250
-async function loadDoubanTop250(params = {}) {
-  // TODO: 实现抓取豆瓣Top250电影榜单
-  // 可用API或爬虫方式获取 https://movie.douban.com/top250
-  // 返回格式需包含id、title、description、posterPath、rating等
-  return [];
-}
-
-// 豆瓣电影口碑榜
-async function loadDoubanReputationMovies(params = {}) {
-  // TODO: 实现抓取豆瓣口碑榜
-  // 例如 https://movie.douban.com/chart
-  return [];
-}
-
-// 豆瓣热播电影榜
-async function loadDoubanHotMovies(params = {}) {
-  // TODO: 实现抓取豆瓣热播榜
-  // 例如 https://movie.douban.com/cinema/nowplaying
-  return [];
-}
-
-// 豆瓣新片榜
-async function loadDoubanNewMovies(params = {}) {
-  // TODO: 实现抓取豆瓣新片榜
-  // 例如 https://movie.douban.com/cinema/later
-  return [];
-}
+// 1. 经典榜单
+async function loadDoubanTop250(params = {}) { return []; }
+async function loadDoubanYearlyBest(params = {}) { return []; }
+// 2. 热门榜单
+async function loadDoubanHotMovies(params = {}) { return []; }
+async function loadDoubanReputationMovies(params = {}) { return []; }
+async function loadDoubanNewMovies(params = {}) { return []; }
+// 3. 主题片单
+async function loadDoubanHiddenGems(params = {}) { return []; }
+async function loadDoubanAnimationMovies(params = {}) { return []; }
+async function loadDoubanDocumentaries(params = {}) { return []; }
+async function loadDoubanChineseMovies(params = {}) { return []; }
+async function loadDoubanWesternMovies(params = {}) { return []; }
+// 4. 用户自定义片单
+async function loadDoubanCustomList(params = {}) { return []; }
