@@ -625,22 +625,21 @@ WidgetMetadata = {
           ]
         },
         {
-          name: "sort",
+          name: "sort_by",
           title: "📊排序方式",
           type: "enumeration",
           description: "选择排序方式",
           value: "hs_desc",
           enumOptions: [
-            { title: "🔥综合热度↓", value: "hs_desc" },
-            { title: "🔥综合热度↑", value: "hs_asc" },
-            { title: "👍评分↓", value: "r_desc" },
-            { title: "👍评分↑", value: "r_asc" },
-            { title: "📅播出时间↓", value: "date_desc" },
-            { title: "📅播出时间↑", value: "date_asc" },
-            { title: "🎯投票数↓", value: "vote_desc" },
-            { title: "🎯投票数↑", value: "vote_asc" },
-            { title: "🎲随机排序", value: "random" },
-            { title: "📈默认排序", value: "d_desc" }
+            { title: "热门度↓", value: "hs_desc" },
+            { title: "热门度↑", value: "hs_asc" },
+            { title: "评分↓", value: "r_desc" },
+            { title: "评分↑", value: "r_asc" },
+            { title: "播出时间↓", value: "date_desc" },
+            { title: "播出时间↑", value: "date_asc" },
+            { title: "投票数↓", value: "vote_desc" },
+            { title: "投票数↑", value: "vote_asc" },
+            { title: "默认排序", value: "d_desc" }
           ]
         },
         {
@@ -1826,7 +1825,8 @@ function processData(data) {
 
 // 获取和解析排序和页码参数
 function getSortAndPage(params) {
-    const sortKeyRaw = params.sort || 'd_desc';
+    // 支持两种参数名：sort_by (新模块) 和 sort (兼容)
+    const sortKeyRaw = params.sort_by || params.sort || 'd_desc';
     let sortKey = 'd'; // 默认排序键
     
     // 解析排序键，支持更多排序选项
