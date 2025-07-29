@@ -434,18 +434,6 @@ WidgetMetadata = {
       cacheDuration: 1800,
       params: [
         {
-          name: "season_year",
-          title: "📅年份",
-          type: "enumeration",
-          description: "选择新番年份",
-          value: "2024",
-          enumOptions: [
-            { title: "2024年", value: "2024" },
-            { title: "2023年", value: "2023" },
-            { title: "2022年", value: "2022" }
-          ]
-        },
-        {
           name: "with_origin_country",
           title: "🌸制作地区",
           type: "enumeration",
@@ -748,7 +736,6 @@ async function bangumiHotNewAnime(params = {}) {
   const { 
     language = "zh-CN", 
     page = 1, 
-    season_year = "2024",
     with_origin_country = "JP",
     sort_by = "popularity.desc",
     vote_average_gte = "6.0"
@@ -757,7 +744,7 @@ async function bangumiHotNewAnime(params = {}) {
   try {
     const endpoint = "/discover/tv";
     
-    // 构建查询参数 - 专注指定年份的新番
+    // 构建查询参数 - 专注热门新番
     const queryParams = { 
       language, 
       page, 
@@ -765,7 +752,6 @@ async function bangumiHotNewAnime(params = {}) {
       api_key: API_KEY,
       // 新番动画筛选
       with_genres: "16", // 动画类型
-      first_air_date_year: season_year, // 指定年份新番
       vote_count_gte: 10  // 新番投票较少，降低门槛
     };
     
@@ -790,8 +776,7 @@ async function bangumiHotNewAnime(params = {}) {
         const formattedItem = formatTmdbItem(item, genreMap.tv);
         // 添加Bangumi新番标识
         formattedItem.type = "bangumi-new";
-        formattedItem.source = `Bangumi ${season_year}年新番`;
-        formattedItem.seasonYear = season_year;
+        formattedItem.source = "Bangumi热门新番";
         formattedItem.isNewAnime = true;
         return formattedItem;
       })
