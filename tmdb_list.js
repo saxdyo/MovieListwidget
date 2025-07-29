@@ -804,11 +804,13 @@ async function fetchTmdbGenres() {
 }
 
 // 格式化每个影视项目
-function formatTmdbItem(item, genreMap) {
+function formatTmdbItem(item, genreMap, options = {}) {
   // 检查是否有海报或壁纸，如果没有则不显示
   if (!item.poster_path && !item.backdrop_path) {
     return null;
   }
+  
+  const { showTitleOnPoster = false, isHotModule = false } = options;
   
   return {
     id: item.id,
@@ -820,7 +822,13 @@ function formatTmdbItem(item, genreMap) {
     backdropPath: item.backdrop_path ? `https://image.tmdb.org/t/p/w1280${item.backdrop_path}` : "",
     rating: item.vote_average || "无评分",
     mediaType: item.media_type || (item.title ? "movie" : "tv"),
-    genreTitle: genreMap[item.genre_ids[0]] || "未知类型" // 显示第一种类型
+    genreTitle: genreMap[item.genre_ids[0]] || "未知类型", // 显示第一种类型
+    // 横版海报标题显示配置
+    showTitleOnPoster: showTitleOnPoster || isHotModule,
+    titlePosition: "bottom", // 标题位置：bottom, center, top
+    titleStyle: "gradient", // 标题样式：gradient, overlay, simple
+    // 为热门模块添加特殊标识
+    isHotModule: isHotModule
   };
 }
 
@@ -832,7 +840,10 @@ async function loadTodayGlobalMedia(params = {}) {
       params: { language, api_key: API_KEY }
     });
     const genreMap = await fetchTmdbGenres();
-    return res.results.map(item => formatTmdbItem(item, genreMap.movie)).filter(item => item !== null);
+    return res.results.map(item => formatTmdbItem(item, genreMap.movie, { 
+      showTitleOnPoster: true, 
+      isHotModule: true 
+    })).filter(item => item !== null);
   } catch (error) {
     console.error("Error fetching trending media:", error);
     return [];
@@ -847,7 +858,10 @@ async function loadWeekGlobalMovies(params = {}) {
       params: { language, api_key: API_KEY }
     });
     const genreMap = await fetchTmdbGenres();
-    return res.results.map(item => formatTmdbItem(item, genreMap.movie)).filter(item => item !== null);
+    return res.results.map(item => formatTmdbItem(item, genreMap.movie, { 
+      showTitleOnPoster: true, 
+      isHotModule: true 
+    })).filter(item => item !== null);
   } catch (error) {
     console.error("Error fetching weekly global movies:", error);
     return [];
@@ -867,7 +881,7 @@ async function tmdbPopularMovies(params = {}) {
         params: { language, page, api_key: API_KEY }
       });
       const genreMap = await fetchTmdbGenres();
-      let results = res.results.map(item => formatTmdbItem(item, genreMap.movie)).filter(item => item !== null);
+      let results = res.results.map(item => formatTmdbItem(item, genreMap.movie, {})).filter(item => item !== null);
       
       // 根据上映状态筛选
       if (air_status === 'released') {
@@ -902,7 +916,7 @@ async function tmdbPopularMovies(params = {}) {
         params: queryParams
       });
       const genreMap = await fetchTmdbGenres();
-      return res.results.map(item => formatTmdbItem(item, genreMap.movie)).filter(item => item !== null);
+      return res.results.map(item => formatTmdbItem(item, genreMap.movie, {})).filter(item => item !== null);
     }
   } catch (error) {
     console.error("Error fetching popular movies:", error);
@@ -924,7 +938,7 @@ async function tmdbTopRated(params = {}) {
         params: { language, page, api_key: API_KEY }
       });
       const genreMap = await fetchTmdbGenres();
-      let results = res.results.map(item => formatTmdbItem(item, genreMap[type])).filter(item => item !== null);
+      let results = res.results.map(item => formatTmdbItem(item, genreMap[type], {})).filter(item => item !== null);
       
       // 根据上映状态筛选
       if (air_status === 'released') {
@@ -968,7 +982,7 @@ async function tmdbTopRated(params = {}) {
         params: queryParams
       });
       const genreMap = await fetchTmdbGenres();
-      return res.results.map(item => formatTmdbItem(item, genreMap[type])).filter(item => item !== null);
+      return res.results.map(item => formatTmdbItem(item, genreMap[type], {})).filter(item => item !== null);
     }
   } catch (error) {
     console.error("Error fetching top rated:", error);
@@ -1002,7 +1016,7 @@ async function tmdbDiscoverByNetwork(params = {}) {
       params: queryParams
     });
     const genreMap = await fetchTmdbGenres();
-    return res.results.map(item => formatTmdbItem(item, genreMap.tv)).filter(item => item !== null);
+    return res.results.map(item => formatTmdbItem(item, genreMap.tv, {})).filter(item => item !== null);
   } catch (error) {
     console.error("Error fetching discover by network:", error);
     return [];
@@ -1058,7 +1072,7 @@ async function tmdbDiscoverByCompany(params = {}) {
     });
     
     const genreMap = await fetchTmdbGenres();
-    return res.results.map(item => formatTmdbItem(item, genreMap[type])).filter(item => item !== null);
+    return res.results.map(item => formatTmdbItem(item, genreMap[type], {})).filter(item => item !== null);
   } catch (error) {
     console.error("Error fetching discover by company:", error);
     return [];
@@ -1135,7 +1149,7 @@ async function imdbPopularContent(params = {}) {
     
     const genreMap = await fetchTmdbGenres();
     return res.results.map(item => {
-      const formattedItem = formatTmdbItem(item, genreMap[type]);
+      const formattedItem = formatTmdbItem(item, genreMap[type], {});
       if (formattedItem) {
         // 添加IMDB特殊标识
         formattedItem.type = "imdb";
@@ -1204,7 +1218,7 @@ async function bangumiHotNewAnime(params = {}) {
     
     const genreMap = await fetchTmdbGenres();
     return res.results.map(item => {
-      const formattedItem = formatTmdbItem(item, genreMap.tv);
+      const formattedItem = formatTmdbItem(item, genreMap.tv, {});
       if (formattedItem) {
         // 添加Bangumi新番标识
         formattedItem.type = "bangumi-new";
@@ -1297,7 +1311,7 @@ async function bangumiRankingList(params = {}) {
     
     const genreMap = await fetchTmdbGenres();
     return res.results.map(item => {
-      const formattedItem = formatTmdbItem(item, genreMap.tv);
+      const formattedItem = formatTmdbItem(item, genreMap.tv, {});
       if (formattedItem) {
         // 添加排行榜标识
         formattedItem.type = "bangumi-ranking";
@@ -1383,7 +1397,7 @@ async function tmdbPopularTVShows(params = {}) {
     
     const genreMap = await fetchTmdbGenres();
     return res.results.map(item => {
-      const formattedItem = formatTmdbItem(item, genreMap.tv);
+      const formattedItem = formatTmdbItem(item, genreMap.tv, {});
       if (formattedItem) {
         // 添加剧集特殊标识
         formattedItem.type = "tmdb-tv";
@@ -1468,7 +1482,7 @@ async function tmdbTVShowsByTime(params = {}) {
     
     const genreMap = await fetchTmdbGenres();
     return res.results.map(item => {
-      const formattedItem = formatTmdbItem(item, genreMap.tv);
+      const formattedItem = formatTmdbItem(item, genreMap.tv, {});
       if (formattedItem) {
         // 添加时间榜标识
         formattedItem.type = "tmdb-tv-time";
