@@ -707,45 +707,103 @@ function formatTmdbItem(item, genreMap) {
   };
 }
 
-// 获取当前热门电影与剧集
+// 加载带标题横版海报的TMDB热门数据
+async function loadTmdbTrendingData() {
+    try {
+        const response = await Widget.http.get("https://raw.githubusercontent.com/quantumultxx/ForwardWidgets/refs/heads/main/data/TMDB_Trending.json");
+        return response.data;
+    } catch (error) {
+        console.error("Error loading trending data:", error);
+        return { today_global: [], week_global_all: [], popular_movies: [] };
+    }
+}
+
+// 获取当前热门电影与剧集（使用带标题的横版海报）
 async function loadTodayGlobalMedia(params = {}) {
-  const { language = "zh-CN" } = params;
   try {
-    const res = await Widget.tmdb.get("/trending/all/day", { 
-      params: { language, api_key: API_KEY }
-    });
-    const genreMap = await fetchTmdbGenres();
-    return res.results
-      .map(item => formatTmdbItem(item, genreMap.movie))
-      .filter(item => item.posterPath); // 今日热门
+    const data = await loadTmdbTrendingData();
+    return data.today_global.map(item => ({
+        id: item.id.toString(),
+        type: "tmdb",
+        title: item.title,
+        genreTitle: item.genreTitle,
+        rating: item.rating,
+        description: item.overview,
+        releaseDate: item.release_date,
+        posterPath: item.poster_url,
+        backdropPath: item.title_backdrop, // 这里是带标题的横版海报
+        coverUrl: item.poster_url,
+        mediaType: item.type,
+        link: null,
+        duration: 0,
+        durationText: "",
+        episode: 0,
+        childItems: []
+    }));
   } catch (error) {
     console.error("Error fetching trending media:", error);
     return [];
   }
 }
 
-// 获取当前本周热门电影与剧集
+// 获取当前本周热门电影与剧集（使用带标题的横版海报）
 async function loadWeekGlobalMovies(params = {}) {
-  const { language = "zh-CN" } = params;
   try {
-    const res = await Widget.tmdb.get("/trending/all/week", { 
-      params: { language, api_key: API_KEY }
-    });
-    const genreMap = await fetchTmdbGenres();
-    return res.results
-      .map(item => formatTmdbItem(item, genreMap.movie))
-      .filter(item => item.posterPath); // 本周热门
+    const data = await loadTmdbTrendingData();
+    return data.week_global_all.map(item => ({
+        id: item.id.toString(),
+        type: "tmdb",
+        title: item.title,
+        genreTitle: item.genreTitle,
+        rating: item.rating,
+        description: item.overview,
+        releaseDate: item.release_date,
+        posterPath: item.poster_url,
+        backdropPath: item.title_backdrop, // 这里是带标题的横版海报
+        coverUrl: item.poster_url,
+        mediaType: item.type,
+        link: null,
+        duration: 0,
+        durationText: "",
+        episode: 0,
+        childItems: []
+    }));
   } catch (error) {
     console.error("Error fetching weekly global movies:", error);
     return [];
   }
 }
 
-// 获取当前热门电影
+// 获取当前热门电影（第一页使用带标题的横版海报）
 async function tmdbPopularMovies(params = {}) {
   const { language = "zh-CN", page = 1, sort_by = "popularity.desc" } = params;
   try {
-    // 如果选择的是热门度排序，使用popular端点；否则使用discover端点
+    // 第一页且是热门度排序时，使用预处理数据（带标题横版海报）
+    if ((parseInt(page) || 1) === 1 && sort_by.startsWith("popularity")) {
+        const data = await loadTmdbTrendingData();
+        return data.popular_movies
+            .slice(0, 15)
+            .map(item => ({
+                id: item.id.toString(),
+                type: "tmdb",
+                title: item.title,
+                genreTitle: item.genreTitle,
+                rating: item.rating,
+                description: item.overview,
+                releaseDate: item.release_date,
+                posterPath: item.poster_url,
+                backdropPath: item.title_backdrop, // 这里是带标题的横版海报
+                coverUrl: item.poster_url,
+                mediaType: item.type,
+                link: null,
+                duration: 0,
+                durationText: "",
+                episode: 0,
+                childItems: []
+            }));
+    }
+    
+    // 其他情况使用标准TMDB API
     if (sort_by.startsWith("popularity")) {
       const res = await Widget.tmdb.get("/movie/popular", { 
         params: { language, page, api_key: API_KEY }
