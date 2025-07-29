@@ -1570,42 +1570,7 @@ function formatDoubanItem(item, source = "豆瓣") {
   };
 }
 
-// 通用豆瓣榜单获取函数
-async function loadDoubanList(collectionId, params = {}) {
-  const { page = 1 } = params;
-  const start = (page - 1) * 20;
-  
-  try {
-    const response = await Widget.http.get(`${DOUBAN_API_BASE}/subject_collection/${collectionId}/items`, {
-      headers: {
-        "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Mobile/15E148 Safari/604.1",
-        "Referer": `https://m.douban.com/subject_collection/${collectionId}/`,
-        "Accept": "application/json, text/plain, */*",
-        "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8",
-        "Accept-Encoding": "gzip, deflate, br",
-        "Connection": "keep-alive"
-      },
-      params: {
-        start: start,
-        count: 20,
-        updated_at: "",
-        items_only: 1,
-        for_mobile: 1
-      }
-    });
-    
-    if (!response.data || !response.data.subject_collection_items) {
-      throw new Error("Invalid response format");
-    }
-    
-    return response.data.subject_collection_items
-      .map(item => formatDoubanItem(item))
-      .filter(item => item !== null);
-  } catch (error) {
-    console.error(`Error fetching Douban list ${collectionId}:`, error);
-    return [];
-  }
-}
+
 
 // 统一的豆瓣榜单获取函数
 async function loadDoubanList(params = {}) {
@@ -1615,51 +1580,89 @@ async function loadDoubanList(params = {}) {
   const isRealTime = list_type.includes("real_time") || list_type === "movie_showing";
   const cacheDuration = isRealTime ? 1800 : 3600;
   
-  // 获取榜单名称
-  const listNames = {
-    "movie_top250": "豆瓣电影Top250",
-    "tv_top250": "豆瓣剧集Top250", 
-    "movie_weekly_best": "豆瓣一周电影口碑榜",
-    "tv_chinese_best_weekly": "豆瓣华语口碑剧集榜",
-    "tv_global_best_weekly": "豆瓣全球口碑剧集榜",
-    "show_domestic": "豆瓣国内热播综艺",
-    "show_foreign": "豆瓣国外热播综艺",
-    "movie_showing": "豆瓣当地影院热映",
-    "movie_real_time_hotest": "豆瓣电影实时热榜",
-    "tv_real_time_hotest": "豆瓣剧集实时热榜",
-    "subject_real_time_hotest": "豆瓣书影音实时热榜"
+  // 获取榜单名称和正确的API端点
+  const listConfigs = {
+    "movie_top250": { name: "豆瓣电影Top250", endpoint: "movie_top250" },
+    "tv_top250": { name: "豆瓣剧集Top250", endpoint: "tv_top250" }, 
+    "movie_weekly_best": { name: "豆瓣一周电影口碑榜", endpoint: "movie_weekly_best" },
+    "tv_chinese_best_weekly": { name: "豆瓣华语口碑剧集榜", endpoint: "tv_chinese_best_weekly" },
+    "tv_global_best_weekly": { name: "豆瓣全球口碑剧集榜", endpoint: "tv_global_best_weekly" },
+    "show_domestic": { name: "豆瓣国内热播综艺", endpoint: "show_domestic" },
+    "show_foreign": { name: "豆瓣国外热播综艺", endpoint: "show_foreign" },
+    "movie_showing": { name: "豆瓣当地影院热映", endpoint: "movie_showing" },
+    "movie_real_time_hotest": { name: "豆瓣电影实时热榜", endpoint: "movie_real_time_hotest" },
+    "tv_real_time_hotest": { name: "豆瓣剧集实时热榜", endpoint: "tv_real_time_hotest" },
+    "subject_real_time_hotest": { name: "豆瓣书影音实时热榜", endpoint: "subject_real_time_hotest" }
   };
   
-  const listName = listNames[list_type] || "豆瓣榜单";
+  // 尝试不同的API端点格式
+  const tryEndpoints = (baseType) => {
+    const endpoints = [
+      baseType,
+      `${baseType}_items`,
+      `${baseType}/items`,
+      baseType.replace('_', '/'),
+      baseType.replace('top250', 'top_250'),
+      baseType.replace('tv_top250', 'tv_top_250'),
+      baseType.replace('movie_top250', 'movie_top_250')
+    ];
+    return endpoints;
+  };
+  
+  const listConfig = listConfigs[list_type] || { name: "豆瓣榜单", endpoint: list_type };
+  const listName = listConfig.name;
+  const endpoint = listConfig.endpoint;
   
   try {
     const start = (page - 1) * 20;
     
-    const response = await Widget.http.get(`${DOUBAN_API_BASE}/subject_collection/${list_type}/items`, {
-      headers: {
-        "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Mobile/15E148 Safari/604.1",
-        "Referer": `https://m.douban.com/subject_collection/${list_type}/`,
-        "Accept": "application/json, text/plain, */*",
-        "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8",
-        "Accept-Encoding": "gzip, deflate, br",
-        "Connection": "keep-alive"
-      },
-      params: {
-        start: start,
-        count: 20,
-        updated_at: "",
-        items_only: 1,
-        for_mobile: 1
-      }
-    });
+    // 尝试多个可能的端点
+    const endpoints = tryEndpoints(endpoint);
+    let response = null;
+    let successfulEndpoint = null;
     
-    if (!response.data || !response.data.subject_collection_items) {
-      throw new Error("Invalid response format");
+    for (const tryEndpoint of endpoints) {
+      try {
+        response = await Widget.http.get(`${DOUBAN_API_BASE}/subject_collection/${tryEndpoint}/items`, {
+          headers: {
+            "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Mobile/15E148 Safari/604.1",
+            "Referer": `https://m.douban.com/subject_collection/${tryEndpoint}/`,
+            "Accept": "application/json, text/plain, */*",
+            "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8",
+            "Accept-Encoding": "gzip, deflate, br",
+            "Connection": "keep-alive",
+            "X-Requested-With": "XMLHttpRequest",
+            "Cache-Control": "no-cache"
+          },
+          params: {
+            start: start,
+            count: 20,
+            updated_at: "",
+            items_only: 1,
+            for_mobile: 1
+          },
+          timeout: 10000
+        });
+        
+        if (response.data && response.data.subject_collection_items) {
+          successfulEndpoint = tryEndpoint;
+          break;
+        }
+      } catch (endpointError) {
+        continue;
+      }
     }
     
-    return response.data.subject_collection_items
+    if (!response || !response.data || !response.data.subject_collection_items) {
+      console.error("All endpoints failed for list_type:", list_type);
+      throw new Error("All API endpoints failed");
+    }
+    
+    const items = response.data.subject_collection_items
       .map(item => formatDoubanItem(item, listName))
       .filter(item => item !== null);
+    
+    return items;
   } catch (error) {
     console.error(`Error fetching Douban list ${list_type}:`, error);
     return [];
