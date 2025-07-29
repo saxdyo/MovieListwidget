@@ -798,13 +798,7 @@ function formatTmdbItem(item, genreMap, options = {}) {
     backdropPath: item.backdrop_path ? `https://image.tmdb.org/t/p/w1280${item.backdrop_path}` : "",
     rating: item.vote_average || "无评分",
     mediaType: item.media_type || (item.title ? "movie" : "tv"),
-    genreTitle: genreMap[item.genre_ids[0]] || "未知类型", // 显示第一种类型
-    // 横版海报标题显示配置
-    showTitleOnPoster: showTitleOnPoster || isHotModule,
-    titlePosition: "bottom", // 标题位置：bottom, center, top
-    titleStyle: "gradient", // 标题样式：gradient, overlay, simple
-    // 为热门模块添加特殊标识
-    isHotModule: isHotModule
+    genreTitle: genreMap[item.genre_ids[0]] || "未知类型" // 显示第一种类型
   };
 }
 
@@ -816,10 +810,7 @@ async function loadTodayGlobalMedia(params = {}) {
       params: { language, api_key: API_KEY }
     });
     const genreMap = await fetchTmdbGenres();
-    return res.results.map(item => formatTmdbItem(item, genreMap.movie, { 
-      showTitleOnPoster: true, 
-      isHotModule: true 
-    })).filter(item => item !== null);
+    return res.results.map(item => formatTmdbItem(item, genreMap.movie, {})).filter(item => item !== null);
   } catch (error) {
     console.error("Error fetching trending media:", error);
     return [];
@@ -834,10 +825,7 @@ async function loadWeekGlobalMovies(params = {}) {
       params: { language, api_key: API_KEY }
     });
     const genreMap = await fetchTmdbGenres();
-    return res.results.map(item => formatTmdbItem(item, genreMap.movie, { 
-      showTitleOnPoster: true, 
-      isHotModule: true 
-    })).filter(item => item !== null);
+    return res.results.map(item => formatTmdbItem(item, genreMap.movie, {})).filter(item => item !== null);
   } catch (error) {
     console.error("Error fetching weekly global movies:", error);
     return [];
