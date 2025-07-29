@@ -757,6 +757,47 @@ WidgetMetadata = {
         { name: "page", title: "页码", type: "page" },
         { name: "language", title: "语言", type: "language", value: "zh-CN" }
       ]
+    },
+    // -------------豆瓣榜单模块-------------
+    {
+      title: "豆瓣电影Top250",
+      description: "豆瓣评分最高的250部电影",
+      requiresWebView: false,
+      functionName: "loadDoubanTop250",
+      cacheDuration: 86400,
+      params: [
+        { name: "page", title: "页码", type: "page" }
+      ]
+    },
+    {
+      title: "豆瓣电影口碑榜",
+      description: "近期口碑最佳的电影榜单",
+      requiresWebView: false,
+      functionName: "loadDoubanReputationMovies",
+      cacheDuration: 3600,
+      params: [
+        { name: "page", title: "页码", type: "page" }
+      ]
+    },
+    {
+      title: "豆瓣热播电影榜",
+      description: "当前热播电影榜单",
+      requiresWebView: false,
+      functionName: "loadDoubanHotMovies",
+      cacheDuration: 3600,
+      params: [
+        { name: "page", title: "页码", type: "page" }
+      ]
+    },
+    {
+      title: "豆瓣新片榜",
+      description: "最新上映电影榜单",
+      requiresWebView: false,
+      functionName: "loadDoubanNewMovies",
+      cacheDuration: 3600,
+      params: [
+        { name: "page", title: "页码", type: "page" }
+      ]
     }
   ]
 };
@@ -1418,4 +1459,35 @@ function getTimePeriodName(time_period) {
     earlier: "早期"
   };
   return nameMap[time_period] || "全部时期";
+}
+
+// -------------豆瓣榜单函数实现（待补充）-------------
+
+// 豆瓣电影Top250
+async function loadDoubanTop250(params = {}) {
+  // TODO: 实现抓取豆瓣Top250电影榜单
+  // 可用API或爬虫方式获取 https://movie.douban.com/top250
+  // 返回格式需包含id、title、description、posterPath、rating等
+  return [];
+}
+
+// 豆瓣电影口碑榜
+async function loadDoubanReputationMovies(params = {}) {
+  // TODO: 实现抓取豆瓣口碑榜
+  // 例如 https://movie.douban.com/chart
+  return [];
+}
+
+// 豆瓣热播电影榜
+async function loadDoubanHotMovies(params = {}) {
+  // TODO: 实现抓取豆瓣热播榜
+  // 例如 https://movie.douban.com/cinema/nowplaying
+  return [];
+}
+
+// 豆瓣新片榜
+async function loadDoubanNewMovies(params = {}) {
+  // TODO: 实现抓取豆瓣新片榜
+  // 例如 https://movie.douban.com/cinema/later
+  return [];
 }
