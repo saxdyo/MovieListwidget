@@ -828,7 +828,9 @@ async function loadTodayGlobalMedia(params = {}) {
       params: { language, api_key: API_KEY }
     });
     const genreMap = await fetchTmdbGenres();
-    return res.results.map(item => formatTmdbItem(item, genreMap.movie));
+    return res.results
+      .map(item => formatTmdbItem(item, genreMap.movie))
+      .filter(item => item.posterPath); // 今日热门
   } catch (error) {
     console.error("Error fetching trending media:", error);
     return [];
@@ -843,7 +845,9 @@ async function loadWeekGlobalMovies(params = {}) {
       params: { language, api_key: API_KEY }
     });
     const genreMap = await fetchTmdbGenres();
-    return res.results.map(item => formatTmdbItem(item, genreMap.movie));
+    return res.results
+      .map(item => formatTmdbItem(item, genreMap.movie))
+      .filter(item => item.posterPath); // 本周热门
   } catch (error) {
     console.error("Error fetching weekly global movies:", error);
     return [];
@@ -890,7 +894,9 @@ async function tmdbTopRated(params = {}) {
         params: { language, page, api_key: API_KEY }
       });
       const genreMap = await fetchTmdbGenres();
-      return res.results.map(item => formatTmdbItem(item, genreMap[type]));
+      return res.results
+        .map(item => formatTmdbItem(item, genreMap[type]))
+        .filter(item => item.posterPath); // 高分内容 top_rated
     } else {
       const endpoint = type === "movie" ? "/discover/movie" : "/discover/tv";
       const res = await Widget.tmdb.get(endpoint, {
@@ -902,7 +908,9 @@ async function tmdbTopRated(params = {}) {
         }
       });
       const genreMap = await fetchTmdbGenres();
-      return res.results.map(item => formatTmdbItem(item, genreMap[type]));
+      return res.results
+        .map(item => formatTmdbItem(item, genreMap[type]))
+        .filter(item => item.posterPath); // 高分内容 discover
     }
   } catch (error) {
     console.error("Error fetching top rated:", error);
@@ -962,7 +970,9 @@ async function tmdbDiscoverByCompany(params = {}) {
     });
     
     const genreMap = await fetchTmdbGenres();
-    return res.results.map(item => formatTmdbItem(item, genreMap[type]));
+    return res.results
+      .map(item => formatTmdbItem(item, genreMap[type]))
+      .filter(item => item.posterPath); // 出品公司
   } catch (error) {
     console.error("Error fetching discover by company:", error);
     return [];
@@ -1019,13 +1029,15 @@ async function imdbPopularContent(params = {}) {
     });
     
     const genreMap = await fetchTmdbGenres();
-    return res.results.map(item => {
-      const formattedItem = formatTmdbItem(item, genreMap[type]);
-      // 添加IMDB特殊标识
-      formattedItem.type = "imdb";
-      formattedItem.source = "IMDB高分精选";
-      return formattedItem;
-    });
+    return res.results
+      .map(item => {
+        const formattedItem = formatTmdbItem(item, genreMap[type]);
+        // 添加IMDB特殊标识
+        formattedItem.type = "imdb";
+        formattedItem.source = "IMDB高分精选";
+        return formattedItem;
+      })
+      .filter(item => item.posterPath); // IMDB高分精选
   } catch (error) {
     console.error("Error fetching IMDB popular content:", error);
     return [];
@@ -1089,14 +1101,16 @@ async function imdbYearlySelection(params = {}) {
     });
     
     const genreMap = await fetchTmdbGenres();
-    return res.results.map(item => {
-      const formattedItem = formatTmdbItem(item, genreMap[type]);
-      // 添加年度精选标识
-      formattedItem.type = "imdb-yearly";
-      formattedItem.source = `IMDB ${primary_release_year || '全年'}精选`;
-      formattedItem.year = primary_release_year || new Date(item.release_date || item.first_air_date).getFullYear();
-      return formattedItem;
-    });
+    return res.results
+      .map(item => {
+        const formattedItem = formatTmdbItem(item, genreMap[type]);
+        // 添加年度精选标识
+        formattedItem.type = "imdb-yearly";
+        formattedItem.source = `IMDB ${primary_release_year || '全年'}精选`;
+        formattedItem.year = primary_release_year || new Date(item.release_date || item.first_air_date).getFullYear();
+        return formattedItem;
+      })
+      .filter(item => item.posterPath); // IMDB年度精选
   } catch (error) {
     console.error("Error fetching IMDB yearly selection:", error);
     return [];
@@ -1147,15 +1161,17 @@ async function bangumiHotNewAnime(params = {}) {
     });
     
     const genreMap = await fetchTmdbGenres();
-    return res.results.map(item => {
-      const formattedItem = formatTmdbItem(item, genreMap.tv);
-      // 添加Bangumi新番标识
-      formattedItem.type = "bangumi-new";
-      formattedItem.source = `Bangumi ${season_year}年新番`;
-      formattedItem.seasonYear = season_year;
-      formattedItem.isNewAnime = true;
-      return formattedItem;
-    });
+    return res.results
+      .map(item => {
+        const formattedItem = formatTmdbItem(item, genreMap.tv);
+        // 添加Bangumi新番标识
+        formattedItem.type = "bangumi-new";
+        formattedItem.source = `Bangumi ${season_year}年新番`;
+        formattedItem.seasonYear = season_year;
+        formattedItem.isNewAnime = true;
+        return formattedItem;
+      })
+      .filter(item => item.posterPath); // Bangumi新番
   } catch (error) {
     console.error("Error fetching Bangumi hot new anime:", error);
     return [];
@@ -1227,14 +1243,16 @@ async function bangumiRankingList(params = {}) {
     });
     
     const genreMap = await fetchTmdbGenres();
-    return res.results.map(item => {
-      const formattedItem = formatTmdbItem(item, genreMap.tv);
-      // 添加排行榜标识
-      formattedItem.type = "bangumi-ranking";
-      formattedItem.source = `Bangumi${getRankingTypeName(ranking_type)}`;
-      formattedItem.rankingType = ranking_type;
-      return formattedItem;
-    });
+    return res.results
+      .map(item => {
+        const formattedItem = formatTmdbItem(item, genreMap.tv);
+        // 添加排行榜标识
+        formattedItem.type = "bangumi-ranking";
+        formattedItem.source = `Bangumi${getRankingTypeName(ranking_type)}`;
+        formattedItem.rankingType = ranking_type;
+        return formattedItem;
+      })
+      .filter(item => item.posterPath); // Bangumi排行榜
   } catch (error) {
     console.error("Error fetching Bangumi ranking list:", error);
     return [];
@@ -1299,14 +1317,16 @@ async function tmdbPopularTVShows(params = {}) {
     });
     
     const genreMap = await fetchTmdbGenres();
-    return res.results.map(item => {
-      const formattedItem = formatTmdbItem(item, genreMap.tv);
-      // 添加剧集特殊标识
-      formattedItem.type = "tmdb-tv";
-      formattedItem.source = "TMDB热门剧集";
-      formattedItem.contentType = "TV剧集";
-      return formattedItem;
-    });
+    return res.results
+      .map(item => {
+        const formattedItem = formatTmdbItem(item, genreMap.tv);
+        // 添加剧集特殊标识
+        formattedItem.type = "tmdb-tv";
+        formattedItem.source = "TMDB热门剧集";
+        formattedItem.contentType = "TV剧集";
+        return formattedItem;
+      })
+      .filter(item => item.posterPath); // TMDB热门剧集
   } catch (error) {
     console.error("Error fetching TMDB popular TV shows:", error);
     return [];
@@ -1370,15 +1390,17 @@ async function tmdbTVShowsByTime(params = {}) {
     });
     
     const genreMap = await fetchTmdbGenres();
-    return res.results.map(item => {
-      const formattedItem = formatTmdbItem(item, genreMap.tv);
-      // 添加时间榜标识
-      formattedItem.type = "tmdb-tv-time";
-      formattedItem.source = `TMDB ${getTimePeriodName(time_period)}剧集`;
-      formattedItem.timePeriod = time_period;
-      formattedItem.contentType = "时间榜剧集";
-      return formattedItem;
-    });
+    return res.results
+      .map(item => {
+        const formattedItem = formatTmdbItem(item, genreMap.tv);
+        // 添加时间榜标识
+        formattedItem.type = "tmdb-tv-time";
+        formattedItem.source = `TMDB ${getTimePeriodName(time_period)}剧集`;
+        formattedItem.timePeriod = time_period;
+        formattedItem.contentType = "时间榜剧集";
+        return formattedItem;
+      })
+      .filter(item => item.posterPath); // TMDB剧集时间榜
   } catch (error) {
     console.error("Error fetching TMDB TV shows by time:", error);
     return [];
