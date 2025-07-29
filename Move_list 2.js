@@ -476,6 +476,64 @@ WidgetMetadata = {
         { name: "language", title: "语言", type: "language", value: "zh-CN" }
       ]
     },
+    {
+      title: "✨ 动画片库",
+      description: "按地区筛选的动画内容",
+      requiresWebView: false,
+      functionName: "listAnime",
+      cacheDuration: 3600,
+      params: [
+        {
+          name: "region",
+          title: "🌍制作地区",
+          type: "enumeration",
+          description: "选择动画制作地区",
+          value: "all",
+          enumOptions: [
+            { title: "全部地区", value: "all" },
+            { title: "日本动画", value: "country_jp" },
+            { title: "中国动画", value: "country_cn" },
+            { title: "韩国动画", value: "country_kr" },
+            { title: "美国动画", value: "country_us" },
+            { title: "欧美地区", value: "region_us-eu" },
+            { title: "港台地区", value: "country_hk" }
+          ]
+        },
+        {
+          name: "sort_by",
+          title: "📊排序方式",
+          type: "enumeration",
+          description: "选择排序方式",
+          value: "popularity.desc",
+          enumOptions: [
+            { title: "热门度↓", value: "popularity.desc" },
+            { title: "热门度↑", value: "popularity.asc" },
+            { title: "评分↓", value: "vote_average.desc" },
+            { title: "评分↑", value: "vote_average.asc" },
+            { title: "播出日期↓", value: "first_air_date.desc" },
+            { title: "播出日期↑", value: "first_air_date.asc" },
+            { title: "投票数↓", value: "vote_count.desc" },
+            { title: "投票数↑", value: "vote_count.asc" }
+          ]
+        },
+        {
+          name: "vote_average_gte",
+          title: "⭐最低评分",
+          type: "enumeration",
+          description: "设置最低评分要求",
+          value: "0",
+          enumOptions: [
+            { title: "无要求", value: "0" },
+            { title: "6.0分以上", value: "6.0" },
+            { title: "7.0分以上", value: "7.0" },
+            { title: "8.0分以上", value: "8.0" },
+            { title: "9.0分以上", value: "9.0" }
+          ]
+        },
+        { name: "page", title: "页码", type: "page" },
+        { name: "language", title: "语言", type: "language", value: "zh-CN" }
+      ]
+    },
      // -------------豆瓣模块-------------
      // --- 片单解析 ---
      {
@@ -862,6 +920,78 @@ async function bangumiHotNewAnime(params = {}) {
       .filter(item => item.posterPath); // Bangumi新番
   } catch (error) {
     console.error("Error fetching Bangumi hot new anime:", error);
+    return [];
+  }
+}
+
+// ✨ 动画片库 - 按地区筛选的动画内容
+async function listAnime(params = {}) {
+  const { 
+    region = "all", 
+    sort_by = "popularity.desc", 
+    page = 1,
+    language = "zh-CN",
+    vote_average_gte = "0"
+  } = params;
+  
+  try {
+    console.log(`[动画片库] 请求参数: region=${region}, sort_by=${sort_by}, page=${page}, vote_average_gte=${vote_average_gte}`);
+    
+    // 构建查询参数
+    const queryParams = {
+      language,
+      page: parseInt(page),
+      sort_by,
+      api_key: API_KEY,
+      with_genres: "16", // 动画类型
+      vote_count_gte: 5 // 最少投票数，确保质量
+    };
+    
+    // 添加最低评分要求
+    if (vote_average_gte && vote_average_gte !== "0") {
+      queryParams.vote_average_gte = vote_average_gte;
+    }
+    
+    // 添加地区筛选
+    if (region && region !== "all") {
+      if (region.startsWith("country_")) {
+        const countryCode = region.replace("country_", "").toUpperCase();
+        queryParams.with_origin_country = countryCode;
+      } else if (region === "region_us-eu") {
+        // 欧美地区，主要是美国、英国、加拿大、澳大利亚
+        queryParams.with_origin_country = "US,GB,CA,AU";
+      }
+    }
+    
+    console.log(`[动画片库] TMDB查询参数:`, queryParams);
+    
+    // 发起TMDB API请求
+    const res = await Widget.tmdb.get("/discover/tv", {
+      params: queryParams
+    });
+    
+    if (!res || !res.results) {
+      console.error("[动画片库] API响应格式异常");
+      return [];
+    }
+    
+    const genreMap = await fetchTmdbGenres();
+    const results = res.results
+      .map(item => {
+        const formattedItem = formatTmdbItem(item, genreMap.tv);
+        // 添加动画标识
+        formattedItem.type = "anime";
+        formattedItem.source = "动画片库";
+        formattedItem.mediaType = "tv"; // 动画通常归类为tv
+        return formattedItem;
+      })
+      .filter(item => item.posterPath && item.title); // 过滤掉没有海报和标题的项目
+    
+    console.log(`[动画片库] 成功获取 ${results.length} 个结果`);
+    return results;
+    
+  } catch (error) {
+    console.error("[动画片库] 获取数据时出错:", error);
     return [];
   }
 }
