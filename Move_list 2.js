@@ -63,201 +63,139 @@ WidgetMetadata = {
         { name: "page", title: "页码", type: "page" }
       ]
     },
-    // --- 播出平台模块 ---
+    // --- 播出平台模块（已优化） ---
     {
-        title: "TMDB 播出平台",
-        description: "按播出平台和内容类型筛选剧集内容",
+        title: "流媒体剧集库",
+        description: "按平台、类型、年份筛选剧集",
         requiresWebView: false,
-        functionName: "tmdbDiscoverByNetwork",
+        functionName: "tmdbDiscoverTVShows",
         cacheDuration: 3600,
         params: [
             {
-                name: "with_networks",
-                title: "播出平台",
+                name: "platform",
+                title: "🎬 播出平台",
                 type: "enumeration",
-                description: "选择一个平台以查看其剧集内容",
+                value: "213",
+                enumOptions: [
+                    { title: "Netflix", value: "213" },
+                    { title: "Disney+", value: "2739" },
+                    { title: "HBO Max", value: "3186" },
+                    { title: "Apple TV+", value: "2552" },
+                    { title: "Hulu", value: "453" },
+                    { title: "Amazon Prime", value: "1024" },
+                    { title: "腾讯视频", value: "2007" },
+                    { title: "爱奇艺", value: "1330" },
+                    { title: "优酷", value: "1419" },
+                    { title: "哔哩哔哩", value: "1605" },
+                    { title: "芒果TV", value: "1631" }
+                ]
+            },
+            {
+                name: "genre",
+                title: "🎭 剧集类型",
+                type: "enumeration",
                 value: "",
-                belongTo: {
-                  paramName: "air_status",
-                  value: ["released","upcoming",""],
-                },
-          enumOptions: [
-            { title: "全部", value: "" },
-            { title: "Tencent", value: "2007" },
-            { title: "iQiyi", value: "1330" },
-            { title: "Youku", value: "1419" },
-            { title: "Bilibili", value: "1605" },
-            { title: "MGTV", value: "1631" },
-            { title: "Netflix", value: "213" },
-            { title: "Disney+", value: "2739" },
-            { title: "HBO", value: "49" },
-            { title: "HBO Max", value: "3186" },
-            { title: "Apple TV+", value: "2552" },
-            { title: "Hulu", value: "453" },
-            { title: "Amazon Prime Video", value: "1024" },
-            { title: "FOX", value: "19" },
-            { title: "Paramount+", value: "4330" },
-            { title: "TV Tokyo", value: "94" },
-            { title: "BBC One", value: "332" },
-            { title: "BBC Two", value: "295" },
-            { title: "NBC", value: "6" },
-            { title: "AMC+", value: "174" },
-            { title: "We TV", value: "3732" },
-            { title: "Viu TV", value: "2146" }
-          ]
-        },
-        {
-          name: "with_genres",
-          title: "🎭内容类型",
-          type: "enumeration",
-          description: "选择要筛选的内容类型",
-          value: "",
-          belongTo: {
-            paramName: "air_status",
-            value: ["released","upcoming",""],
-          },
-          enumOptions: [
-            { title: "全部类型", value: "" },
-            { title: "犯罪", value: "80" },
-            { title: "动画", value: "16" },
-            { title: "喜剧", value: "35" },
-            { title: "剧情", value: "18" },
-            { title: "家庭", value: "10751" },
-            { title: "悬疑", value: "9648" },
-            { title: "真人秀", value: "10764" },
-            { title: "脱口秀", value: "10767" },
-            { title: "纪录片", value: "99" },
-            { title: "动作与冒险", value: "10759" },
-            { title: "科幻与奇幻", value: "10765" },
-            { title: "战争与政治", value: "10768" }
-          ]
-        },
-        {
-          name: "air_status",
-          title: "上映状态",
-          type: "enumeration",
-          description: "默认已上映",
-          value: "released",
-          enumOptions: [
-            { title: "已上映", value: "released" },
-            { title: "未上映", value: "upcoming" },
-            { title: "全部", value: "" }
-          ]
-        },
-        {
-          name: "sort_by",
-          title: "🔢 排序方式",
-          type: "enumeration",
-          description: "选择内容排序方式,默认上映时间↓",
-          value: "first_air_date.desc",
-          enumOptions: [
-            { title: "上映时间↓", value: "first_air_date.desc" },
-            { title: "上映时间↑", value: "first_air_date.asc" },
-            { title: "人气最高", value: "popularity.desc" },
-            { title: "评分最高", value: "vote_average.desc" },
-            { title: "最多投票", value: "vote_count.desc" }
-          ]
-        },
-        { name: "page", title: "页码", type: "page" },
-        { name: "language", title: "语言", type: "language", value: "zh-CN" }
-      ]
+                enumOptions: [
+                    { title: "全部类型", value: "" },
+                    { title: "剧情", value: "18" },
+                    { title: "喜剧", value: "35" },
+                    { title: "动作冒险", value: "10759" },
+                    { title: "科幻奇幻", value: "10765" },
+                    { title: "犯罪", value: "80" },
+                    { title: "悬疑", value: "9648" },
+                    { title: "动画", value: "16" },
+                    { title: "纪录片", value: "99" }
+                ]
+            },
+            {
+                name: "year",
+                title: "📆 首播年份",
+                type: "string",
+                value: "",
+                description: "例如：2023 或 2020-2023"
+            },
+            {
+                name: "sort_by",
+                title: "🔢 排序方式",
+                type: "enumeration",
+                value: "popularity.desc",
+                enumOptions: [
+                    { title: "人气最高", value: "popularity.desc" },
+                    { title: "评分最高", value: "vote_average.desc" },
+                    { title: "最新上线", value: "first_air_date.desc" }
+                ]
+            },
+            { name: "page", title: "页码", type: "page" },
+            { name: "language", title: "语言", type: "language", value: "zh-CN" }
+        ]
     },
-    // --- 出品公司模块 ---
+    // --- 出品公司模块（已优化） ---
     {
-      title: "TMDB 出品公司",
-      functionName: "tmdbCompanies",
-      cacheDuration: 3600,
-      params: [
-        {
-          name: "with_companies",
-          title: "出品公司",
-          type: "enumeration",
-          value: "",
-          description: "选择一个公司以查看其剧集内容",
-          belongTo: {
-            paramName: "air_status",
-            value: ["released","upcoming",""],
-          },
-          enumOptions: [
-            { title: "全部", value: "" },
-            { title: "Disney", value: "2" },
-            { title: "Warner Bros", value: "174" },
-            { title: "Columbia", value: "5" },
-            { title: "Sony", value: "34" },
-            { title: "Universal", value: "33" },
-            { title: "Paramount", value: "4" },
-            { title: "20th Century", value: "25" },
-            { title: "Marvel", value: "420" },
-            { title: "Toho", value: "882" },
-            { title: "中国电影集团公司", value: "14714" },
-            { title: "BBC", value: "3324" },
-            { title: "A24", value: "41077" },
-            { title: "Blumhouse", value: "3172" },
-            { title: "Working Title Films", value: "10163" }
-          ]
-        },
-        {
-          name: "with_genres",
-          title: "🎭内容类型",
-          type: "enumeration",
-          description: "选择要筛选的内容类型",
-          value: "",
-          belongTo: {
-            paramName: "air_status",
-            value: ["released","upcoming",""],
-          },
-          enumOptions: [
-            { title: "全部类型", value: "" },
-            { title: "冒险", value: "12" },
-            { title: "剧情", value: "18" },
-            { title: "动作", value: "28" },
-            { title: "动画", value: "16" },
-            { title: "历史", value: "36" },
-            { title: "喜剧", value: "35" },
-            { title: "奇幻", value: "14" },
-            { title: "家庭", value: "10751" },
-            { title: "恐怖", value: "27" },
-            { title: "悬疑", value: "9648" },
-            { title: "惊悚", value: "53" },
-            { title: "战争", value: "10752" },
-            { title: "爱情", value: "10749" },
-            { title: "犯罪", value: "80" },
-            { title: "科幻", value: "878" },
-            { title: "记录", value: "99" },
-            { title: "西部", value: "37" },
-            { title: "音乐", value: "10402" },
-            { title: "电视电影", value: "10770" }
-          ]
-        },
-        {
-          name: "air_status",
-          title: "上映状态",
-          type: "enumeration",
-          description: "默认已上映",
-          value: "released",
-          enumOptions: [
-            { title: "已上映", value: "released" },
-            { title: "未上映", value: "upcoming" },
-            { title: "全部", value: "" }
-          ]
-        },
-        {
-          name: "sort_by",
-          title: "🔢 排序方式",
-          type: "enumeration",
-          description: "选择内容排序方式,默认上映时间↓",
-          value: "primary_release_date.desc",
-          enumOptions: [
-            { title: "上映时间↓", value: "primary_release_date.desc" },
-            { title: "上映时间↑", value: "primary_release_date.asc" },
-            { title: "人气最高", value: "popularity.desc" },
-            { title: "评分最高", value: "vote_average.desc" },
-            { title: "最多投票", value: "vote_count.desc" }
-          ]
-        },
-        { name: "page", title: "页码", type: "page" },
-        { name: "language", title: "语言", type: "language", value: "zh-CN" }
-      ]
+        title: "电影公司片库",
+        description: "按公司、类型、年份筛选电影",
+        requiresWebView: false,
+        functionName: "tmdbDiscoverMoviesByCompany",
+        cacheDuration: 3600,
+        params: [
+            {
+                name: "company",
+                title: "🏢 出品公司",
+                type: "enumeration",
+                value: "2",
+                enumOptions: [
+                    { title: "迪士尼 Disney", value: "2" },
+                    { title: "华纳兄弟 Warner Bros.", value: "174" },
+                    { title: "环球影业 Universal", value: "33" },
+                    { title: "索尼影业 Sony", value: "34" },
+                    { title: "派拉蒙 Paramount", value: "4" },
+                    { title: "20世纪影业 20th Century", value: "25" },
+                    { title: "漫威影业 Marvel", value: "420" },
+                    { title: "A24", value: "41077" },
+                    { title: "皮克斯 Pixar", value: "3" },
+                    { title: "梦工厂动画 DreamWorks", value: "521" }
+                ]
+            },
+            {
+                name: "genre",
+                title: "🎭 电影类型",
+                type: "enumeration",
+                value: "",
+                enumOptions: [
+                    { title: "全部类型", value: "" },
+                    { title: "动作", value: "28" },
+                    { title: "冒险", value: "12" },
+                    { title: "科幻", value: "878" },
+                    { title: "奇幻", value: "14" },
+                    { title: "剧情", value: "18" },
+                    { title: "喜剧", value: "35" },
+                    { title: "动画", value: "16" },
+                    { title: "恐怖", value: "27" },
+                    { title: "悬疑", value: "9648" },
+                    { title: "犯罪", value: "80" },
+                    { title: "纪录片", value: "99" }
+                ]
+            },
+            {
+                name: "year",
+                title: "📆 上映年份",
+                type: "string",
+                value: "",
+                description: "例如：2023 或 2020-2023"
+            },
+            {
+                name: "sort_by",
+                title: "🔢 排序方式",
+                type: "enumeration",
+                value: "popularity.desc",
+                enumOptions: [
+                    { title: "人气最高", value: "popularity.desc" },
+                    { title: "评分最高", value: "vote_average.desc" },
+                    { title: "最新上映", value: "primary_release_date.desc" }
+                ]
+            },
+            { name: "page", title: "页码", type: "page" },
+            { name: "language", title: "语言", type: "language", value: "zh-CN" }
+        ]
     }
   ]
 };
@@ -456,55 +394,58 @@ async function tmdbTopRated(params) {
     return await fetchTmdbData(api, params);
 }
 
-async function tmdbDiscoverByNetwork(params = {}) {
+// 新的函数：根据平台筛选剧集（替换旧的 tmdbDiscoverByNetwork）
+async function tmdbDiscoverTVShows(params = {}) {
     const api = "discover/tv";
-    const beijingDate = getBeijingDate();
-    const discoverParams = {
+    const discoveryParams = {
         language: params.language || 'zh-CN',
         page: params.page || 1,
-        with_networks: params.with_networks,
-        sort_by: params.sort_by || "first_air_date.desc",
+        with_networks: params.platform,
+        sort_by: params.sort_by || "popularity.desc",
     };
-    
-    if (params.air_status === 'released') {
-        discoverParams['first_air_date.lte'] = beijingDate;
-    } else if (params.air_status === 'upcoming') {
-        discoverParams['first_air_date.gte'] = beijingDate;
+
+    if (params.genre) {
+        discoveryParams.with_genres = params.genre;
     }
-    
-    if (params.with_genres) {
-        discoverParams.with_genres = params.with_genres;
+
+    if (params.year) {
+        if (params.year.includes('-')) {
+            const [startYear, endYear] = params.year.split('-');
+            discoveryParams['first_air_date.gte'] = `${startYear.trim()}-01-01`;
+            discoveryParams['first_air_date.lte'] = `${endYear.trim()}-12-31`;
+        } else {
+            discoveryParams['first_air_date.gte'] = `${params.year.trim()}-01-01`;
+            discoveryParams['first_air_date.lte'] = `${params.year.trim()}-12-31`;
+        }
     }
-    
-    return await fetchTmdbData(api, discoverParams);
+
+    return await fetchTmdbData(api, discoveryParams);
 }
 
-async function tmdbCompanies(params = {}) {
+// 新的函数：根据公司筛选电影（替换旧的 tmdbCompanies）
+async function tmdbDiscoverMoviesByCompany(params = {}) {
     const api = "discover/movie";
-    const beijingDate = getBeijingDate();
-    const withCompanies = String(params.with_companies || '').trim();
-
-    const cleanParams = {
+    const discoveryParams = {
+        language: params.language || 'zh-CN',
         page: params.page || 1,
-        language: params.language || "zh-CN",
-        sort_by: params.sort_by || "primary_release_date.desc",
-        include_adult: false,
-        include_video: false
+        with_companies: params.company,
+        sort_by: params.sort_by || "popularity.desc",
     };
 
-    if (withCompanies) {
-        cleanParams.with_companies = withCompanies;
+    if (params.genre) {
+        discoveryParams.with_genres = params.genre;
     }
 
-    if (params.air_status === 'released') {
-        cleanParams['primary_release_date.lte'] = beijingDate;
-    } else if (params.air_status === 'upcoming') {
-        cleanParams['primary_release_date.gte'] = beijingDate;
+    if (params.year) {
+        if (params.year.includes('-')) {
+            const [startYear, endYear] = params.year.split('-');
+            discoveryParams['primary_release_date.gte'] = `${startYear.trim()}-01-01`;
+            discoveryParams['primary_release_date.lte'] = `${endYear.trim()}-12-31`;
+        } else {
+            discoveryParams['primary_release_date.gte'] = `${params.year.trim()}-01-01`;
+            discoveryParams['primary_release_date.lte'] = `${params.year.trim()}-12-31`;
+        }
     }
 
-    if (params.with_genres) {
-        cleanParams.with_genres = String(params.with_genres).trim();
-    }
-
-    return await fetchTmdbData(api, cleanParams);
+    return await fetchTmdbData(api, discoveryParams);
 }
