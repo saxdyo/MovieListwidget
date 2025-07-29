@@ -1009,7 +1009,7 @@ async function tmdbPopularTVShows(params = {}) {
         // 过滤掉无海报
         if (!item.posterPath) return false;
         // 过滤掉综艺（真人秀、脱口秀、访谈、节目等）
-        const varietyGenreIds = [10764, 10767]; // 真人秀、脱口秀
+        const varietyGenreIds = [10767]; // 只保留脱口秀过滤
         if (item.genre_ids && item.genre_ids.some(id => varietyGenreIds.includes(id))) return false;
         const lowerTitle = (item.title || '').toLowerCase();
         const lowerDesc = (item.description || '').toLowerCase();
@@ -1339,7 +1339,7 @@ async function fetchImdbItemsForDouban(scItems) {
     
     let filteredItems = allItems.filter(item => {
         // 过滤掉综艺（真人秀、脱口秀、访谈、节目等）
-        const varietyGenreIds = [10764, 10767]; // 真人秀、脱口秀
+        const varietyGenreIds = [10767]; // 只保留脱口秀过滤
         if (item.genre_ids && item.genre_ids.some(id => varietyGenreIds.includes(id))) return false;
         const lowerTitle = (item.title || '').toLowerCase();
         const lowerDesc = (item.description || '').toLowerCase();
