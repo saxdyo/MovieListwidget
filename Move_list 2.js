@@ -1233,19 +1233,70 @@ function generateDoubanMockData(page, listName, category, minRating = 7.0) {
     "综合": ["剧情", "喜剧", "动作", "爱情"]
   };
   
+  // 多样化的电影标题模板
+  const titleTemplates = {
+    "电影": ["流浪地球", "我和我的祖国", "哪吒之魔童降世", "少年的你", "夺冠", "送你一朵小红花", "你好,李焕英", "唐人街探案", "西虹市首富", "我不是药神"],
+    "电视剧": ["庆余年", "隐秘的角落", "延禧攻略", "都挺好", "小欢喜", "三十而已", "安家", "以家人之名", "琅琊榜", "甄嬛传"],
+    "华语电影": ["霸王别姬", "大话西游", "英雄", "卧虎藏龙", "功夫", "让子弹飞", "一代宗师", "红海行动", "战狼", "流浪地球"],
+    "欧美电影": ["复仇者联盟", "泰坦尼克号", "阿凡达", "星际穿越", "盗梦空间", "教父", "肖申克的救赎", "指环王", "哈利波特", "速度与激情"],
+    "日韩电影": ["你的名字", "千与千寻", "寄生虫", "釜山行", "小森林", "海街日记", "比悲伤更悲伤的故事", "素媛", "熔炉", "辩护人"],
+    "动画": ["疯狂动物城", "冰雪奇缘", "玩具总动员", "超人总动员", "寻梦环游记", "机器人总动员", "飞屋环游记", "头脑特工队", "怪物公司", "海底总动员"],
+    "纪录片": ["地球脉动", "蓝色星球", "舌尖上的中国", "我在故宫修文物", "二十二", "四个春天", "生门", "人生一串", "风味人间", "航拍中国"],
+    "文艺片": ["小偷家族", "燃烧", "罗马", "月光男孩", "鸟人", "布达佩斯大饭店", "三块广告牌", "水形物语", "绿皮书", "寄生虫"],
+    "科幻": ["银翼杀手", "黑客帝国", "星际穿越", "降临", "火星救援", "湮灭", "Ex Machina", "她", "第九区", "源代码"],
+    "经典": ["教父", "肖申克的救赎", "辛德勒的名单", "公民凯恩", "卡萨布兰卡", "日落大道", "雨中曲", "乱世佳人", "罗马假日", "北非谍影"],
+    "综合": ["阿甘正传", "这个杀手不太冷", "泰坦尼克号", "海上钢琴师", "美丽人生", "放牛班的春天", "触不可及", "怦然心动", "当幸福来敲门", "三傻大闹宝莱坞"]
+  };
+  
+  // 多样化的海报URL
+  const posterUrls = [
+    "https://img1.doubanio.com/view/photo/s_ratio_poster/public/p2614988097.jpg",
+    "https://img1.doubanio.com/view/photo/s_ratio_poster/public/p2561716440.jpg",
+    "https://img9.doubanio.com/view/photo/s_ratio_poster/public/p2578269071.jpg",
+    "https://img1.doubanio.com/view/photo/s_ratio_poster/public/p2582070906.jpg",
+    "https://img9.doubanio.com/view/photo/s_ratio_poster/public/p2593965087.jpg",
+    "https://img1.doubanio.com/view/photo/s_ratio_poster/public/p2603675186.jpg",
+    "https://img9.doubanio.com/view/photo/s_ratio_poster/public/p2616355133.jpg",
+    "https://img1.doubanio.com/view/photo/s_ratio_poster/public/p2625551676.jpg",
+    "https://img9.doubanio.com/view/photo/s_ratio_poster/public/p2633621351.jpg",
+    "https://img1.doubanio.com/view/photo/s_ratio_poster/public/p2641971087.jpg",
+    "https://img9.doubanio.com/view/photo/s_ratio_poster/public/p2649047168.jpg",
+    "https://img1.doubanio.com/view/photo/s_ratio_poster/public/p2656437829.jpg",
+    "https://img9.doubanio.com/view/photo/s_ratio_poster/public/p2663792590.jpg",
+    "https://img1.doubanio.com/view/photo/s_ratio_poster/public/p2671148311.jpg",
+    "https://img9.doubanio.com/view/photo/s_ratio_poster/public/p2678503032.jpg",
+    "https://img1.doubanio.com/view/photo/s_ratio_poster/public/p2685857753.jpg",
+    "https://img9.doubanio.com/view/photo/s_ratio_poster/public/p2693212474.jpg",
+    "https://img1.doubanio.com/view/photo/s_ratio_poster/public/p2700567195.jpg",
+    "https://img9.doubanio.com/view/photo/s_ratio_poster/public/p2707921916.jpg",
+    "https://img1.doubanio.com/view/photo/s_ratio_poster/public/p2715276637.jpg"
+  ];
+  
   const genres = genreMap[category] || ["剧情", "喜剧"];
+  const titles = titleTemplates[category] || titleTemplates["综合"];
   
   for (let i = 0; i < 20; i++) {
     const index = startIndex + i + 1;
     const rating = (Math.random() * (10 - minRating) + minRating).toFixed(1);
+    const titleIndex = (index - 1) % titles.length;
+    const posterIndex = (index - 1) % posterUrls.length;
+    
+    // 生成更真实的简介
+    const summaries = [
+      `一部关于${genres[i % genres.length]}的优秀作品，讲述了一个感人至深的故事。`,
+      `这是一部${genres[(i + 1) % genres.length]}题材的精彩${category}，展现了人性的复杂与美好。`,
+      `${category}中的佳作，以其独特的视角和深刻的内涵赢得了观众的喜爱。`,
+      `一部不可多得的${genres[i % genres.length]}作品，情节紧凑，演技精湛。`,
+      `这部${category}通过细腻的情感描写，展现了${genres[(i + 1) % genres.length]}的魅力。`
+    ];
     
     mockItems.push({
       id: `douban_${listName}_${index}`,
-      title: `${listName}精选作品${index}`,
-      summary: `这是${listName}中的第${index}部优秀作品，展现了${category}的独特魅力。实际使用时会从豆瓣API获取真实数据。`,
-      pubdate: "2024-01-01",
+      title: `${titles[titleIndex]}${index > titles.length ? ` ${Math.floor(index / titles.length) + 1}` : ''}`,
+      summary: summaries[i % summaries.length],
+      pubdate: `202${Math.floor(Math.random() * 5)}-${String(Math.floor(Math.random() * 12) + 1).padStart(2, '0')}-${String(Math.floor(Math.random() * 28) + 1).padStart(2, '0')}`,
       pic: {
-        large: "https://img1.doubanio.com/view/photo/s_ratio_poster/public/p2614988097.jpg"
+        large: posterUrls[posterIndex]
       },
       rating: {
         average: parseFloat(rating)
