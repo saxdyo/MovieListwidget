@@ -421,6 +421,51 @@ WidgetMetadata = {
         { name: "page", title: "页码", type: "page" },
         { name: "language", title: "语言", type: "language", value: "zh-CN" }
       ]
+    },
+    // 豆瓣片单(TMDB版)
+    {
+      title: "豆瓣片单(TMDB版)",
+      description: "从豆瓣豆列中获取TMDB电影或剧集",
+      requiresWebView: false,
+      functionName: "loadCardItems",
+      cacheDuration: 3600,
+      params: [
+        { name: "url", title: "豆瓣豆列URL", type: "url" }
+      ]
+    },
+    // 豆瓣自定义片单
+    {
+      title: "豆瓣自定义片单",
+      description: "从豆瓣自定义片单中获取TMDB电影或剧集",
+      requiresWebView: false,
+      functionName: "loadEnhancedDoubanList",
+      cacheDuration: 3600,
+      params: [
+        { name: "url", title: "豆瓣豆列URL", type: "url" }
+      ]
+    },
+    // Bangumi热门新番
+    {
+      title: "Bangumi热门新番",
+      description: "获取Bangumi热门新番",
+      requiresWebView: false,
+      functionName: "bangumiHotNewAnime",
+      cacheDuration: 3600,
+      params: [
+        { name: "page", title: "页码", type: "page" }
+      ]
+    },
+    // Bangumi排行榜
+    {
+      title: "Bangumi排行榜",
+      description: "获取Bangumi排行榜",
+      requiresWebView: false,
+      functionName: "bangumiRanking",
+      cacheDuration: 3600,
+      params: [
+        { name: "type", title: "类型", type: "enumeration", enumOptions: [{ title: "全部", value: "" }, { title: "动画", value: "动画" }, { title: "游戏", value: "游戏" }, { title: "音乐", value: "音乐" }, { title: "三次元", value: "三次元" }] },
+        { name: "page", title: "页码", type: "page" }
+      ]
     }
    ]
  };
@@ -1383,6 +1428,99 @@ async function classifyByGenre(params = {}) {
       });
   } catch (error) {
     console.error("Error in classifyByGenre:", error);
+    return [];
+  }
+}
+
+// Bangumi热门新番
+async function bangumiHotNewAnime(params = {}) {
+  const page = params.page || 1;
+  const count = 20;
+  const start = (page - 1) * count;
+  const url = `https://api.bgm.tv/v0/subjects?type=2&sort=rank&page=${page}&limit=${count}`;
+
+  try {
+    const response = await Widget.http.get(url, {
+      headers: {
+        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+      },
+    });
+
+    if (!response.data || !response.data.list) {
+      throw new Error("获取Bangumi热门新番失败");
+    }
+
+    const items = response.data.list.map(item => ({
+      id: item.id,
+      type: "bgm",
+      title: item.name,
+      description: item.summary,
+      releaseDate: item.date,
+      posterPath: item.images.large,
+      backdropPath: item.images.large,
+      rating: item.rating.score,
+      mediaType: "tv", // Bangumi subjects are mostly TV shows
+      genreTitle: "动画", // Assuming all are anime for now
+      originalDoubanTitle: item.name,
+      originalDoubanYear: null,
+      originalDoubanId: item.id
+    }));
+
+    return items;
+  } catch (error) {
+    console.error("Error fetching Bangumi hot new anime:", error);
+    return [];
+  }
+}
+
+// Bangumi排行榜
+async function bangumiRanking(params = {}) {
+  const type = params.type || "";
+  const page = params.page || 1;
+  const count = 20;
+  const start = (page - 1) * count;
+  let url = `https://api.bgm.tv/v0/subjects?type=1&sort=rank&page=${page}&limit=${count}`;
+
+  if (type === "动画") {
+    url = `https://api.bgm.tv/v0/subjects?type=2&sort=rank&page=${page}&limit=${count}`;
+  } else if (type === "游戏") {
+    url = `https://api.bgm.tv/v0/subjects?type=3&sort=rank&page=${page}&limit=${count}`;
+  } else if (type === "音乐") {
+    url = `https://api.bgm.tv/v0/subjects?type=4&sort=rank&page=${page}&limit=${count}`;
+  } else if (type === "三次元") {
+    url = `https://api.bgm.tv/v0/subjects?type=1&sort=rank&page=${page}&limit=${count}`;
+  }
+
+  try {
+    const response = await Widget.http.get(url, {
+      headers: {
+        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+      },
+    });
+
+    if (!response.data || !response.data.list) {
+      throw new Error("获取Bangumi排行榜失败");
+    }
+
+    const items = response.data.list.map(item => ({
+      id: item.id,
+      type: "bgm",
+      title: item.name,
+      description: item.summary,
+      releaseDate: item.date,
+      posterPath: item.images.large,
+      backdropPath: item.images.large,
+      rating: item.rating.score,
+      mediaType: "tv", // Bangumi subjects are mostly TV shows
+      genreTitle: "动画", // Assuming all are anime for now
+      originalDoubanTitle: item.name,
+      originalDoubanYear: null,
+      originalDoubanId: item.id
+    }));
+
+    return items;
+  } catch (error) {
+    console.error("Error fetching Bangumi ranking:", error);
     return [];
   }
 }
