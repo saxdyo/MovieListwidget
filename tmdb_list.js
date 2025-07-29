@@ -743,27 +743,65 @@ WidgetMetadata = {
         { name: "language", title: "语言", type: "language", value: "zh-CN" }
       ]
     },
-    // -------------豆瓣模块-------------
+    // -------------Trakt模块-------------
     {
-      title: "豆瓣自定义片单",
-      description: "支持格式:桌面/移动端豆列、官方榜单、App dispatch",
+      title: "Trakt 热门电影",
+      description: "来自Trakt的热门电影榜单",
       requiresWebView: false,
-      functionName: "loadEnhancedDoubanList",
+      functionName: "loadTraktPopularMovies",
       cacheDuration: 3600,
       params: [
-        { name: "url", title: "🔗 片单地址", type: "input", description: "支持格式:桌面/移动端豆列、官方榜单、App dispatch" },
-        { name: "page", title: "页码", type: "page" }
+        { name: "page", title: "页码", type: "page" },
+        { name: "limit", title: "每页数量", type: "enumeration", value: "20", enumOptions: [
+          { title: "10个", value: "10" },
+          { title: "20个", value: "20" },
+          { title: "50个", value: "50" }
+        ]}
       ]
     },
     {
-      title: "豆瓣电影实时热榜",
-      description: "来自豆瓣的当前热门电影榜单",
+      title: "Trakt 热门剧集",
+      description: "来自Trakt的热门剧集榜单",
       requiresWebView: false,
-      functionName: "loadDoubanHotListWithTmdb",
+      functionName: "loadTraktPopularShows",
       cacheDuration: 3600,
       params: [
-        { name: "url", title: "🔗 列表地址", type: "constant", value: "https://www.douban.com/doubanapp/dispatch?uri=/subject_collection/movie_real_time_hotest/&dt_dapp=1" },
-        { name: "type", title: "🎭 类型", type: "constant", value: "movie" }
+        { name: "page", title: "页码", type: "page" },
+        { name: "limit", title: "每页数量", type: "enumeration", value: "20", enumOptions: [
+          { title: "10个", value: "10" },
+          { title: "20个", value: "20" },
+          { title: "50个", value: "50" }
+        ]}
+      ]
+    },
+    {
+      title: "Trakt 趋势电影",
+      description: "来自Trakt的趋势电影榜单",
+      requiresWebView: false,
+      functionName: "loadTraktTrendingMovies",
+      cacheDuration: 1800,
+      params: [
+        { name: "page", title: "页码", type: "page" },
+        { name: "limit", title: "每页数量", type: "enumeration", value: "20", enumOptions: [
+          { title: "10个", value: "10" },
+          { title: "20个", value: "20" },
+          { title: "50个", value: "50" }
+        ]}
+      ]
+    },
+    {
+      title: "Trakt 趋势剧集",
+      description: "来自Trakt的趋势剧集榜单",
+      requiresWebView: false,
+      functionName: "loadTraktTrendingShows",
+      cacheDuration: 1800,
+      params: [
+        { name: "page", title: "页码", type: "page" },
+        { name: "limit", title: "每页数量", type: "enumeration", value: "20", enumOptions: [
+          { title: "10个", value: "10" },
+          { title: "20个", value: "20" },
+          { title: "50个", value: "50" }
+        ]}
       ]
     }
   ]
@@ -1533,4 +1571,141 @@ function getTimePeriodName(time_period) {
     earlier: "早期"
   };
   return nameMap[time_period] || "全部时期";
+}
+
+// ===============Trakt功能函数===============
+
+// Trakt API配置
+const TRAKT_CLIENT_ID = 'your_trakt_client_id'; // 需要替换为实际的Trakt Client ID
+const TRAKT_CLIENT_SECRET = 'your_trakt_client_secret'; // 需要替换为实际的Trakt Client Secret
+
+// 格式化Trakt项目
+function formatTraktItem(item, type = "movie") {
+  if (!item.movie && !item.show) {
+    return null;
+  }
+  
+  const mediaItem = item.movie || item.show;
+  const year = mediaItem.year || "未知年份";
+  const title = mediaItem.title || "未知标题";
+  
+  return {
+    id: mediaItem.ids?.tmdb || mediaItem.ids?.trakt || mediaItem.ids?.slug,
+    type: "trakt",
+    title: title,
+    description: `年份: ${year} | 评分: ${item.rating || "无评分"} | 观看数: ${item.watchers || 0}`,
+    releaseDate: year,
+    posterPath: mediaItem.ids?.tmdb ? `https://image.tmdb.org/t/p/w500${mediaItem.ids.tmdb}` : "",
+    backdropPath: mediaItem.ids?.tmdb ? `https://image.tmdb.org/t/p/w1280${mediaItem.ids.tmdb}` : "",
+    rating: item.rating || "无评分",
+    mediaType: type,
+    genreTitle: "Trakt热门",
+    source: `Trakt ${type === "movie" ? "电影" : "剧集"}`,
+    watchers: item.watchers || 0,
+    playCount: item.play_count || 0
+  };
+}
+
+// 获取Trakt热门电影
+async function loadTraktPopularMovies(params = {}) {
+  const { page = 1, limit = 20 } = params;
+  
+  try {
+    const response = await Widget.http.get("https://api.trakt.tv/movies/popular", {
+      headers: {
+        "Content-Type": "application/json",
+        "trakt-api-version": "2",
+        "trakt-api-key": TRAKT_CLIENT_ID
+      },
+      params: {
+        page: page,
+        limit: limit
+      }
+    });
+    
+    return response.data
+      .map(item => formatTraktItem(item, "movie"))
+      .filter(item => item !== null);
+  } catch (error) {
+    console.error("Error fetching Trakt popular movies:", error);
+    return [];
+  }
+}
+
+// 获取Trakt热门剧集
+async function loadTraktPopularShows(params = {}) {
+  const { page = 1, limit = 20 } = params;
+  
+  try {
+    const response = await Widget.http.get("https://api.trakt.tv/shows/popular", {
+      headers: {
+        "Content-Type": "application/json",
+        "trakt-api-version": "2",
+        "trakt-api-key": TRAKT_CLIENT_ID
+      },
+      params: {
+        page: page,
+        limit: limit
+      }
+    });
+    
+    return response.data
+      .map(item => formatTraktItem(item, "tv"))
+      .filter(item => item !== null);
+  } catch (error) {
+    console.error("Error fetching Trakt popular shows:", error);
+    return [];
+  }
+}
+
+// 获取Trakt趋势电影
+async function loadTraktTrendingMovies(params = {}) {
+  const { page = 1, limit = 20 } = params;
+  
+  try {
+    const response = await Widget.http.get("https://api.trakt.tv/movies/trending", {
+      headers: {
+        "Content-Type": "application/json",
+        "trakt-api-version": "2",
+        "trakt-api-key": TRAKT_CLIENT_ID
+      },
+      params: {
+        page: page,
+        limit: limit
+      }
+    });
+    
+    return response.data
+      .map(item => formatTraktItem(item, "movie"))
+      .filter(item => item !== null);
+  } catch (error) {
+    console.error("Error fetching Trakt trending movies:", error);
+    return [];
+  }
+}
+
+// 获取Trakt趋势剧集
+async function loadTraktTrendingShows(params = {}) {
+  const { page = 1, limit = 20 } = params;
+  
+  try {
+    const response = await Widget.http.get("https://api.trakt.tv/shows/trending", {
+      headers: {
+        "Content-Type": "application/json",
+        "trakt-api-version": "2",
+        "trakt-api-key": TRAKT_CLIENT_ID
+      },
+      params: {
+        page: page,
+        limit: limit
+      }
+    });
+    
+    return response.data
+      .map(item => formatTraktItem(item, "tv"))
+      .filter(item => item !== null);
+  } catch (error) {
+    console.error("Error fetching Trakt trending shows:", error);
+    return [];
+  }
 }
