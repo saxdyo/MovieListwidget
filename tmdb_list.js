@@ -623,140 +623,7 @@ WidgetMetadata = {
       functionName: "bangumiHotNewAnime",
       cacheDuration: 1800,
       params: [
-        {
-          name: "season_year",
-          title: "📅年份",
-          type: "enumeration",
-          description: "选择新番年份",
-          value: "2024",
-          enumOptions: [
-            { title: "2024年", value: "2024" },
-            { title: "2023年", value: "2023" },
-            { title: "2022年", value: "2022" },
-            { title: "2021年", value: "2021" },
-            { title: "2020年", value: "2020" },
-            { title: "2019年", value: "2019" },
-            { title: "2018年", value: "2018" },
-            { title: "2017年", value: "2017" },
-            { title: "2016年", value: "2016" },
-            { title: "2015年", value: "2015" },
-            { title: "2014年", value: "2014" },
-            { title: "2013年", value: "2013" },
-            { title: "2012年", value: "2012" },
-            { title: "2011年", value: "2011" },
-            { title: "2010年", value: "2010" },
-            { title: "2009年", value: "2009" },
-            { title: "2008年", value: "2008" },
-            { title: "2007年", value: "2007" },
-            { title: "2006年", value: "2006" },
-            { title: "2005年", value: "2005" },
-            { title: "2004年", value: "2004" },
-            { title: "2003年", value: "2003" },
-            { title: "2002年", value: "2002" },
-            { title: "2001年", value: "2001" },
-            { title: "2000年", value: "2000" },
-            { title: "1999年", value: "1999" },
-            { title: "1998年", value: "1998" },
-            { title: "1997年", value: "1997" },
-            { title: "1996年", value: "1996" },
-            { title: "1995年", value: "1995" },
-            { title: "1994年", value: "1994" },
-            { title: "1993年", value: "1993" },
-            { title: "1992年", value: "1992" },
-            { title: "1991年", value: "1991" },
-            { title: "1990年", value: "1990" },
-            { title: "1989年", value: "1989" },
-            { title: "1988年", value: "1988" },
-            { title: "1987年", value: "1987" },
-            { title: "1986年", value: "1986" },
-            { title: "1985年", value: "1985" },
-            { title: "1984年", value: "1984" },
-            { title: "1983年", value: "1983" },
-            { title: "1982年", value: "1982" },
-            { title: "1981年", value: "1981" },
-            { title: "1980年", value: "1980" },
-            { title: "1979年", value: "1979" },
-            { title: "1978年", value: "1978" },
-            { title: "1977年", value: "1977" },
-            { title: "1976年", value: "1976" },
-            { title: "1975年", value: "1975" },
-            { title: "1974年", value: "1974" },
-            { title: "1973年", value: "1973" },
-            { title: "1972年", value: "1972" },
-            { title: "1971年", value: "1971" },
-            { title: "1970年", value: "1970" },
-            { title: "1969年", value: "1969" },
-            { title: "1968年", value: "1968" },
-            { title: "1967年", value: "1967" },
-            { title: "1966年", value: "1966" },
-            { title: "1965年", value: "1965" },
-            { title: "1964年", value: "1964" },
-            { title: "1963年", value: "1963" },
-            { title: "1962年", value: "1962" },
-            { title: "1961年", value: "1961" },
-            { title: "1960年", value: "1960" },
-            { title: "1959年", value: "1959" },
-            { title: "1958年", value: "1958" },
-            { title: "1957年", value: "1957" },
-            { title: "1956年", value: "1956" },
-            { title: "1955年", value: "1955" },
-            { title: "1954年", value: "1954" },
-            { title: "1953年", value: "1953" },
-            { title: "1952年", value: "1952" },
-            { title: "1951年", value: "1951" },
-            { title: "1950年", value: "1950" },
-            { title: "1949年", value: "1949" },
-            { title: "1948年", value: "1948" },
-            { title: "1947年", value: "1947" },
-            { title: "1946年", value: "1946" },
-            { title: "1945年", value: "1945" },
-            { title: "1944年", value: "1944" },
-            { title: "1943年", value: "1943" },
-            { title: "1942年", value: "1942" },
-            { title: "1941年", value: "1941" },
-            { title: "1940年", value: "1940" },
-            { title: "1939年", value: "1939" },
-            { title: "1938年", value: "1938" },
-            { title: "1937年", value: "1937" },
-            { title: "1936年", value: "1936" },
-            { title: "1935年", value: "1935" },
-            { title: "1934年", value: "1934" },
-            { title: "1933年", value: "1933" },
-            { title: "1932年", value: "1932" },
-            { title: "1931年", value: "1931" },
-            { title: "1930年", value: "1930" },
-            { title: "1929年", value: "1929" },
-            { title: "1928年", value: "1928" },
-            { title: "1927年", value: "1927" },
-            { title: "1926年", value: "1926" },
-            { title: "1925年", value: "1925" },
-            { title: "1924年", value: "1924" },
-            { title: "1923年", value: "1923" },
-            { title: "1922年", value: "1922" },
-            { title: "1921年", value: "1921" },
-            { title: "1920年", value: "1920" },
-            { title: "1919年", value: "1919" },
-            { title: "1918年", value: "1918" },
-            { title: "1917年", value: "1917" },
-            { title: "1916年", value: "1916" },
-            { title: "1915年", value: "1915" },
-            { title: "1914年", value: "1914" },
-            { title: "1913年", value: "1913" },
-            { title: "1912年", value: "1912" },
-            { title: "1911年", value: "1911" },
-            { title: "1910年", value: "1910" },
-            { title: "1909年", value: "1909" },
-            { title: "1908年", value: "1908" },
-            { title: "1907年", value: "1907" },
-            { title: "1906年", value: "1906" },
-            { title: "1905年", value: "1905" },
-            { title: "1904年", value: "1904" },
-            { title: "1903年", value: "1903" },
-            { title: "1902年", value: "1902" },
-            { title: "1901年", value: "1901" },
-            { title: "1900年", value: "1900" }
-          ]
-        },
+
         {
           name: "with_origin_country",
           title: "🌸制作地区",
@@ -938,6 +805,11 @@ async function fetchTmdbGenres() {
 
 // 格式化每个影视项目
 function formatTmdbItem(item, genreMap) {
+  // 检查是否有海报或壁纸，如果没有则不显示
+  if (!item.poster_path && !item.backdrop_path) {
+    return null;
+  }
+  
   return {
     id: item.id,
     type: "tmdb",
@@ -960,7 +832,7 @@ async function loadTodayGlobalMedia(params = {}) {
       params: { language, api_key: API_KEY }
     });
     const genreMap = await fetchTmdbGenres();
-    return res.results.map(item => formatTmdbItem(item, genreMap.movie));
+    return res.results.map(item => formatTmdbItem(item, genreMap.movie)).filter(item => item !== null);
   } catch (error) {
     console.error("Error fetching trending media:", error);
     return [];
@@ -975,7 +847,7 @@ async function loadWeekGlobalMovies(params = {}) {
       params: { language, api_key: API_KEY }
     });
     const genreMap = await fetchTmdbGenres();
-    return res.results.map(item => formatTmdbItem(item, genreMap.movie));
+    return res.results.map(item => formatTmdbItem(item, genreMap.movie)).filter(item => item !== null);
   } catch (error) {
     console.error("Error fetching weekly global movies:", error);
     return [];
@@ -995,7 +867,7 @@ async function tmdbPopularMovies(params = {}) {
         params: { language, page, api_key: API_KEY }
       });
       const genreMap = await fetchTmdbGenres();
-      let results = res.results.map(item => formatTmdbItem(item, genreMap.movie));
+      let results = res.results.map(item => formatTmdbItem(item, genreMap.movie)).filter(item => item !== null);
       
       // 根据上映状态筛选
       if (air_status === 'released') {
@@ -1030,7 +902,7 @@ async function tmdbPopularMovies(params = {}) {
         params: queryParams
       });
       const genreMap = await fetchTmdbGenres();
-      return res.results.map(item => formatTmdbItem(item, genreMap.movie));
+      return res.results.map(item => formatTmdbItem(item, genreMap.movie)).filter(item => item !== null);
     }
   } catch (error) {
     console.error("Error fetching popular movies:", error);
@@ -1052,7 +924,7 @@ async function tmdbTopRated(params = {}) {
         params: { language, page, api_key: API_KEY }
       });
       const genreMap = await fetchTmdbGenres();
-      let results = res.results.map(item => formatTmdbItem(item, genreMap[type]));
+      let results = res.results.map(item => formatTmdbItem(item, genreMap[type])).filter(item => item !== null);
       
       // 根据上映状态筛选
       if (air_status === 'released') {
@@ -1096,7 +968,7 @@ async function tmdbTopRated(params = {}) {
         params: queryParams
       });
       const genreMap = await fetchTmdbGenres();
-      return res.results.map(item => formatTmdbItem(item, genreMap[type]));
+      return res.results.map(item => formatTmdbItem(item, genreMap[type])).filter(item => item !== null);
     }
   } catch (error) {
     console.error("Error fetching top rated:", error);
@@ -1130,7 +1002,7 @@ async function tmdbDiscoverByNetwork(params = {}) {
       params: queryParams
     });
     const genreMap = await fetchTmdbGenres();
-    return res.results.map(item => formatTmdbItem(item, genreMap.tv));
+    return res.results.map(item => formatTmdbItem(item, genreMap.tv)).filter(item => item !== null);
   } catch (error) {
     console.error("Error fetching discover by network:", error);
     return [];
@@ -1186,7 +1058,7 @@ async function tmdbDiscoverByCompany(params = {}) {
     });
     
     const genreMap = await fetchTmdbGenres();
-    return res.results.map(item => formatTmdbItem(item, genreMap[type]));
+    return res.results.map(item => formatTmdbItem(item, genreMap[type])).filter(item => item !== null);
   } catch (error) {
     console.error("Error fetching discover by company:", error);
     return [];
@@ -1264,11 +1136,14 @@ async function imdbPopularContent(params = {}) {
     const genreMap = await fetchTmdbGenres();
     return res.results.map(item => {
       const formattedItem = formatTmdbItem(item, genreMap[type]);
-      // 添加IMDB特殊标识
-      formattedItem.type = "imdb";
-      formattedItem.source = "IMDB高分精选";
-      return formattedItem;
-    });
+      if (formattedItem) {
+        // 添加IMDB特殊标识
+        formattedItem.type = "imdb";
+        formattedItem.source = "IMDB高分精选";
+        return formattedItem;
+      }
+      return null;
+    }).filter(item => item !== null);
   } catch (error) {
     console.error("Error fetching IMDB popular content:", error);
     return [];
@@ -1282,7 +1157,6 @@ async function bangumiHotNewAnime(params = {}) {
   const { 
     language = "zh-CN", 
     page = 1, 
-    season_year = "2024",
     with_origin_country = "JP",
     sort_by = "popularity.desc",
     vote_average_gte = "6.0",
@@ -1295,7 +1169,7 @@ async function bangumiHotNewAnime(params = {}) {
     
     const endpoint = "/discover/tv";
     
-    // 构建查询参数 - 专注指定年份的新番
+    // 构建查询参数 - 专注新番动画
     const queryParams = { 
       language, 
       page, 
@@ -1303,7 +1177,6 @@ async function bangumiHotNewAnime(params = {}) {
       api_key: API_KEY,
       // 新番动画筛选
       with_genres: "16", // 动画类型
-      first_air_date_year: season_year, // 指定年份新番
       vote_count_gte: 10  // 新番投票较少，降低门槛
     };
     
@@ -1332,13 +1205,15 @@ async function bangumiHotNewAnime(params = {}) {
     const genreMap = await fetchTmdbGenres();
     return res.results.map(item => {
       const formattedItem = formatTmdbItem(item, genreMap.tv);
-      // 添加Bangumi新番标识
-      formattedItem.type = "bangumi-new";
-      formattedItem.source = `Bangumi ${season_year}年新番`;
-      formattedItem.seasonYear = season_year;
-      formattedItem.isNewAnime = true;
-      return formattedItem;
-    });
+      if (formattedItem) {
+        // 添加Bangumi新番标识
+        formattedItem.type = "bangumi-new";
+        formattedItem.source = "Bangumi热门新番";
+        formattedItem.isNewAnime = true;
+        return formattedItem;
+      }
+      return null;
+    }).filter(item => item !== null);
   } catch (error) {
     console.error("Error fetching Bangumi hot new anime:", error);
     return [];
@@ -1423,12 +1298,15 @@ async function bangumiRankingList(params = {}) {
     const genreMap = await fetchTmdbGenres();
     return res.results.map(item => {
       const formattedItem = formatTmdbItem(item, genreMap.tv);
-      // 添加排行榜标识
-      formattedItem.type = "bangumi-ranking";
-      formattedItem.source = `Bangumi${getRankingTypeName(ranking_type)}`;
-      formattedItem.rankingType = ranking_type;
-      return formattedItem;
-    });
+      if (formattedItem) {
+        // 添加排行榜标识
+        formattedItem.type = "bangumi-ranking";
+        formattedItem.source = `Bangumi${getRankingTypeName(ranking_type)}`;
+        formattedItem.rankingType = ranking_type;
+        return formattedItem;
+      }
+      return null;
+    }).filter(item => item !== null);
   } catch (error) {
     console.error("Error fetching Bangumi ranking list:", error);
     return [];
@@ -1506,12 +1384,15 @@ async function tmdbPopularTVShows(params = {}) {
     const genreMap = await fetchTmdbGenres();
     return res.results.map(item => {
       const formattedItem = formatTmdbItem(item, genreMap.tv);
-      // 添加剧集特殊标识
-      formattedItem.type = "tmdb-tv";
-      formattedItem.source = "TMDB热门剧集";
-      formattedItem.contentType = "TV剧集";
-      return formattedItem;
-    });
+      if (formattedItem) {
+        // 添加剧集特殊标识
+        formattedItem.type = "tmdb-tv";
+        formattedItem.source = "TMDB热门剧集";
+        formattedItem.contentType = "TV剧集";
+        return formattedItem;
+      }
+      return null;
+    }).filter(item => item !== null);
   } catch (error) {
     console.error("Error fetching TMDB popular TV shows:", error);
     return [];
@@ -1588,13 +1469,16 @@ async function tmdbTVShowsByTime(params = {}) {
     const genreMap = await fetchTmdbGenres();
     return res.results.map(item => {
       const formattedItem = formatTmdbItem(item, genreMap.tv);
-      // 添加时间榜标识
-      formattedItem.type = "tmdb-tv-time";
-      formattedItem.source = `TMDB ${getTimePeriodName(time_period)}剧集`;
-      formattedItem.timePeriod = time_period;
-      formattedItem.contentType = "时间榜剧集";
-      return formattedItem;
-    });
+      if (formattedItem) {
+        // 添加时间榜标识
+        formattedItem.type = "tmdb-tv-time";
+        formattedItem.source = `TMDB ${getTimePeriodName(time_period)}剧集`;
+        formattedItem.timePeriod = time_period;
+        formattedItem.contentType = "时间榜剧集";
+        return formattedItem;
+      }
+      return null;
+    }).filter(item => item !== null);
   } catch (error) {
     console.error("Error fetching TMDB TV shows by time:", error);
     return [];
