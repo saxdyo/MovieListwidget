@@ -479,73 +479,44 @@ WidgetMetadata = {
      // -------------豆瓣模块-------------
      // --- 片单解析 ---
      {
-       title: "豆瓣自定义片单",
-       description: "支持格式:桌面/移动端豆列、官方榜单、App dispatch",
+       title: "豆瓣片单(TMDB版)",
+       description: "豆瓣片单地址",
        requiresWebView: false,
-       functionName: "loadEnhancedDoubanList",
-       cacheDuration: 3600,
+       functionName: "loadCardItems",
+       cacheDuration: 43200,
        params: [
          {
-           name: "url", 
-           title: "🔗 片单地址", 
-           type: "input", 
-           description: "支持格式:桌面/移动端豆列、官方榜单、App dispatch",
+           name: "url",
+           title: "列表地址",
+           type: "input",
+           description: "豆瓣片单地址",
            placeholders: [
-               { title: "一周电影口碑榜", 
-               value: "https://www.douban.com/doubanapp/dispatch?uri=/subject_collection/movie_weekly_best/&dt_dapp=1" },
-               { title: "华语口碑剧集榜", 
-               value: "https://www.douban.com/doubanapp/dispatch?uri=/subject_collection/tv_chinese_best_weekly/&dt_dapp=1" },
-               { title: "全球口碑剧集榜", 
-               value: "https://www.douban.com/doubanapp/dispatch?uri=/subject_collection/tv_global_best_weekly/&dt_dapp=1" },
-               { title: "国内热播综艺", 
-               value: "https://www.douban.com/doubanapp/dispatch?uri=/subject_collection/show_domestic/&dt_dapp=1" },
-               { title: "国外热播综艺", 
-               value: "https://www.douban.com/doubanapp/dispatch?uri=/subject_collection/show_foreign/&dt_dapp=1" },
-               { title: "当地影院热映", 
-               value: "https://www.douban.com/doubanapp/dispatch?uri=/subject_collection/movie_showing/&dt_dapp=1" }
+             { title: "豆瓣热门电影", value: "https://m.douban.com/subject_collection/movie_hot_gaia" },
+             { title: "热播新剧", value: "https://m.douban.com/subject_collection/tv_hot" },
+             { title: "热播综艺", value: "https://m.douban.com/subject_collection/show_hot" },
+             { title: "热播动漫", value: "https://m.douban.com/subject_collection/tv_animation" },
+             { title: "影院热映", value: "https://m.douban.com/subject_collection/movie_showing" },
+             { title: "实时热门电影", value: "https://m.douban.com/subject_collection/movie_real_time_hotest" },
+             { title: "实时热门电视", value: "https://m.douban.com/subject_collection/tv_real_time_hotest" },
+             { title: "豆瓣 Top 250", value: "https://m.douban.com/subject_collection/movie_top250" },
+             { title: "一周电影口碑榜", value: "https://m.douban.com/subject_collection/movie_weekly_best" },
+             { title: "华语口碑剧集榜", value: "https://m.douban.com/subject_collection/tv_chinese_best_weekly" },
+             { title: "全球口碑剧集榜", value: "https://m.douban.com/subject_collection/tv_global_best_weekly" },
+             { title: "国内综艺口碑榜", value: "https://m.douban.com/subject_collection/show_chinese_best_weekly" },
+             { title: "全球综艺口碑榜", value: "https://m.douban.com/subject_collection/show_global_best_weekly" },
+             { title: "第97届奥斯卡", value: "https://m.douban.com/subject_collection/EC7I7ZDRA?type=rank" },
+             { title: "IMDB MOVIE TOP 250", value: "https://m.douban.com/doulist/1518184" },
+             { title: "IMDB TV TOP 250", value: "https://m.douban.com/doulist/41573512" },
+             { title: "意外结局电影", value: "https://m.douban.com/doulist/11324" }
            ]
          },
-         { name: "page", title: "页码", type: "page" }
+         {
+           name: "page",
+           title: "页码",
+           type: "page"
+         }
        ]
-     },
-     {
-      title: "豆瓣片单(TMDB版)",
-      requiresWebView: false,
-      functionName: "loadCardItems",
-      cacheDuration: 43200,
-      params: [
-        {
-          name: "url",
-          title: "列表地址",
-          type: "input",
-          description: "豆瓣片单地址",
-          placeholders: [
-            { title: "豆瓣热门电影", value: "https://m.douban.com/subject_collection/movie_hot_gaia" },
-            { title: "热播新剧", value: "https://m.douban.com/subject_collection/tv_hot" },
-            { title: "热播综艺", value: "https://m.douban.com/subject_collection/show_hot" },
-            { title: "热播动漫", value: "https://m.douban.com/subject_collection/tv_animation" },
-            { title: "影院热映", value: "https://m.douban.com/subject_collection/movie_showing" },
-            { title: "实时热门电影", value: "https://m.douban.com/subject_collection/movie_real_time_hotest" },
-            { title: "实时热门电视", value: "https://m.douban.com/subject_collection/tv_real_time_hotest" },
-            { title: "豆瓣 Top 250", value: "https://m.douban.com/subject_collection/movie_top250" },
-            { title: "一周电影口碑榜", value: "https://m.douban.com/subject_collection/movie_weekly_best" },
-            { title: "华语口碑剧集榜", value: "https://m.douban.com/subject_collection/tv_chinese_best_weekly" },
-            { title: "全球口碑剧集榜", value: "https://m.douban.com/subject_collection/tv_global_best_weekly" },
-            { title: "国内综艺口碑榜", value: "https://m.douban.com/subject_collection/show_chinese_best_weekly" },
-            { title: "全球综艺口碑榜", value: "https://m.douban.com/subject_collection/show_global_best_weekly" },
-            { title: "第97届奥斯卡", value: "https://m.douban.com/subject_collection/EC7I7ZDRA?type=rank" },
-            { title: "IMDB MOVIE TOP 250", value: "https://m.douban.com/doulist/1518184" },
-            { title: "IMDB TV TOP 250", value: "https://m.douban.com/doulist/41573512" },
-            { title: "意外结局电影", value: "https://m.douban.com/doulist/11324" }
-          ]
-        },
-        {
-          name: "page",
-          title: "页码",
-          type: "page"
-        }
-      ]
-    }
+     }
 
    ]
  };
