@@ -666,22 +666,53 @@ WidgetMetadata = {
 
 const API_KEY = 'f3ae69ddca232b56265600eb919d46ab'; // TMDB API Key
 
+// TMDB类型缓存
+let tmdbGenresCache = null;
+
 // 提取 TMDB 的种类信息
 async function fetchTmdbGenres() {
+  // 如果已有缓存，直接返回
+  if (tmdbGenresCache) {
+    return tmdbGenresCache;
+  }
+  
   try {
     const [movieGenres, tvGenres] = await Promise.all([
       Widget.tmdb.get('/genre/movie/list', { params: { language: 'zh-CN', api_key: API_KEY } }),
       Widget.tmdb.get('/genre/tv/list', { params: { language: 'zh-CN', api_key: API_KEY } })
     ]);
 
-    return {
+    const genreData = {
       movie: movieGenres.genres.reduce((acc, g) => ({ ...acc, [g.id]: g.name }), {}),
       tv: tvGenres.genres.reduce((acc, g) => ({ ...acc, [g.id]: g.name }), {})
     };
+    
+    // 缓存结果
+    tmdbGenresCache = genreData;
+    return genreData;
   } catch (error) {
     console.error("Error fetching genres:", error);
-    return {};
+    return { movie: {}, tv: {} };
   }
+}
+
+// 获取TMDB类型标题（中文）
+function getTmdbGenreTitles(genreIds, mediaType) {
+  if (!Array.isArray(genreIds) || genreIds.length === 0) {
+    return '';
+  }
+  
+  // 如果没有缓存的类型数据，返回空字符串
+  if (!tmdbGenresCache) {
+    return '';
+  }
+  
+  const genres = tmdbGenresCache[mediaType] || {};
+  return genreIds
+    .slice(0, 3) // 最多显示3个类型
+    .map(id => genres[id])
+    .filter(Boolean)
+    .join('•');
 }
 
 // 格式化每个影视项目（优先中文）
@@ -920,7 +951,7 @@ async function loadTodayGlobalMedia(params = {}) {
         });
         const genreMap = await fetchTmdbGenres();
         return res.results
-            .map(item => formatTmdbItem(item, genreMap.movie))
+            .map(item => formatTmdbItem(item, genreMap))
             .filter(item => item.posterPath);
     }
   } catch (error) {
@@ -965,7 +996,7 @@ async function loadWeekGlobalMovies(params = {}) {
         });
         const genreMap = await fetchTmdbGenres();
         return res.results
-            .map(item => formatTmdbItem(item, genreMap.movie))
+            .map(item => formatTmdbItem(item, genreMap))
             .filter(item => item.posterPath);
     }
   } catch (error) {
@@ -1014,7 +1045,7 @@ async function tmdbPopularMovies(params = {}) {
         }
       });
       const genreMap = await fetchTmdbGenres();
-      return res.results.map(item => formatTmdbItem(item, genreMap.movie));
+      return res.results.map(item => formatTmdbItem(item, genreMap));
     } else {
       const res = await Widget.tmdb.get("/discover/movie", {
         params: { 
@@ -1026,7 +1057,7 @@ async function tmdbPopularMovies(params = {}) {
         }
       });
       const genreMap = await fetchTmdbGenres();
-      return res.results.map(item => formatTmdbItem(item, genreMap.movie));
+      return res.results.map(item => formatTmdbItem(item, genreMap));
     }
   } catch (error) {
     console.error("Error fetching popular movies:", error);
@@ -1089,7 +1120,7 @@ async function tmdbDiscoverByNetwork(params = {}) {
       }
     });
     const genreMap = await fetchTmdbGenres();
-    return res.results.map(item => formatTmdbItem(item, genreMap.tv));
+    return res.results.map(item => formatTmdbItem(item, genreMap));
   } catch (error) {
     console.error("Error fetching discover by network:", error);
     return [];
@@ -1182,7 +1213,7 @@ async function bangumiHotNewAnime(params = {}) {
     const genreMap = await fetchTmdbGenres();
     return res.results
       .map(item => {
-        const formattedItem = formatTmdbItem(item, genreMap.tv);
+        const formattedItem = formatTmdbItem(item, genreMap);
         // 添加Bangumi新番标识
         formattedItem.type = "bangumi-new";
         formattedItem.source = "Bangumi热门新番";
@@ -1243,7 +1274,7 @@ async function tmdbPopularTVShows(params = {}) {
     const genreMap = await fetchTmdbGenres();
     return res.results
       .map(item => {
-        const formattedItem = formatTmdbItem(item, genreMap.tv);
+        const formattedItem = formatTmdbItem(item, genreMap);
         // 添加剧集特殊标识
         formattedItem.type = "tmdb-tv";
         formattedItem.source = "TMDB热门剧集";
@@ -1332,7 +1363,7 @@ async function tmdbTVShowsByTime(params = {}) {
     const genreMap = await fetchTmdbGenres();
     return res.results
       .map(item => {
-        const formattedItem = formatTmdbItem(item, genreMap.tv);
+        const formattedItem = formatTmdbItem(item, genreMap);
         // 添加时间榜标识
         formattedItem.type = "tmdb-tv-time";
         formattedItem.source = `TMDB ${getTimePeriodName(time_period)}剧集`;
@@ -2198,5 +2229,8 @@ async function listAnime(params) {
 
 console.log("[IMDb-v2] ✨ 动画模块加载成功.");
 console.log("[优化] 所有TMDB模块已优化为中文优先显示");
+
+// 脚本加载完成，初始化错误处理
+console.log("[系统] 影视榜单脚本加载完成，所有模块已就绪");
 
 
