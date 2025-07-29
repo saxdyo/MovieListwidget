@@ -707,27 +707,108 @@ function formatTmdbItem(item, genreMap) {
   };
 }
 
-// 加载带标题横版海报的TMDB热门数据
+// 自己拉取和处理TMDB热门数据
 async function loadTmdbTrendingData() {
     try {
-        const response = await Widget.http.get("https://raw.githubusercontent.com/quantumultxx/ForwardWidgets/refs/heads/main/data/TMDB_Trending.json", {
-            timeout: 10000,
+        // 尝试从自己的数据源获取（替换为你的GitHub仓库地址）
+        const response = await Widget.http.get("https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/data/TMDB_Trending.json", {
+            timeout: 5000,
             headers: {'Cache-Control': 'no-cache'}
         });
         
-        // 检查数据是否为空或过期
         if (response.data && response.data.today_global && response.data.today_global.length > 0) {
-            console.log("[数据源] 成功获取预处理的热门数据");
+            console.log("[数据源] 成功获取第三方预处理数据");
             return response.data;
-        } else {
-            console.warn("[数据源] 预处理数据为空，将使用备用方案");
-            throw new Error("预处理数据为空");
         }
     } catch (error) {
-        console.error("[数据源] 获取预处理数据失败，使用备用方案:", error.message);
-        // 返回空数据，让函数回退到标准TMDB API
-        return null;
+        console.log("[数据源] 第三方数据不可用，使用自己的数据处理");
     }
+    
+    // 自己处理数据
+    return await generateOwnTrendingData();
+}
+
+// 自己生成热门数据（带标题横版海报）
+async function generateOwnTrendingData() {
+    // 检查缓存
+    const now = Date.now();
+    if (trendingDataCache && (now - trendingCacheTime) < TRENDING_CACHE_DURATION) {
+        console.log("[自建数据] 使用缓存的热门数据");
+        return trendingDataCache;
+    }
+    
+    try {
+        console.log("[自建数据] 开始生成热门数据...");
+        
+        // 并行获取多个数据源
+        const [todayTrending, weekTrending, popularMovies, genreMap] = await Promise.all([
+            Widget.tmdb.get("/trending/all/day", { params: { language: 'zh-CN', api_key: API_KEY } }),
+            Widget.tmdb.get("/trending/all/week", { params: { language: 'zh-CN', api_key: API_KEY } }),
+            Widget.tmdb.get("/movie/popular", { params: { language: 'zh-CN', api_key: API_KEY } }),
+            fetchTmdbGenres()
+        ]);
+        
+        // 处理今日热门数据
+        const today_global = await processMediaItems(todayTrending.results.slice(0, 20), genreMap);
+        
+        // 处理本周热门数据
+        const week_global_all = await processMediaItems(weekTrending.results.slice(0, 20), genreMap);
+        
+        // 处理热门电影数据
+        const popular_movies = await processMediaItems(popularMovies.results.slice(0, 15), genreMap, 'movie');
+        
+        const result = {
+            today_global,
+            week_global_all,
+            popular_movies
+        };
+        
+        // 缓存结果
+        trendingDataCache = result;
+        trendingCacheTime = now;
+        
+        console.log(`[自建数据] 生成完成并缓存: 今日${today_global.length}个, 本周${week_global_all.length}个, 热门电影${popular_movies.length}个`);
+        
+        return result;
+        
+    } catch (error) {
+        console.error("[自建数据] 生成失败:", error);
+        // 如果有旧缓存，则返回旧缓存
+        if (trendingDataCache) {
+            console.log("[自建数据] 使用旧缓存数据");
+            return trendingDataCache;
+        }
+        return { today_global: [], week_global_all: [], popular_movies: [] };
+    }
+}
+
+// 处理媒体项目数据
+async function processMediaItems(items, genreMap, forceType = null) {
+    return items
+        .filter(item => item.poster_path && item.backdrop_path && (item.title || item.name))
+        .map(item => {
+            const mediaType = forceType || item.media_type || (item.title ? 'movie' : 'tv');
+            const releaseDate = item.release_date || item.first_air_date || '';
+            const year = releaseDate ? releaseDate.substring(0, 4) : '';
+            
+            // 生成类型标签
+            const genreTitle = item.genre_ids ? 
+                getTmdbGenreTitles(item.genre_ids.slice(0, 2), mediaType) : '';
+            
+            return {
+                id: item.id,
+                title: item.title || item.name,
+                genreTitle: genreTitle,
+                rating: item.vote_average || 0,
+                overview: item.overview || '',
+                release_date: releaseDate,
+                year: year ? parseInt(year) : null,
+                poster_url: `https://image.tmdb.org/t/p/w500${item.poster_path}`,
+                // 使用backdrop作为横版海报（虽然没有标题，但是高质量的横版图）
+                title_backdrop: `https://image.tmdb.org/t/p/w1280${item.backdrop_path}`,
+                type: mediaType
+            };
+        });
 }
 
 // 获取当前热门电影与剧集（使用带标题的横版海报）
@@ -1824,6 +1905,9 @@ const DEBUG_LOG = true;
 
 // --- 缓存 ---
 let cachedData = {}; // 用于缓存单个分页文件的请求结果
+let trendingDataCache = null; // 缓存热门数据
+let trendingCacheTime = 0; // 缓存时间戳
+const TRENDING_CACHE_DURATION = 30 * 60 * 1000; // 30分钟缓存
 
 // 缓存清除器，用于绕过 GitHub CDN 缓存
 function getCacheBuster() {
