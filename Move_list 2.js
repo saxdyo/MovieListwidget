@@ -626,7 +626,7 @@ async function fetchTmdbGenres() {
 
 // 格式化每个影视项目
 function formatTmdbItem(item, genreMap) {
-  // 优先选用中文标题
+  // 优先选用简体中文标题
   function pickChinese(...args) {
     for (const str of args) {
       if (str && /[\u4e00-\u9fa5]/.test(str)) return str;
@@ -636,7 +636,7 @@ function formatTmdbItem(item, genreMap) {
   return {
     id: item.id,
     type: "tmdb",
-    title: pickChinese(item.original_title, item.original_name, item.title, item.name),
+    title: pickChinese(item.title_zh, item.original_title_zh, item.name_zh, item.original_name_zh, item.original_title, item.original_name, item.title, item.name),
     description: item.overview || "暂无简介",
     releaseDate: item.release_date || item.first_air_date || "未知日期",
     posterPath: item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : "",
