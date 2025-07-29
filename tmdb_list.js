@@ -292,6 +292,3 @@ async function doubanMixedRanking(params = {}) {
     return [];
   }
 }
-
-// 以下保留所有原有TMDB/IMDB/Bangumi函数，仅作过滤处理
-// 其余函数如 loadTodayGlobalMedia, loadWeekGlobalMovies, tmdbPopularMovies, tmdbTopRated, tmdbDiscoverByNetwork, tmdbDiscoverByCompany, imdbPopularContent, bangumiHotNewAnime, bangumiRankingList, tmdbPopularTVShows, tmdbTVShowsByTime 等保持不变，但统一在 map 后加 .filter(item => item !== null) 确保无海报不显示
