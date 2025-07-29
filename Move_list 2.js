@@ -538,8 +538,21 @@ WidgetMetadata = {
         {
           name: "genre",
           title: "主题类型",
-          type: "input",
-          description: "输入类型ID或名称，如18(剧情)、35(喜剧)等"
+          type: "enumeration",
+          description: "选择主题类型",
+          value: "18",
+          enumOptions: [
+            { title: "剧情", value: "18" },
+            { title: "喜剧", value: "35" },
+            { title: "动作", value: "28" },
+            { title: "爱情", value: "10749" },
+            { title: "科幻", value: "878" },
+            { title: "动画", value: "16" },
+            { title: "犯罪", value: "80" },
+            { title: "悬疑", value: "9648" },
+            { title: "恐怖", value: "27" },
+            { title: "纪录片", value: "99" }
+          ]
         },
         {
           name: "page",
