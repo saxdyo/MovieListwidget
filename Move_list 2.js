@@ -897,13 +897,14 @@ async function fetchTmdbGenres() {
 
 // 格式化每个影视项目
 function formatTmdbItem(item, genreMap) {
+  if (!item.poster_path) return null;
   return {
     id: item.id,
     type: "tmdb",
     title: item.title || item.name,
     description: item.overview || "暂无简介",
     releaseDate: item.release_date || item.first_air_date || "未知日期",
-    posterPath: item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : "",
+    posterPath: `https://image.tmdb.org/t/p/w500${item.poster_path}`,
     backdropPath: item.backdrop_path ? `https://image.tmdb.org/t/p/w1280${item.backdrop_path}` : "",
     rating: item.vote_average || "无评分",
     mediaType: item.media_type || (item.title ? "movie" : "tv"),
@@ -919,7 +920,7 @@ async function loadTodayGlobalMedia(params = {}) {
       params: { language, api_key: API_KEY }
     });
     const genreMap = await fetchTmdbGenres();
-    return res.results.map(item => formatTmdbItem(item, genreMap.movie));
+    return res.results.map(item => formatTmdbItem(item, genreMap.movie)).filter(Boolean);
   } catch (error) {
     console.error("Error fetching trending media:", error);
     return [];
@@ -934,7 +935,7 @@ async function loadWeekGlobalMovies(params = {}) {
       params: { language, api_key: API_KEY }
     });
     const genreMap = await fetchTmdbGenres();
-    return res.results.map(item => formatTmdbItem(item, genreMap.movie));
+    return res.results.map(item => formatTmdbItem(item, genreMap.movie)).filter(Boolean);
   } catch (error) {
     console.error("Error fetching weekly global movies:", error);
     return [];
@@ -951,7 +952,7 @@ async function tmdbPopularMovies(params = {}) {
         params: { language, page, api_key: API_KEY }
       });
       const genreMap = await fetchTmdbGenres();
-      return res.results.map(item => formatTmdbItem(item, genreMap.movie));
+      return res.results.map(item => formatTmdbItem(item, genreMap.movie)).filter(Boolean);
     } else {
       const res = await Widget.tmdb.get("/discover/movie", {
         params: { 
@@ -962,7 +963,7 @@ async function tmdbPopularMovies(params = {}) {
         }
       });
       const genreMap = await fetchTmdbGenres();
-      return res.results.map(item => formatTmdbItem(item, genreMap.movie));
+      return res.results.map(item => formatTmdbItem(item, genreMap.movie)).filter(Boolean);
     }
   } catch (error) {
     console.error("Error fetching popular movies:", error);
@@ -981,7 +982,7 @@ async function tmdbTopRated(params = {}) {
         params: { language, page, api_key: API_KEY }
       });
       const genreMap = await fetchTmdbGenres();
-      return res.results.map(item => formatTmdbItem(item, genreMap[type]));
+      return res.results.map(item => formatTmdbItem(item, genreMap[type])).filter(Boolean);
     } else {
       const endpoint = type === "movie" ? "/discover/movie" : "/discover/tv";
       const res = await Widget.tmdb.get(endpoint, {
@@ -993,7 +994,7 @@ async function tmdbTopRated(params = {}) {
         }
       });
       const genreMap = await fetchTmdbGenres();
-      return res.results.map(item => formatTmdbItem(item, genreMap[type]));
+      return res.results.map(item => formatTmdbItem(item, genreMap[type])).filter(Boolean);
     }
   } catch (error) {
     console.error("Error fetching top rated:", error);
@@ -1015,7 +1016,7 @@ async function tmdbDiscoverByNetwork(params = {}) {
       }
     });
     const genreMap = await fetchTmdbGenres();
-    return res.results.map(item => formatTmdbItem(item, genreMap.tv));
+    return res.results.map(item => formatTmdbItem(item, genreMap.tv)).filter(Boolean);
   } catch (error) {
     console.error("Error fetching discover by network:", error);
     return [];
@@ -1053,7 +1054,7 @@ async function tmdbDiscoverByCompany(params = {}) {
     });
     
     const genreMap = await fetchTmdbGenres();
-    return res.results.map(item => formatTmdbItem(item, genreMap[type]));
+    return res.results.map(item => formatTmdbItem(item, genreMap[type])).filter(Boolean);
   } catch (error) {
     console.error("Error fetching discover by company:", error);
     return [];
@@ -1116,7 +1117,7 @@ async function imdbPopularContent(params = {}) {
       formattedItem.type = "imdb";
       formattedItem.source = "IMDB高分精选";
       return formattedItem;
-    });
+    }).filter(Boolean);
   } catch (error) {
     console.error("Error fetching IMDB popular content:", error);
     return [];
@@ -1187,7 +1188,7 @@ async function imdbYearlySelection(params = {}) {
       formattedItem.source = `IMDB ${primary_release_year || '全年'}精选`;
       formattedItem.year = primary_release_year || new Date(item.release_date || item.first_air_date).getFullYear();
       return formattedItem;
-    });
+    }).filter(Boolean);
   } catch (error) {
     console.error("Error fetching IMDB yearly selection:", error);
     return [];
@@ -1246,7 +1247,7 @@ async function bangumiHotNewAnime(params = {}) {
       formattedItem.seasonYear = season_year;
       formattedItem.isNewAnime = true;
       return formattedItem;
-    });
+    }).filter(Boolean);
   } catch (error) {
     console.error("Error fetching Bangumi hot new anime:", error);
     return [];
@@ -1325,7 +1326,7 @@ async function bangumiRankingList(params = {}) {
       formattedItem.source = `Bangumi${getRankingTypeName(ranking_type)}`;
       formattedItem.rankingType = ranking_type;
       return formattedItem;
-    });
+    }).filter(Boolean);
   } catch (error) {
     console.error("Error fetching Bangumi ranking list:", error);
     return [];
@@ -1397,7 +1398,7 @@ async function tmdbPopularTVShows(params = {}) {
       formattedItem.source = "TMDB热门剧集";
       formattedItem.contentType = "TV剧集";
       return formattedItem;
-    });
+    }).filter(Boolean);
   } catch (error) {
     console.error("Error fetching TMDB popular TV shows:", error);
     return [];
@@ -1469,7 +1470,7 @@ async function tmdbTVShowsByTime(params = {}) {
       formattedItem.timePeriod = time_period;
       formattedItem.contentType = "时间榜剧集";
       return formattedItem;
-    });
+    }).filter(Boolean);
   } catch (error) {
     console.error("Error fetching TMDB TV shows by time:", error);
     return [];
