@@ -54,57 +54,6 @@ WidgetMetadata = {
           ]
         },
         {
-          name: "with_genres",
-          title: "🎬题材类型",
-          type: "multi_enumeration",
-          description: "选择要筛选的题材类型（可多选）",
-          value: [],
-          enumOptions: [
-            { title: "动作", value: "28" },
-            { title: "冒险", value: "12" },
-            { title: "动画", value: "16" },
-            { title: "喜剧", value: "35" },
-            { title: "犯罪", value: "80" },
-            { title: "纪录片", value: "99" },
-            { title: "剧情", value: "18" },
-            { title: "家庭", value: "10751" },
-            { title: "奇幻", value: "14" },
-            { title: "历史", value: "36" },
-            { title: "恐怖", value: "27" },
-            { title: "音乐", value: "10402" },
-            { title: "悬疑", value: "9648" },
-            { title: "爱情", value: "10749" },
-            { title: "科幻", value: "878" },
-            { title: "惊悚", value: "53" },
-            { title: "战争", value: "10752" },
-            { title: "西部", value: "37" }
-          ]
-        },
-        {
-          name: "with_origin_country",
-          title: "🌍地区筛选",
-          type: "multi_enumeration",
-          description: "按制片地区筛选内容（可多选）",
-          value: [],
-          enumOptions: [
-            { title: "美国", value: "US" },
-            { title: "中国", value: "CN" },
-            { title: "日本", value: "JP" },
-            { title: "韩国", value: "KR" },
-            { title: "英国", value: "GB" },
-            { title: "法国", value: "FR" },
-            { title: "德国", value: "DE" },
-            { title: "意大利", value: "IT" },
-            { title: "西班牙", value: "ES" },
-            { title: "俄罗斯", value: "RU" },
-            { title: "印度", value: "IN" },
-            { title: "泰国", value: "TH" },
-            { title: "加拿大", value: "CA" },
-            { title: "澳大利亚", value: "AU" },
-            { title: "墨西哥", value: "MX" }
-          ]
-        },
-        {
           name: "air_status",
           title: "上映状态",
           type: "enumeration",
@@ -155,57 +104,6 @@ WidgetMetadata = {
           ]
         },
         {
-          name: "with_genres",
-          title: "🎬题材类型",
-          type: "multi_enumeration",
-          description: "选择要筛选的题材类型（可多选）",
-          value: [],
-          enumOptions: [
-            { title: "动作", value: "28" },
-            { title: "冒险", value: "12" },
-            { title: "动画", value: "16" },
-            { title: "喜剧", value: "35" },
-            { title: "犯罪", value: "80" },
-            { title: "纪录片", value: "99" },
-            { title: "剧情", value: "18" },
-            { title: "家庭", value: "10751" },
-            { title: "奇幻", value: "14" },
-            { title: "历史", value: "36" },
-            { title: "恐怖", value: "27" },
-            { title: "音乐", value: "10402" },
-            { title: "悬疑", value: "9648" },
-            { title: "爱情", value: "10749" },
-            { title: "科幻", value: "878" },
-            { title: "惊悚", value: "53" },
-            { title: "战争", value: "10752" },
-            { title: "西部", value: "37" }
-          ]
-        },
-        {
-          name: "with_origin_country",
-          title: "🌍地区筛选",
-          type: "multi_enumeration",
-          description: "按制片地区筛选内容（可多选）",
-          value: [],
-          enumOptions: [
-            { title: "美国", value: "US" },
-            { title: "中国", value: "CN" },
-            { title: "日本", value: "JP" },
-            { title: "韩国", value: "KR" },
-            { title: "英国", value: "GB" },
-            { title: "法国", value: "FR" },
-            { title: "德国", value: "DE" },
-            { title: "意大利", value: "IT" },
-            { title: "西班牙", value: "ES" },
-            { title: "俄罗斯", value: "RU" },
-            { title: "印度", value: "IN" },
-            { title: "泰国", value: "TH" },
-            { title: "加拿大", value: "CA" },
-            { title: "澳大利亚", value: "AU" },
-            { title: "墨西哥", value: "MX" }
-          ]
-        },
-        {
           name: "air_status",
           title: "上映状态",
           type: "enumeration",
@@ -231,10 +129,11 @@ WidgetMetadata = {
         { 
           name: "with_networks",
           title: "播出平台",
-          type: "multi_enumeration",
-          description: "选择播出平台以查看其剧集内容（可多选）",
-          value: [],
+          type: "enumeration",
+          description: "选择一个平台以查看其剧集内容",
+          value: "",
           enumOptions: [
+            { title: "全部", value: "" },
             { title: "Tencent", value: "2007" },
             { title: "iQiyi", value: "1330" },
             { title: "Youku", value: "1419" },
@@ -247,10 +146,11 @@ WidgetMetadata = {
         {
           name: "with_genres",
           title: "🎭内容类型",
-          type: "multi_enumeration",
-          description: "选择要筛选的内容类型（可多选）",
-          value: [],
+          type: "enumeration",
+          description: "选择要筛选的内容类型",
+          value: "",
           enumOptions: [
+            { title: "全部类型", value: "" },
             { title: "动作", value: "28" },
             { title: "科幻", value: "878" },
             { title: "爱情", value: "10749" }
@@ -299,10 +199,11 @@ WidgetMetadata = {
         { 
           name: "with_companies",
           title: "出品公司",
-          type: "multi_enumeration",
-          description: "选择出品公司查看其作品（可多选）",
-          value: [],
+          type: "enumeration",
+          description: "选择一个出品公司查看其作品",
+          value: "",
           enumOptions: [
+            { title: "全部", value: "" },
             { title: "漫威影业 (Marvel Studios)", value: "420" },
             { title: "华特迪士尼 (Walt Disney Pictures)", value: "2" },
             { title: "华纳兄弟 (Warner Bros.)", value: "174" },
@@ -334,10 +235,11 @@ WidgetMetadata = {
         {
           name: "with_genres",
           title: "🎬题材类型",
-          type: "multi_enumeration",
-          description: "选择要筛选的题材类型（可多选）",
-          value: [],
+          type: "enumeration",
+          description: "选择要筛选的题材类型",
+          value: "",
           enumOptions: [
+            { title: "全部类型", value: "" },
             { title: "动作", value: "28" },
             { title: "冒险", value: "12" },
             { title: "动画", value: "16" },
@@ -975,15 +877,7 @@ async function loadWeekGlobalMovies(params = {}) {
 
 // 获取当前热门电影
 async function tmdbPopularMovies(params = {}) {
-  const { 
-    language = "zh-CN", 
-    page = 1, 
-    with_genres = [],
-    with_origin_country = [],
-    sort_by = "popularity.desc", 
-    air_status 
-  } = params;
-  
+  const { language = "zh-CN", page = 1, sort_by = "popularity.desc", air_status } = params;
   try {
     // 获取北京时间
     const beijingDate = getBeijingDate();
@@ -1017,16 +911,6 @@ async function tmdbPopularMovies(params = {}) {
         sort_by,
         api_key: API_KEY 
       };
-      
-      // 添加题材类型筛选（支持多选）
-      if (with_genres && Array.isArray(with_genres) && with_genres.length > 0) {
-        queryParams.with_genres = with_genres.join(',');
-      }
-      
-      // 添加制作地区筛选（支持多选）
-      if (with_origin_country && Array.isArray(with_origin_country) && with_origin_country.length > 0) {
-        queryParams.with_origin_country = with_origin_country.join(',');
-      }
       
       // 添加上映状态筛选
       if (air_status === 'released') {
@@ -1115,15 +999,7 @@ async function tmdbTopRated(params = {}) {
 
 // 获取播出平台内容
 async function tmdbDiscoverByNetwork(params = {}) {
-  const { 
-    language = "zh-CN", 
-    page = 1, 
-    with_networks = [],
-    with_genres = [],
-    sort_by = "popularity.desc", 
-    air_status 
-  } = params;
-  
+  const { language = "zh-CN", page = 1, with_networks, sort_by = "popularity.desc", air_status } = params;
   try {
     // 获取北京时间
     const beijingDate = getBeijingDate();
@@ -1131,19 +1007,10 @@ async function tmdbDiscoverByNetwork(params = {}) {
     const queryParams = { 
       language, 
       page, 
+      with_networks,
       sort_by,
       api_key: API_KEY 
     };
-    
-    // 添加播出平台筛选（支持多选）
-    if (with_networks && Array.isArray(with_networks) && with_networks.length > 0) {
-      queryParams.with_networks = with_networks.join(',');
-    }
-    
-    // 添加内容类型筛选（支持多选）
-    if (with_genres && Array.isArray(with_genres) && with_genres.length > 0) {
-      queryParams.with_genres = with_genres.join(',');
-    }
     
     // 添加上映状态筛选
     if (air_status === 'released') {
@@ -1165,16 +1032,7 @@ async function tmdbDiscoverByNetwork(params = {}) {
 
 // 获取出品公司内容
 async function tmdbDiscoverByCompany(params = {}) {
-  const { 
-    language = "zh-CN", 
-    page = 1, 
-    with_companies = [],
-    type = "movie", 
-    with_genres = [],
-    sort_by = "popularity.desc", 
-    air_status 
-  } = params;
-  
+  const { language = "zh-CN", page = 1, with_companies, type = "movie", with_genres, sort_by = "popularity.desc", air_status } = params;
   try {
     // 获取北京时间
     const beijingDate = getBeijingDate();
@@ -1190,14 +1048,14 @@ async function tmdbDiscoverByCompany(params = {}) {
       api_key: API_KEY
     };
     
-    // 添加出品公司过滤器（支持多选）
-    if (with_companies && Array.isArray(with_companies) && with_companies.length > 0) {
-      queryParams.with_companies = with_companies.join(',');
+    // 添加出品公司过滤器
+    if (with_companies) {
+      queryParams.with_companies = with_companies;
     }
     
-    // 添加题材类型过滤器（支持多选）
-    if (with_genres && Array.isArray(with_genres) && with_genres.length > 0) {
-      queryParams.with_genres = with_genres.join(',');
+    // 添加题材类型过滤器
+    if (with_genres) {
+      queryParams.with_genres = with_genres;
     }
     
     // 添加上映状态筛选
