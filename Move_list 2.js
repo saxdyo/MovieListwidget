@@ -777,97 +777,8 @@ WidgetMetadata = {
       functionName: "loadDoubanHotListWithTmdb",
       cacheDuration: 3600,
       params: [
-        { name: "url", type: "constant", value: "https://www.douban.com/doubanapp/dispatch?uri=/subject_collection/movie_real_time_hotest/&dt_dapp=1" },
-        { name: "type", type: "constant", value: "movie" }
-      ]
-    },
-    // ↓↓↓ 新增 8 个豆瓣热门片单 ↓↓↓
-    {
-      title: "豆瓣一周口碑榜",
-      description: "豆瓣电影每周口碑榜 Top10",
-      requiresWebView: false,
-      functionName: "loadEnhancedDoubanList",
-      cacheDuration: 3600,
-      params: [
-        { name: "url", type: "constant", value: "https://m.douban.com/rexxar/api/v2/subject_collection/movie_weekly_best/items?start=0&count=20" },
-        { name: "page", type: "page" }
-      ]
-    },
-    {
-      title: "豆瓣实时热门电影",
-      description: "此刻正在热搜的电影",
-      requiresWebView: false,
-      functionName: "loadEnhancedDoubanList",
-      cacheDuration: 1800,
-      params: [
-        { name: "url", type: "constant", value: "https://m.douban.com/rexxar/api/v2/subject_collection/movie_real_time_hotest/items?start=0&count=20" },
-        { name: "page", type: "page" }
-      ]
-    },
-    {
-      title: "豆瓣热门剧集",
-      description: "近期热度最高的剧集",
-      requiresWebView: false,
-      functionName: "loadEnhancedDoubanList",
-      cacheDuration: 1800,
-      params: [
-        { name: "url", type: "constant", value: "https://m.douban.com/rexxar/api/v2/subject_collection/tv_hot/items?start=0&count=20" },
-        { name: "page", type: "page" }
-      ]
-    },
-    {
-      title: "豆瓣一周口碑剧集",
-      description: "上周评分最高的剧集",
-      requiresWebView: false,
-      functionName: "loadEnhancedDoubanList",
-      cacheDuration: 3600,
-      params: [
-        { name: "url", type: "constant", value: "https://m.douban.com/rexxar/api/v2/subject_collection/tv_weekly_best/items?start=0&count=20" },
-        { name: "page", type: "page" }
-      ]
-    },
-    {
-      title: "豆瓣华语口碑榜",
-      description: "近期最受好评的华语电影",
-      requiresWebView: false,
-      functionName: "loadEnhancedDoubanList",
-      cacheDuration: 3600,
-      params: [
-        { name: "url", type: "constant", value: "https://m.douban.com/rexxar/api/v2/subject_collection/movie_chinese_best_weekly/items?start=0&count=20" },
-        { name: "page", type: "page" }
-      ]
-    },
-    {
-      title: "豆瓣全球口碑榜",
-      description: "全球非华语高评分电影",
-      requiresWebView: false,
-      functionName: "loadEnhancedDoubanList",
-      cacheDuration: 3600,
-      params: [
-        { name: "url", type: "constant", value: "https://m.douban.com/rexxar/api/v2/subject_collection/movie_global_best_weekly/items?start=0&count=20" },
-        { name: "page", type: "page" }
-      ]
-    },
-    {
-      title: "豆瓣新片榜",
-      description: "本月最受关注的新上映电影",
-      requiresWebView: false,
-      functionName: "loadEnhancedDoubanList",
-      cacheDuration: 3600,
-      params: [
-        { name: "url", type: "constant", value: "https://m.douban.com/rexxar/api/v2/subject_collection/movie_latest/items?start=0&count=20" },
-        { name: "page", type: "page" }
-      ]
-    },
-    {
-      title: "豆瓣热门动画",
-      description: "近期热度最高的动画电影/剧集",
-      requiresWebView: false,
-      functionName: "loadEnhancedDoubanList",
-      cacheDuration: 1800,
-      params: [
-        { name: "url", type: "constant", value: "https://m.douban.com/rexxar/api/v2/subject_collection/tv_animation/items?start=0&count=20" },
-        { name: "page", type: "page" }
+        { name: "url", title: "🔗 列表地址", type: "constant", value: "https://www.douban.com/doubanapp/dispatch?uri=/subject_collection/movie_real_time_hotest/&dt_dapp=1" },
+        { name: "type", title: "🎭 类型", type: "constant", value: "movie" }
       ]
     }
   ]
@@ -875,8 +786,6 @@ WidgetMetadata = {
 
 const API_KEY = 'f3ae69ddca232b56265600eb919d46ab'; // TMDB API Key
 
-// 以下所有函数保持不变（loadTodayGlobalMedia, loadWeekGlobalMovies, tmdbPopularMovies, tmdbTopRated, tmdbDiscoverByNetwork, tmdbDiscoverByCompany, imdbPopularContent, imdbYearlySelection, bangumiHotNewAnime, bangumiRankingList, tmdbPopularTVShows, tmdbTVShowsByTime, fetchTmdbGenres, formatTmdbItem, getRankingTypeName, getTimePeriodDateRange, getTimePeriodName）
-// 由于篇幅限制，这里省略重复代码，请保留你原来的全部函数实现
 // 提取 TMDB 的种类信息
 async function fetchTmdbGenres() {
   try {
