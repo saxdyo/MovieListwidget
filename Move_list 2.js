@@ -684,26 +684,58 @@ async function fetchTmdbGenres() {
   }
 }
 
-// 格式化每个影视项目
+// 格式化每个影视项目（优先中文）
 function formatTmdbItem(item, genreMap) {
-  // 优先选用简体中文标题
-  function pickChinese(...args) {
+  // 优先选用中文标题（增强版）
+  function pickChineseTitle(...args) {
+    // 第一轮：寻找包含中文的标题
     for (const str of args) {
-      if (str && /[\u4e00-\u9fa5]/.test(str)) return str;
+      if (str && typeof str === 'string' && /[\u4e00-\u9fa5]/.test(str.trim())) {
+        return str.trim();
+      }
     }
-    return args.find(Boolean) || '';
+    // 第二轮：寻找非空标题
+    for (const str of args) {
+      if (str && typeof str === 'string' && str.trim().length > 0) {
+        return str.trim();
+      }
+    }
+    return '未知标题';
   }
+  
+  // 优先使用中文简介
+  function pickChineseDescription(overview) {
+    if (!overview || typeof overview !== 'string') return "暂无简介";
+    const trimmed = overview.trim();
+    return trimmed.length > 0 ? trimmed : "暂无简介";
+  }
+  
   return {
     id: item.id,
     type: "tmdb",
-    title: pickChinese(item.title_zh, item.original_title_zh, item.name_zh, item.original_name_zh, item.original_title, item.original_name, item.title, item.name),
-    description: item.overview || "暂无简介",
+    title: pickChineseTitle(
+      item.title_zh,          // 中文标题
+      item.name_zh,           // 中文剧集名
+      item.original_title_zh, // 中文原始标题
+      item.original_name_zh,  // 中文原始剧集名
+      item.title,             // 标题
+      item.name,              // 剧集名
+      item.original_title,    // 原始标题
+      item.original_name      // 原始剧集名
+    ),
+    description: pickChineseDescription(item.overview),
     releaseDate: item.release_date || item.first_air_date || "未知日期",
     posterPath: item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : "",
     backdropPath: item.backdrop_path ? `https://image.tmdb.org/t/p/w1280${item.backdrop_path}` : "",
-    rating: item.vote_average || "无评分",
+    coverUrl: item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : "",
+    rating: item.vote_average ? item.vote_average.toFixed(1) : "无评分",
     mediaType: item.media_type || (item.title ? "movie" : "tv"),
-    genreTitle: genreMap[item.genre_ids && item.genre_ids[0]] || "未知类型"
+    genreTitle: getTmdbGenreTitles(item.genre_ids || [], item.media_type || (item.title ? "movie" : "tv")) || "未知类型",
+    link: null,
+    duration: 0,
+    durationText: "",
+    episode: 0,
+    childItems: []
   };
 }
 
@@ -740,11 +772,29 @@ async function generateOwnTrendingData() {
     try {
         console.log("[自建数据] 开始生成热门数据...");
         
-        // 并行获取多个数据源
+        // 并行获取多个数据源（优先中文）
         const [todayTrending, weekTrending, popularMovies, genreMap] = await Promise.all([
-            Widget.tmdb.get("/trending/all/day", { params: { language: 'zh-CN', api_key: API_KEY } }),
-            Widget.tmdb.get("/trending/all/week", { params: { language: 'zh-CN', api_key: API_KEY } }),
-            Widget.tmdb.get("/movie/popular", { params: { language: 'zh-CN', api_key: API_KEY } }),
+            Widget.tmdb.get("/trending/all/day", { 
+                params: { 
+                    language: 'zh-CN',
+                    region: 'CN', 
+                    api_key: API_KEY 
+                } 
+            }),
+            Widget.tmdb.get("/trending/all/week", { 
+                params: { 
+                    language: 'zh-CN',
+                    region: 'CN', 
+                    api_key: API_KEY 
+                } 
+            }),
+            Widget.tmdb.get("/movie/popular", { 
+                params: { 
+                    language: 'zh-CN',
+                    region: 'CN', 
+                    api_key: API_KEY 
+                } 
+            }),
             fetchTmdbGenres()
         ]);
         
@@ -782,7 +832,17 @@ async function generateOwnTrendingData() {
     }
 }
 
-// 处理媒体项目数据
+// 优先选择中文内容的辅助函数
+function pickChineseContent(primaryCN, secondaryCN, primaryEN, secondaryEN, fallback = '') {
+    // 优先级：中文主要 > 中文次要 > 英文主要 > 英文次要 > 备用
+    if (primaryCN && /[\u4e00-\u9fa5]/.test(primaryCN)) return primaryCN;
+    if (secondaryCN && /[\u4e00-\u9fa5]/.test(secondaryCN)) return secondaryCN;
+    if (primaryEN && primaryEN.trim()) return primaryEN;
+    if (secondaryEN && secondaryEN.trim()) return secondaryEN;
+    return fallback;
+}
+
+// 处理媒体项目数据（优先中文）
 async function processMediaItems(items, genreMap, forceType = null) {
     return items
         .filter(item => item.poster_path && item.backdrop_path && (item.title || item.name))
@@ -791,16 +851,29 @@ async function processMediaItems(items, genreMap, forceType = null) {
             const releaseDate = item.release_date || item.first_air_date || '';
             const year = releaseDate ? releaseDate.substring(0, 4) : '';
             
-            // 生成类型标签
+            // 优先使用中文标题
+            const title = pickChineseContent(
+                item.title,           // 主要标题
+                item.name,            // 剧集名称
+                item.original_title,  // 原始标题
+                item.original_name,   // 原始名称
+                '未知标题'
+            );
+            
+            // 优先使用中文简介
+            const overview = item.overview && item.overview.trim() ? 
+                item.overview : '暂无简介';
+            
+            // 生成类型标签（中文）
             const genreTitle = item.genre_ids ? 
                 getTmdbGenreTitles(item.genre_ids.slice(0, 2), mediaType) : '';
             
             return {
                 id: item.id,
-                title: item.title || item.name,
+                title: title,
                 genreTitle: genreTitle,
                 rating: item.vote_average || 0,
-                overview: item.overview || '',
+                overview: overview,
                 release_date: releaseDate,
                 year: year ? parseInt(year) : null,
                 poster_url: `https://image.tmdb.org/t/p/w500${item.poster_path}`,
@@ -836,10 +909,14 @@ async function loadTodayGlobalMedia(params = {}) {
             childItems: []
         }));
     } else {
-        // 备用方案：使用标准TMDB API
+        // 备用方案：使用标准TMDB API（优先中文）
         console.log("[备用方案] 使用标准TMDB API获取今日热门");
         const res = await Widget.tmdb.get("/trending/all/day", { 
-            params: { language, api_key: API_KEY }
+            params: { 
+                language: 'zh-CN',
+                region: 'CN',
+                api_key: API_KEY 
+            }
         });
         const genreMap = await fetchTmdbGenres();
         return res.results
@@ -877,10 +954,14 @@ async function loadWeekGlobalMovies(params = {}) {
             childItems: []
         }));
     } else {
-        // 备用方案：使用标准TMDB API
+        // 备用方案：使用标准TMDB API（优先中文）
         console.log("[备用方案] 使用标准TMDB API获取本周热门");
         const res = await Widget.tmdb.get("/trending/all/week", { 
-            params: { language, api_key: API_KEY }
+            params: { 
+                language: 'zh-CN',
+                region: 'CN',
+                api_key: API_KEY 
+            }
         });
         const genreMap = await fetchTmdbGenres();
         return res.results
@@ -922,17 +1003,23 @@ async function tmdbPopularMovies(params = {}) {
             }));
     }
     
-    // 其他情况使用标准TMDB API
+    // 其他情况使用标准TMDB API（优先中文）
     if (sort_by.startsWith("popularity")) {
       const res = await Widget.tmdb.get("/movie/popular", { 
-        params: { language, page, api_key: API_KEY }
+        params: { 
+          language: 'zh-CN',
+          region: 'CN', 
+          page, 
+          api_key: API_KEY 
+        }
       });
       const genreMap = await fetchTmdbGenres();
       return res.results.map(item => formatTmdbItem(item, genreMap.movie));
     } else {
       const res = await Widget.tmdb.get("/discover/movie", {
         params: { 
-          language, 
+          language: 'zh-CN',
+          region: 'CN', 
           page, 
           sort_by,
           api_key: API_KEY 
@@ -955,7 +1042,12 @@ async function tmdbTopRated(params = {}) {
     if (sort_by.startsWith("vote_average")) {
       const api = type === "movie" ? "/movie/top_rated" : "/tv/top_rated";
       const res = await Widget.tmdb.get(api, { 
-        params: { language, page, api_key: API_KEY }
+        params: { 
+          language: 'zh-CN', 
+          region: 'CN',
+          page, 
+          api_key: API_KEY 
+        }
       });
       const genreMap = await fetchTmdbGenres();
       return res.results
@@ -965,7 +1057,8 @@ async function tmdbTopRated(params = {}) {
       const endpoint = type === "movie" ? "/discover/movie" : "/discover/tv";
       const res = await Widget.tmdb.get(endpoint, {
         params: { 
-          language, 
+          language: 'zh-CN',
+          region: 'CN', 
           page, 
           sort_by,
           api_key: API_KEY 
@@ -2104,5 +2197,6 @@ async function listAnime(params) {
 }
 
 console.log("[IMDb-v2] ✨ 动画模块加载成功.");
+console.log("[优化] 所有TMDB模块已优化为中文优先显示");
 
 
