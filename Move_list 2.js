@@ -758,428 +758,64 @@ WidgetMetadata = {
         { name: "language", title: "语言", type: "language", value: "zh-CN" }
       ]
     },
-    // -------------豆瓣片单模块（优化版）-------------
-    // 1. 豆瓣综合榜单
+    // -------------豆瓣片单模块（简化版）-------------
     {
-      title: "豆瓣综合榜单",
-      description: "豆瓣电影电视剧综合榜单，支持多维度筛选",
+      title: "豆瓣电影Top250",
+      description: "豆瓣评分最高的250部电影",
       requiresWebView: false,
-      functionName: "loadDoubanComprehensiveList",
+      functionName: "loadDoubanTop250Movies",
+      cacheDuration: 86400,
+      params: [
+        { name: "page", title: "页码", type: "page" }
+      ]
+    },
+    {
+      title: "豆瓣剧集Top250",
+      description: "豆瓣评分最高的250部电视剧",
+      requiresWebView: false,
+      functionName: "loadDoubanTop250TV",
+      cacheDuration: 86400,
+      params: [
+        { name: "page", title: "页码", type: "page" }
+      ]
+    },
+    {
+      title: "豆瓣热播剧集",
+      description: "当前热播的电视剧集",
+      requiresWebView: false,
+      functionName: "loadDoubanHotTV",
       cacheDuration: 3600,
       params: [
-        {
-          name: "content_type",
-          title: "🎭内容类型",
-          type: "enumeration",
-          description: "选择要查看的内容类型",
-          value: "movie",
-          enumOptions: [
-            { title: "电影", value: "movie" },
-            { title: "电视剧", value: "tv" },
-            { title: "综艺", value: "variety" },
-            { title: "纪录片", value: "documentary" },
-            { title: "动画", value: "animation" },
-            { title: "全部", value: "all" }
-          ]
-        },
-        {
-          name: "sort_by",
-          title: "📊排序方式",
-          type: "enumeration",
-          description: "选择排序方式",
-          value: "rating_desc",
-          enumOptions: [
-            { title: "豆瓣评分↓", value: "rating_desc" },
-            { title: "豆瓣评分↑", value: "rating_asc" },
-            { title: "上映时间↓", value: "release_date_desc" },
-            { title: "上映时间↑", value: "release_date_asc" },
-            { title: "热度↓", value: "popularity_desc" },
-            { title: "热度↑", value: "popularity_asc" },
-            { title: "评价人数↓", value: "vote_count_desc" },
-            { title: "评价人数↑", value: "vote_count_asc" },
-            { title: "片长↓", value: "duration_desc" },
-            { title: "片长↑", value: "duration_asc" }
-          ]
-        },
-        {
-          name: "region",
-          title: "🌍地区筛选",
-          type: "enumeration",
-          description: "按制作地区筛选内容",
-          value: "",
-          enumOptions: [
-            { title: "全部地区", value: "" },
-            { title: "中国大陆", value: "mainland_china" },
-            { title: "香港", value: "hong_kong" },
-            { title: "台湾", value: "taiwan" },
-            { title: "美国", value: "usa" },
-            { title: "日本", value: "japan" },
-            { title: "韩国", value: "korea" },
-            { title: "英国", value: "uk" },
-            { title: "法国", value: "france" },
-            { title: "德国", value: "germany" },
-            { title: "意大利", value: "italy" },
-            { title: "西班牙", value: "spain" },
-            { title: "俄罗斯", value: "russia" },
-            { title: "印度", value: "india" },
-            { title: "泰国", value: "thailand" },
-            { title: "其他亚洲", value: "other_asia" },
-            { title: "其他欧洲", value: "other_europe" }
-          ]
-        },
-        {
-          name: "genre",
-          title: "🎬题材类型",
-          type: "enumeration",
-          description: "按题材类型筛选",
-          value: "",
-          enumOptions: [
-            { title: "全部题材", value: "" },
-            { title: "剧情", value: "drama" },
-            { title: "喜剧", value: "comedy" },
-            { title: "动作", value: "action" },
-            { title: "爱情", value: "romance" },
-            { title: "科幻", value: "sci_fi" },
-            { title: "悬疑", value: "mystery" },
-            { title: "惊悚", value: "thriller" },
-            { title: "恐怖", value: "horror" },
-            { title: "犯罪", value: "crime" },
-            { title: "战争", value: "war" },
-            { title: "冒险", value: "adventure" },
-            { title: "奇幻", value: "fantasy" },
-            { title: "家庭", value: "family" },
-            { title: "音乐", value: "musical" },
-            { title: "历史", value: "history" },
-            { title: "传记", value: "biography" },
-            { title: "运动", value: "sport" },
-            { title: "西部", value: "western" }
-          ]
-        },
-        {
-          name: "year_range",
-          title: "📅年份范围",
-          type: "enumeration",
-          description: "按年份范围筛选",
-          value: "",
-          enumOptions: [
-            { title: "全部年份", value: "" },
-            { title: "2024年", value: "2024" },
-            { title: "2023年", value: "2023" },
-            { title: "2022年", value: "2022" },
-            { title: "2021年", value: "2021" },
-            { title: "2020年", value: "2020" },
-            { title: "2020年代", value: "2020s" },
-            { title: "2010年代", value: "2010s" },
-            { title: "2000年代", value: "2000s" },
-            { title: "1990年代", value: "1990s" },
-            { title: "1980年代", value: "1980s" },
-            { title: "更早", value: "earlier" }
-          ]
-        },
-        {
-          name: "rating_range",
-          title: "⭐评分范围",
-          type: "enumeration",
-          description: "设置豆瓣评分范围",
-          value: "",
-          enumOptions: [
-            { title: "全部评分", value: "" },
-            { title: "9.0分以上", value: "9.0+" },
-            { title: "8.5-9.0分", value: "8.5-9.0" },
-            { title: "8.0-8.5分", value: "8.0-8.5" },
-            { title: "7.5-8.0分", value: "7.5-8.0" },
-            { title: "7.0-7.5分", value: "7.0-7.5" },
-            { title: "6.5-7.0分", value: "6.5-7.0" },
-            { title: "6.0-6.5分", value: "6.0-6.5" },
-            { title: "6.0分以下", value: "6.0-" }
-          ]
-        },
         { name: "page", title: "页码", type: "page" }
       ]
     },
-    // 2. 豆瓣经典榜单
     {
-      title: "豆瓣经典榜单",
-      description: "豆瓣经典电影电视剧榜单",
+      title: "豆瓣热映电影",
+      description: "当前热映的电影",
       requiresWebView: false,
-      functionName: "loadDoubanClassicList",
-      cacheDuration: 86400,
+      functionName: "loadDoubanHotMovies",
+      cacheDuration: 3600,
       params: [
-        {
-          name: "list_type",
-          title: "🏆榜单类型",
-          type: "enumeration",
-          description: "选择经典榜单类型",
-          value: "top250",
-          enumOptions: [
-            { title: "豆瓣电影Top250", value: "top250" },
-            { title: "豆瓣电视剧Top100", value: "tv_top100" },
-            { title: "华语电影经典", value: "chinese_classic" },
-            { title: "欧美电影经典", value: "western_classic" },
-            { title: "日韩电影经典", value: "asian_classic" },
-            { title: "动画电影经典", value: "animation_classic" },
-            { title: "纪录片经典", value: "documentary_classic" },
-            { title: "短片经典", value: "short_classic" }
-          ]
-        },
-        {
-          name: "sort_by",
-          title: "📊排序方式",
-          type: "enumeration",
-          description: "选择排序方式",
-          value: "ranking",
-          enumOptions: [
-            { title: "榜单排名", value: "ranking" },
-            { title: "豆瓣评分↓", value: "rating_desc" },
-            { title: "上映时间↓", value: "release_date_desc" },
-            { title: "评价人数↓", value: "vote_count_desc" }
-          ]
-        },
         { name: "page", title: "页码", type: "page" }
       ]
     },
-    // 3. 豆瓣热门榜单
     {
-      title: "豆瓣热门榜单",
-      description: "豆瓣当前热门影视内容",
+      title: "豆瓣新片榜",
+      description: "最新上映的电影",
       requiresWebView: false,
-      functionName: "loadDoubanHotList",
-      cacheDuration: 1800,
+      functionName: "loadDoubanNewMovies",
+      cacheDuration: 3600,
       params: [
-        {
-          name: "hot_type",
-          title: "🔥热门类型",
-          type: "enumeration",
-          description: "选择热门榜单类型",
-          value: "hot_movies",
-          enumOptions: [
-            { title: "热门电影", value: "hot_movies" },
-            { title: "热门电视剧", value: "hot_tv" },
-            { title: "热播剧集", value: "trending_tv" },
-            { title: "新片热映", value: "new_releases" },
-            { title: "口碑佳作", value: "reputation" },
-            { title: "院线热映", value: "in_theaters" },
-            { title: "即将上映", value: "coming_soon" },
-            { title: "网络热播", value: "online_popular" }
-          ]
-        },
-        {
-          name: "region",
-          title: "🌍地区筛选",
-          type: "enumeration",
-          description: "按地区筛选热门内容",
-          value: "",
-          enumOptions: [
-            { title: "全部地区", value: "" },
-            { title: "华语", value: "chinese" },
-            { title: "欧美", value: "western" },
-            { title: "日韩", value: "asian" },
-            { title: "其他", value: "others" }
-          ]
-        },
-        {
-          name: "sort_by",
-          title: "📊排序方式",
-          type: "enumeration",
-          description: "选择排序方式",
-          value: "popularity_desc",
-          enumOptions: [
-            { title: "热度↓", value: "popularity_desc" },
-            { title: "豆瓣评分↓", value: "rating_desc" },
-            { title: "上映时间↓", value: "release_date_desc" },
-            { title: "评价人数↓", value: "vote_count_desc" }
-          ]
-        },
         { name: "page", title: "页码", type: "page" }
       ]
     },
-    // 4. 豆瓣年度榜单
     {
-      title: "豆瓣年度榜单",
-      description: "豆瓣年度影视作品榜单",
+      title: "豆瓣口碑榜",
+      description: "近期口碑最佳的影视作品",
       requiresWebView: false,
-      functionName: "loadDoubanYearlyList",
-      cacheDuration: 86400,
+      functionName: "loadDoubanReputationList",
+      cacheDuration: 3600,
       params: [
-        {
-          name: "year",
-          title: "📅年份选择",
-          type: "enumeration",
-          description: "选择年份",
-          value: "2024",
-          enumOptions: [
-            { title: "2024年", value: "2024" },
-            { title: "2023年", value: "2023" },
-            { title: "2022年", value: "2022" },
-            { title: "2021年", value: "2021" },
-            { title: "2020年", value: "2020" },
-            { title: "2019年", value: "2019" },
-            { title: "2018年", value: "2018" },
-            { title: "2017年", value: "2017" },
-            { title: "2016年", value: "2016" },
-            { title: "2015年", value: "2015" }
-          ]
-        },
-        {
-          name: "content_type",
-          title: "🎭内容类型",
-          type: "enumeration",
-          description: "选择内容类型",
-          value: "movie",
-          enumOptions: [
-            { title: "电影", value: "movie" },
-            { title: "电视剧", value: "tv" },
-            { title: "综艺", value: "variety" },
-            { title: "纪录片", value: "documentary" },
-            { title: "动画", value: "animation" }
-          ]
-        },
-        {
-          name: "region",
-          title: "🌍地区筛选",
-          type: "enumeration",
-          description: "按地区筛选",
-          value: "",
-          enumOptions: [
-            { title: "全部地区", value: "" },
-            { title: "华语", value: "chinese" },
-            { title: "欧美", value: "western" },
-            { title: "日韩", value: "asian" },
-            { title: "其他", value: "others" }
-          ]
-        },
-        {
-          name: "sort_by",
-          title: "📊排序方式",
-          type: "enumeration",
-          description: "选择排序方式",
-          value: "rating_desc",
-          enumOptions: [
-            { title: "豆瓣评分↓", value: "rating_desc" },
-            { title: "热度↓", value: "popularity_desc" },
-            { title: "上映时间↓", value: "release_date_desc" },
-            { title: "评价人数↓", value: "vote_count_desc" }
-          ]
-        },
-        { name: "page", title: "页码", type: "page" }
-      ]
-    },
-    // 5. 豆瓣主题片单
-    {
-      title: "豆瓣主题片单",
-      description: "豆瓣特色主题影视片单",
-      requiresWebView: false,
-      functionName: "loadDoubanThemeList",
-      cacheDuration: 86400,
-      params: [
-        {
-          name: "theme_type",
-          title: "🎨主题类型",
-          type: "enumeration",
-          description: "选择主题片单类型",
-          value: "hidden_gems",
-          enumOptions: [
-            { title: "高分冷门佳作", value: "hidden_gems" },
-            { title: "小众艺术电影", value: "art_house" },
-            { title: "经典老片重温", value: "classic_rewatch" },
-            { title: "女性视角电影", value: "female_perspective" },
-            { title: "青春校园题材", value: "youth_campus" },
-            { title: "科幻未来世界", value: "sci_fi_future" },
-            { title: "治愈温情故事", value: "healing_stories" },
-            { title: "黑色幽默作品", value: "dark_comedy" },
-            { title: "历史传记片", value: "historical_biography" },
-            { title: "音乐舞蹈片", value: "music_dance" },
-            { title: "悬疑烧脑片", value: "mind_bending" },
-            { title: "家庭亲情片", value: "family_bonds" }
-          ]
-        },
-        {
-          name: "content_type",
-          title: "🎭内容类型",
-          type: "enumeration",
-          description: "选择内容类型",
-          value: "all",
-          enumOptions: [
-            { title: "全部类型", value: "all" },
-            { title: "电影", value: "movie" },
-            { title: "电视剧", value: "tv" },
-            { title: "纪录片", value: "documentary" },
-            { title: "动画", value: "animation" }
-          ]
-        },
-        {
-          name: "region",
-          title: "🌍地区偏好",
-          type: "enumeration",
-          description: "按地区偏好筛选",
-          value: "",
-          enumOptions: [
-            { title: "全部地区", value: "" },
-            { title: "华语作品", value: "chinese" },
-            { title: "欧美作品", value: "western" },
-            { title: "日韩作品", value: "asian" },
-            { title: "其他地区", value: "others" }
-          ]
-        },
-        {
-          name: "rating_filter",
-          title: "⭐评分要求",
-          type: "enumeration",
-          description: "设置最低评分要求",
-          value: "7.0+",
-          enumOptions: [
-            { title: "无要求", value: "" },
-            { title: "6.0分以上", value: "6.0+" },
-            { title: "7.0分以上", value: "7.0+" },
-            { title: "8.0分以上", value: "8.0+" },
-            { title: "8.5分以上", value: "8.5+" }
-          ]
-        },
-        { name: "page", title: "页码", type: "page" }
-      ]
-    },
-    // 6. 豆瓣自定义搜索
-    {
-      title: "豆瓣自定义搜索",
-      description: "自定义关键词搜索豆瓣影视内容",
-      requiresWebView: false,
-      functionName: "loadDoubanCustomSearch",
-      cacheDuration: 1800,
-      params: [
-        { 
-          name: "keyword", 
-          title: "🔍搜索关键词", 
-          type: "input",
-          description: "输入电影/电视剧名称、演员、导演等关键词"
-        },
-        {
-          name: "search_type",
-          title: "🎯搜索类型",
-          type: "enumeration",
-          description: "选择搜索范围",
-          value: "all",
-          enumOptions: [
-            { title: "全部内容", value: "all" },
-            { title: "电影", value: "movie" },
-            { title: "电视剧", value: "tv" },
-            { title: "人物", value: "person" },
-            { title: "书籍", value: "book" },
-            { title: "音乐", value: "music" }
-          ]
-        },
-        {
-          name: "sort_by",
-          title: "📊排序方式",
-          type: "enumeration",
-          description: "搜索结果排序方式",
-          value: "relevance",
-          enumOptions: [
-            { title: "相关度", value: "relevance" },
-            { title: "豆瓣评分↓", value: "rating_desc" },
-            { title: "上映时间↓", value: "release_date_desc" },
-            { title: "热度↓", value: "popularity_desc" }
-          ]
-        },
         { name: "page", title: "页码", type: "page" }
       ]
     }
@@ -1845,427 +1481,118 @@ function getTimePeriodName(time_period) {
   return nameMap[time_period] || "全部时期";
 }
 
-// -------------豆瓣片单函数（优化实现）-------------
+// -------------豆瓣片单函数（简化版）-------------
 
-// 豆瓣数据格式化函数
-function formatDoubanItem(item, source = "豆瓣") {
+// 简单的豆瓣数据格式化函数
+function formatDoubanItem(item) {
   return {
-    id: item.id || item.subject?.id,
+    id: item.id,
     type: "douban",
-    title: item.title || item.subject?.title || item.name,
-    description: item.description || item.summary || item.subject?.summary || "暂无简介",
-    releaseDate: item.release_date || item.pubdate || item.subject?.pubdate || "未知日期",
-    posterPath: item.poster || item.pic?.large || item.subject?.pic?.large || item.image || "",
-    backdropPath: item.backdrop || item.pic?.large || item.subject?.pic?.large || "",
-    rating: item.rating?.average || item.subject?.rating?.average || "无评分",
-    ratingCount: item.rating?.numRaters || item.subject?.rating?.numRaters || 0,
-    genres: item.genres || item.subject?.genres || [],
-    directors: item.directors || item.subject?.directors || [],
-    actors: item.casts || item.subject?.casts || [],
-    countries: item.countries || item.subject?.countries || [],
-    languages: item.languages || item.subject?.languages || [],
-    duration: item.durations?.[0] || item.subject?.durations?.[0] || "",
-    year: item.year || item.subject?.year || new Date().getFullYear(),
-    source: source,
-    doubanUrl: `https://movie.douban.com/subject/${item.id || item.subject?.id}/`
+    title: item.title,
+    description: item.summary || "暂无简介",
+    releaseDate: item.pubdate || "未知日期",
+    posterPath: item.pic?.large || "",
+    rating: item.rating?.average || "无评分",
+    genreTitle: item.genres?.join("、") || "未知类型",
+    source: "豆瓣"
   };
 }
 
-// 1. 豆瓣综合榜单
-async function loadDoubanComprehensiveList(params = {}) {
-  const { 
-    page = 1, 
-    content_type = "movie", 
-    sort_by = "rating_desc", 
-    region = "", 
-    genre = "", 
-    year_range = "", 
-    rating_range = "" 
-  } = params;
-  
+// 1. 豆瓣电影Top250
+async function loadDoubanTop250Movies(params = {}) {
+  const { page = 1 } = params;
   try {
-    // 构建豆瓣API请求参数
-    const apiParams = {
-      start: (page - 1) * 20,
-      count: 20,
-      type: content_type === "all" ? "" : content_type
-    };
-    
-    // 添加地区筛选
-    if (region) {
-      apiParams.countries = getDoubanRegionCode(region);
-    }
-    
-    // 添加题材筛选
-    if (genre) {
-      apiParams.genres = getDoubanGenreCode(genre);
-    }
-    
-    // 添加年份筛选
-    if (year_range) {
-      const yearFilter = getDoubanYearRange(year_range);
-      if (yearFilter.start) apiParams.year_range = `${yearFilter.start},${yearFilter.end}`;
-    }
-    
-    // 添加评分筛选
-    if (rating_range) {
-      const ratingFilter = getDoubanRatingRange(rating_range);
-      if (ratingFilter.min) apiParams.rating = `${ratingFilter.min},${ratingFilter.max}`;
-    }
-    
-    // 添加排序参数
-    apiParams.sort = getDoubanSortCode(sort_by);
-    
-    // 模拟豆瓣API调用（实际应用中需要真实API）
-    const mockData = generateMockDoubanData(apiParams, "综合榜单");
-    
-    return mockData.map(item => formatDoubanItem(item, "豆瓣综合榜单"));
+    // 这里应该调用豆瓣API获取Top250电影数据
+    // 由于豆瓣API限制，这里使用模拟数据
+    const mockData = generateSimpleDoubanData(page, "豆瓣电影Top250");
+    return mockData.map(item => formatDoubanItem(item));
   } catch (error) {
-    console.error("Error fetching Douban comprehensive list:", error);
+    console.error("Error fetching Douban Top250 movies:", error);
     return [];
   }
 }
 
-// 2. 豆瓣经典榜单
-async function loadDoubanClassicList(params = {}) {
-  const { page = 1, list_type = "top250", sort_by = "ranking" } = params;
-  
+// 2. 豆瓣剧集Top250
+async function loadDoubanTop250TV(params = {}) {
+  const { page = 1 } = params;
   try {
-    const apiParams = {
-      start: (page - 1) * 20,
-      count: 20,
-      list_type: list_type,
-      sort: getDoubanSortCode(sort_by)
-    };
-    
-    // 根据榜单类型设置不同的数据源
-    const listConfig = getDoubanClassicListConfig(list_type);
-    const mockData = generateMockDoubanData(apiParams, listConfig.name);
-    
-    return mockData.map(item => formatDoubanItem(item, listConfig.name));
+    const mockData = generateSimpleDoubanData(page, "豆瓣剧集Top250");
+    return mockData.map(item => formatDoubanItem(item));
   } catch (error) {
-    console.error("Error fetching Douban classic list:", error);
+    console.error("Error fetching Douban Top250 TV:", error);
     return [];
   }
 }
 
-// 3. 豆瓣热门榜单
-async function loadDoubanHotList(params = {}) {
-  const { page = 1, hot_type = "hot_movies", region = "", sort_by = "popularity_desc" } = params;
-  
+// 3. 豆瓣热播剧集
+async function loadDoubanHotTV(params = {}) {
+  const { page = 1 } = params;
   try {
-    const apiParams = {
-      start: (page - 1) * 20,
-      count: 20,
-      hot_type: hot_type,
-      sort: getDoubanSortCode(sort_by)
-    };
-    
-    if (region) {
-      apiParams.countries = getDoubanRegionCode(region);
-    }
-    
-    const hotConfig = getDoubanHotListConfig(hot_type);
-    const mockData = generateMockDoubanData(apiParams, hotConfig.name);
-    
-    return mockData.map(item => formatDoubanItem(item, hotConfig.name));
+    const mockData = generateSimpleDoubanData(page, "豆瓣热播剧集");
+    return mockData.map(item => formatDoubanItem(item));
   } catch (error) {
-    console.error("Error fetching Douban hot list:", error);
+    console.error("Error fetching Douban hot TV:", error);
     return [];
   }
 }
 
-// 4. 豆瓣年度榜单
-async function loadDoubanYearlyList(params = {}) {
-  const { 
-    page = 1, 
-    year = "2024", 
-    content_type = "movie", 
-    region = "", 
-    sort_by = "rating_desc" 
-  } = params;
-  
+// 4. 豆瓣热映电影
+async function loadDoubanHotMovies(params = {}) {
+  const { page = 1 } = params;
   try {
-    const apiParams = {
-      start: (page - 1) * 20,
-      count: 20,
-      year: year,
-      type: content_type,
-      sort: getDoubanSortCode(sort_by)
-    };
-    
-    if (region) {
-      apiParams.countries = getDoubanRegionCode(region);
-    }
-    
-    const mockData = generateMockDoubanData(apiParams, `${year}年度榜单`);
-    
-    return mockData.map(item => formatDoubanItem(item, `豆瓣${year}年度榜单`));
+    const mockData = generateSimpleDoubanData(page, "豆瓣热映电影");
+    return mockData.map(item => formatDoubanItem(item));
   } catch (error) {
-    console.error("Error fetching Douban yearly list:", error);
+    console.error("Error fetching Douban hot movies:", error);
     return [];
   }
 }
 
-// 5. 豆瓣主题片单
-async function loadDoubanThemeList(params = {}) {
-  const { 
-    page = 1, 
-    theme_type = "hidden_gems", 
-    content_type = "all", 
-    region = "", 
-    rating_filter = "7.0+" 
-  } = params;
-  
+// 5. 豆瓣新片榜
+async function loadDoubanNewMovies(params = {}) {
+  const { page = 1 } = params;
   try {
-    const apiParams = {
-      start: (page - 1) * 20,
-      count: 20,
-      theme: theme_type,
-      type: content_type === "all" ? "" : content_type
-    };
-    
-    if (region) {
-      apiParams.countries = getDoubanRegionCode(region);
-    }
-    
-    if (rating_filter) {
-      const ratingFilter = getDoubanRatingRange(rating_filter);
-      if (ratingFilter.min) apiParams.rating = `${ratingFilter.min},${ratingFilter.max}`;
-    }
-    
-    const themeConfig = getDoubanThemeConfig(theme_type);
-    const mockData = generateMockDoubanData(apiParams, themeConfig.name);
-    
-    return mockData.map(item => formatDoubanItem(item, themeConfig.name));
+    const mockData = generateSimpleDoubanData(page, "豆瓣新片榜");
+    return mockData.map(item => formatDoubanItem(item));
   } catch (error) {
-    console.error("Error fetching Douban theme list:", error);
+    console.error("Error fetching Douban new movies:", error);
     return [];
   }
 }
 
-// 6. 豆瓣自定义搜索
-async function loadDoubanCustomSearch(params = {}) {
-  const { 
-    page = 1, 
-    keyword = "", 
-    search_type = "all", 
-    sort_by = "relevance" 
-  } = params;
-  
-  if (!keyword.trim()) {
-    return [];
-  }
-  
+// 6. 豆瓣口碑榜
+async function loadDoubanReputationList(params = {}) {
+  const { page = 1 } = params;
   try {
-    const apiParams = {
-      start: (page - 1) * 20,
-      count: 20,
-      q: keyword.trim(),
-      type: search_type === "all" ? "" : search_type,
-      sort: getDoubanSortCode(sort_by)
-    };
-    
-    const mockData = generateMockDoubanSearchData(apiParams);
-    
-    return mockData.map(item => formatDoubanItem(item, "豆瓣搜索"));
+    const mockData = generateSimpleDoubanData(page, "豆瓣口碑榜");
+    return mockData.map(item => formatDoubanItem(item));
   } catch (error) {
-    console.error("Error fetching Douban custom search:", error);
+    console.error("Error fetching Douban reputation list:", error);
     return [];
   }
 }
 
-// -------------豆瓣辅助函数-------------
-
-// 获取豆瓣地区代码
-function getDoubanRegionCode(region) {
-  const regionMap = {
-    "mainland_china": "中国大陆",
-    "hong_kong": "香港",
-    "taiwan": "台湾",
-    "usa": "美国",
-    "japan": "日本",
-    "korea": "韩国",
-    "uk": "英国",
-    "france": "法国",
-    "germany": "德国",
-    "italy": "意大利",
-    "spain": "西班牙",
-    "russia": "俄罗斯",
-    "india": "印度",
-    "thailand": "泰国",
-    "chinese": "中国大陆,香港,台湾",
-    "western": "美国,英国,法国,德国,意大利",
-    "asian": "日本,韩国,泰国,印度",
-    "others": ""
-  };
-  return regionMap[region] || "";
-}
-
-// 获取豆瓣题材代码
-function getDoubanGenreCode(genre) {
-  const genreMap = {
-    "drama": "剧情",
-    "comedy": "喜剧",
-    "action": "动作",
-    "romance": "爱情",
-    "sci_fi": "科幻",
-    "mystery": "悬疑",
-    "thriller": "惊悚",
-    "horror": "恐怖",
-    "crime": "犯罪",
-    "war": "战争",
-    "adventure": "冒险",
-    "fantasy": "奇幻",
-    "family": "家庭",
-    "musical": "音乐",
-    "history": "历史",
-    "biography": "传记",
-    "sport": "运动",
-    "western": "西部"
-  };
-  return genreMap[genre] || "";
-}
-
-// 获取豆瓣年份范围
-function getDoubanYearRange(yearRange) {
-  const currentYear = new Date().getFullYear();
-  const rangeMap = {
-    "2024": { start: 2024, end: 2024 },
-    "2023": { start: 2023, end: 2023 },
-    "2022": { start: 2022, end: 2022 },
-    "2021": { start: 2021, end: 2021 },
-    "2020": { start: 2020, end: 2020 },
-    "2020s": { start: 2020, end: currentYear },
-    "2010s": { start: 2010, end: 2019 },
-    "2000s": { start: 2000, end: 2009 },
-    "1990s": { start: 1990, end: 1999 },
-    "1980s": { start: 1980, end: 1989 },
-    "earlier": { start: 1900, end: 1979 }
-  };
-  return rangeMap[yearRange] || { start: null, end: null };
-}
-
-// 获取豆瓣评分范围
-function getDoubanRatingRange(ratingRange) {
-  const rangeMap = {
-    "9.0+": { min: 9.0, max: 10.0 },
-    "8.5-9.0": { min: 8.5, max: 9.0 },
-    "8.0-8.5": { min: 8.0, max: 8.5 },
-    "7.5-8.0": { min: 7.5, max: 8.0 },
-    "7.0-7.5": { min: 7.0, max: 7.5 },
-    "6.5-7.0": { min: 6.5, max: 7.0 },
-    "6.0-6.5": { min: 6.0, max: 6.5 },
-    "6.0-": { min: 0.0, max: 6.0 },
-    "6.0+": { min: 6.0, max: 10.0 },
-    "7.0+": { min: 7.0, max: 10.0 },
-    "8.0+": { min: 8.0, max: 10.0 },
-    "8.5+": { min: 8.5, max: 10.0 }
-  };
-  return rangeMap[ratingRange] || { min: null, max: null };
-}
-
-// 获取豆瓣排序代码
-function getDoubanSortCode(sortBy) {
-  const sortMap = {
-    "rating_desc": "rating",
-    "rating_asc": "rating_asc",
-    "release_date_desc": "time",
-    "release_date_asc": "time_asc",
-    "popularity_desc": "hot",
-    "popularity_asc": "hot_asc",
-    "vote_count_desc": "vote",
-    "vote_count_asc": "vote_asc",
-    "duration_desc": "duration",
-    "duration_asc": "duration_asc",
-    "ranking": "rank",
-    "relevance": "relevance"
-  };
-  return sortMap[sortBy] || "rating";
-}
-
-// 获取经典榜单配置
-function getDoubanClassicListConfig(listType) {
-  const configMap = {
-    "top250": { name: "豆瓣电影Top250", filter: "top250" },
-    "tv_top100": { name: "豆瓣电视剧Top100", filter: "tv_top" },
-    "chinese_classic": { name: "华语电影经典", filter: "chinese_classic" },
-    "western_classic": { name: "欧美电影经典", filter: "western_classic" },
-    "asian_classic": { name: "日韩电影经典", filter: "asian_classic" },
-    "animation_classic": { name: "动画电影经典", filter: "animation_classic" },
-    "documentary_classic": { name: "纪录片经典", filter: "documentary_classic" },
-    "short_classic": { name: "短片经典", filter: "short_classic" }
-  };
-  return configMap[listType] || { name: "豆瓣经典榜单", filter: "classic" };
-}
-
-// 获取热门榜单配置
-function getDoubanHotListConfig(hotType) {
-  const configMap = {
-    "hot_movies": { name: "豆瓣热门电影", filter: "hot_movies" },
-    "hot_tv": { name: "豆瓣热门电视剧", filter: "hot_tv" },
-    "trending_tv": { name: "豆瓣热播剧集", filter: "trending_tv" },
-    "new_releases": { name: "豆瓣新片热映", filter: "new_releases" },
-    "reputation": { name: "豆瓣口碑佳作", filter: "reputation" },
-    "in_theaters": { name: "豆瓣院线热映", filter: "in_theaters" },
-    "coming_soon": { name: "豆瓣即将上映", filter: "coming_soon" },
-    "online_popular": { name: "豆瓣网络热播", filter: "online_popular" }
-  };
-  return configMap[hotType] || { name: "豆瓣热门榜单", filter: "hot" };
-}
-
-// 获取主题片单配置
-function getDoubanThemeConfig(themeType) {
-  const configMap = {
-    "hidden_gems": { name: "豆瓣高分冷门佳作", filter: "hidden_gems" },
-    "art_house": { name: "豆瓣小众艺术电影", filter: "art_house" },
-    "classic_rewatch": { name: "豆瓣经典老片重温", filter: "classic_rewatch" },
-    "female_perspective": { name: "豆瓣女性视角电影", filter: "female_perspective" },
-    "youth_campus": { name: "豆瓣青春校园题材", filter: "youth_campus" },
-    "sci_fi_future": { name: "豆瓣科幻未来世界", filter: "sci_fi_future" },
-    "healing_stories": { name: "豆瓣治愈温情故事", filter: "healing_stories" },
-    "dark_comedy": { name: "豆瓣黑色幽默作品", filter: "dark_comedy" },
-    "historical_biography": { name: "豆瓣历史传记片", filter: "historical_biography" },
-    "music_dance": { name: "豆瓣音乐舞蹈片", filter: "music_dance" },
-    "mind_bending": { name: "豆瓣悬疑烧脑片", filter: "mind_bending" },
-    "family_bonds": { name: "豆瓣家庭亲情片", filter: "family_bonds" }
-  };
-  return configMap[themeType] || { name: "豆瓣主题片单", filter: "theme" };
-}
-
-// 生成模拟豆瓣数据（实际应用中应替换为真实API调用）
-function generateMockDoubanData(params, sourceName) {
-  // 这里应该是真实的豆瓣API调用
-  // 由于豆瓣API限制，这里提供模拟数据结构
+// 简化的模拟数据生成函数
+function generateSimpleDoubanData(page, listName) {
   const mockItems = [];
-  const count = params.count || 20;
+  const startIndex = (page - 1) * 20;
   
-  for (let i = 0; i < count; i++) {
+  for (let i = 0; i < 20; i++) {
+    const index = startIndex + i + 1;
     mockItems.push({
-      id: `douban_${Date.now()}_${i}`,
-      title: `${sourceName}示例影片${i + 1}`,
-      description: "这是一个示例描述，实际使用时会从豆瓣API获取真实数据。",
-      release_date: "2024-01-01",
-      poster: "https://img1.doubanio.com/view/photo/s_ratio_poster/public/p2614988097.jpg",
-      rating: {
-        average: (Math.random() * 3 + 7).toFixed(1),
-        numRaters: Math.floor(Math.random() * 100000) + 1000
+      id: `douban_${listName}_${index}`,
+      title: `${listName}示例作品${index}`,
+      summary: `这是${listName}的第${index}部作品，实际使用时会从豆瓣API获取真实数据。`,
+      pubdate: "2024-01-01",
+      pic: {
+        large: "https://img1.doubanio.com/view/photo/s_ratio_poster/public/p2614988097.jpg"
       },
-      genres: ["剧情", "爱情"],
-      directors: [{ name: "示例导演" }],
-      casts: [{ name: "示例演员1" }, { name: "示例演员2" }],
-      countries: ["中国大陆"],
-      languages: ["汉语普通话"],
-      durations: ["120分钟"],
-      year: 2024
+      rating: {
+        average: (Math.random() * 2 + 7.5).toFixed(1)
+      },
+      genres: ["剧情", "爱情"]
     });
   }
   
   return mockItems;
-}
-
-// 生成模拟豆瓣搜索数据
-function generateMockDoubanSearchData(params) {
-  // 模拟搜索结果
-  return generateMockDoubanData(params, `搜索"${params.q}"`);
 }
