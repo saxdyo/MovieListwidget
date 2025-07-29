@@ -2,14 +2,13 @@ WidgetMetadata = {
   id: "forward.combined.media.lists",
   title: "影视榜单",
   description: "影视动画榜单",
-  author: "阿米诺斯",
+  author: "saxdyo",
   site: "https://github.com/saxdyo/MovieListwidget",
   version: "1.0.0",
   requiredVersion: "0.0.1",
   detailCacheDuration: 60,
   modules: [
     // -------------TMDB模块-------------
-    // --- 热门模块 ---
     {
       title: "TMDB 今日热门",
       description: "今日热门电影与剧集",
@@ -31,17 +30,33 @@ WidgetMetadata = {
       ]
     },
     {
-    title: "TMDB 热门电影",
-    description: "当前热门电影",
-    requiresWebView: false,
-    functionName: "tmdbPopularMovies",
-    cacheDuration: 60,
-    params: [
+      title: "TMDB 热门电影",
+      description: "当前热门电影",
+      requiresWebView: false,
+      functionName: "tmdbPopularMovies",
+      cacheDuration: 60,
+      params: [
+        {
+          name: "sort_by",
+          title: "📊排序方式",
+          type: "enumeration",
+          description: "选择排序方式",
+          value: "popularity.desc",
+          enumOptions: [
+            { title: "热门度↓", value: "popularity.desc" },
+            { title: "热门度↑", value: "popularity.asc" },
+            { title: "评分↓", value: "vote_average.desc" },
+            { title: "评分↑", value: "vote_average.asc" },
+            { title: "上映日期↓", value: "release_date.desc" },
+            { title: "上映日期↑", value: "release_date.asc" },
+            { title: "收入↓", value: "revenue.desc" },
+            { title: "收入↑", value: "revenue.asc" }
+          ]
+        },
         { name: "language", title: "语言", type: "language", value: "zh-CN" },
         { name: "page", title: "页码", type: "page" }
       ]
     },
-    // --- 常规发现模块 ---
     {
       title: "TMDB 高分内容",
       description: "高分电影或剧集 (按用户评分排序)",
@@ -59,393 +74,1438 @@ WidgetMetadata = {
           ], 
           value: "movie" 
         },
+        {
+          name: "sort_by",
+          title: "📊排序方式",
+          type: "enumeration",
+          description: "选择排序方式",
+          value: "vote_average.desc",
+          enumOptions: [
+            { title: "评分↓", value: "vote_average.desc" },
+            { title: "评分↑", value: "vote_average.asc" },
+            { title: "热门度↓", value: "popularity.desc" },
+            { title: "热门度↑", value: "popularity.asc" },
+            { title: "上映日期↓", value: "release_date.desc" },
+            { title: "上映日期↑", value: "release_date.asc" },
+            { title: "投票数↓", value: "vote_count.desc" },
+            { title: "投票数↑", value: "vote_count.asc" }
+          ]
+        },
         { name: "language", title: "语言", type: "language", value: "zh-CN" },
         { name: "page", title: "页码", type: "page" }
       ]
     },
-    // --- 播出平台模块（已优化） ---
     {
-        title: "流媒体剧集库",
-        description: "按平台、类型、年份筛选剧集",
-        requiresWebView: false,
-        functionName: "tmdbDiscoverTVShows",
-        cacheDuration: 3600,
-        params: [
-            {
-                name: "platform",
-                title: "🎬 播出平台",
-                type: "enumeration",
-                value: "213",
-                enumOptions: [
-                    { title: "Netflix", value: "213" },
-                    { title: "Disney+", value: "2739" },
-                    { title: "HBO Max", value: "3186" },
-                    { title: "Apple TV+", value: "2552" },
-                    { title: "Hulu", value: "453" },
-                    { title: "Amazon Prime", value: "1024" },
-                    { title: "腾讯视频", value: "2007" },
-                    { title: "爱奇艺", value: "1330" },
-                    { title: "优酷", value: "1419" },
-                    { title: "哔哩哔哩", value: "1605" },
-                    { title: "芒果TV", value: "1631" }
-                ]
-            },
-            {
-                name: "genre",
-                title: "🎭 剧集类型",
-                type: "enumeration",
-                value: "",
-                enumOptions: [
-                    { title: "全部类型", value: "" },
-                    { title: "剧情", value: "18" },
-                    { title: "喜剧", value: "35" },
-                    { title: "动作冒险", value: "10759" },
-                    { title: "科幻奇幻", value: "10765" },
-                    { title: "犯罪", value: "80" },
-                    { title: "悬疑", value: "9648" },
-                    { title: "动画", value: "16" },
-                    { title: "纪录片", value: "99" }
-                ]
-            },
-            {
-                name: "year",
-                title: "📆 首播年份",
-                type: "string",
-                value: "",
-                description: "例如：2023 或 2020-2023"
-            },
-            {
-                name: "sort_by",
-                title: "🔢 排序方式",
-                type: "enumeration",
-                value: "popularity.desc",
-                enumOptions: [
-                    { title: "人气最高", value: "popularity.desc" },
-                    { title: "评分最高", value: "vote_average.desc" },
-                    { title: "最新上线", value: "first_air_date.desc" }
-                ]
-            },
-            { name: "page", title: "页码", type: "page" },
-            { name: "language", title: "语言", type: "language", value: "zh-CN" }
-        ]
+      title: "TMDB 播出平台",
+      description: "按播出平台和内容类型筛选剧集内容",
+      requiresWebView: false,
+      functionName: "tmdbDiscoverByNetwork",
+      cacheDuration: 3600,
+      params: [
+        { 
+          name: "with_networks",
+          title: "播出平台",
+          type: "enumeration",
+          description: "选择一个平台以查看其剧集内容",
+          value: "",
+          enumOptions: [
+            { title: "全部", value: "" },
+            { title: "Tencent", value: "2007" },
+            { title: "iQiyi", value: "1330" },
+            { title: "Youku", value: "1419" },
+            { title: "Bilibili", value: "1605" },
+            { title: "Netflix", value: "213" },
+            { title: "Disney+", value: "2739" },
+            { title: "HBO", value: "49" }
+          ]
+        },
+        {
+          name: "with_genres",
+          title: "🎭内容类型",
+          type: "enumeration",
+          description: "选择要筛选的内容类型",
+          value: "",
+          enumOptions: [
+            { title: "全部类型", value: "" },
+            { title: "动作", value: "28" },
+            { title: "科幻", value: "878" },
+            { title: "爱情", value: "10749" }
+          ]
+        },
+        {
+          name: "sort_by",
+          title: "📊排序方式",
+          type: "enumeration",
+          description: "选择排序方式",
+          value: "popularity.desc",
+          enumOptions: [
+            { title: "热门度↓", value: "popularity.desc" },
+            { title: "热门度↑", value: "popularity.asc" },
+            { title: "评分↓", value: "vote_average.desc" },
+            { title: "评分↑", value: "vote_average.asc" },
+            { title: "首播日期↓", value: "first_air_date.desc" },
+            { title: "首播日期↑", value: "first_air_date.asc" },
+            { title: "投票数↓", value: "vote_count.desc" },
+            { title: "投票数↑", value: "vote_count.asc" }
+          ]
+        },
+        { name: "page", title: "页码", type: "page" },
+        { name: "language", title: "语言", type: "language", value: "zh-CN" }
+      ]
     },
-    // --- 出品公司模块（已优化） ---
     {
-        title: "电影公司片库",
-        description: "按公司、类型、年份筛选电影",
-        requiresWebView: false,
-        functionName: "tmdbDiscoverMoviesByCompany",
-        cacheDuration: 3600,
-        params: [
-            {
-                name: "company",
-                title: "🏢 出品公司",
-                type: "enumeration",
-                value: "2",
-                enumOptions: [
-                    { title: "迪士尼 Disney", value: "2" },
-                    { title: "华纳兄弟 Warner Bros.", value: "174" },
-                    { title: "环球影业 Universal", value: "33" },
-                    { title: "索尼影业 Sony", value: "34" },
-                    { title: "派拉蒙 Paramount", value: "4" },
-                    { title: "20世纪影业 20th Century", value: "25" },
-                    { title: "漫威影业 Marvel", value: "420" },
-                    { title: "A24", value: "41077" },
-                    { title: "皮克斯 Pixar", value: "3" },
-                    { title: "梦工厂动画 DreamWorks", value: "521" }
-                ]
-            },
-            {
-                name: "genre",
-                title: "🎭 电影类型",
-                type: "enumeration",
-                value: "",
-                enumOptions: [
-                    { title: "全部类型", value: "" },
-                    { title: "动作", value: "28" },
-                    { title: "冒险", value: "12" },
-                    { title: "科幻", value: "878" },
-                    { title: "奇幻", value: "14" },
-                    { title: "剧情", value: "18" },
-                    { title: "喜剧", value: "35" },
-                    { title: "动画", value: "16" },
-                    { title: "恐怖", value: "27" },
-                    { title: "悬疑", value: "9648" },
-                    { title: "犯罪", value: "80" },
-                    { title: "纪录片", value: "99" }
-                ]
-            },
-            {
-                name: "year",
-                title: "📆 上映年份",
-                type: "string",
-                value: "",
-                description: "例如：2023 或 2020-2023"
-            },
-            {
-                name: "sort_by",
-                title: "🔢 排序方式",
-                type: "enumeration",
-                value: "popularity.desc",
-                enumOptions: [
-                    { title: "人气最高", value: "popularity.desc" },
-                    { title: "评分最高", value: "vote_average.desc" },
-                    { title: "最新上映", value: "primary_release_date.desc" }
-                ]
-            },
-            { name: "page", title: "页码", type: "page" },
-            { name: "language", title: "语言", type: "language", value: "zh-CN" }
-        ]
+      title: "TMDB 出品公司",
+      description: "按出品公司筛选电影和剧集内容",
+      requiresWebView: false,
+      functionName: "tmdbDiscoverByCompany",
+      cacheDuration: 3600,
+      params: [
+        { 
+          name: "with_companies",
+          title: "出品公司",
+          type: "enumeration",
+          description: "选择一个出品公司查看其作品",
+          value: "",
+          enumOptions: [
+            { title: "全部", value: "" },
+            { title: "漫威影业 (Marvel Studios)", value: "420" },
+            { title: "华特迪士尼 (Walt Disney Pictures)", value: "2" },
+            { title: "华纳兄弟 (Warner Bros.)", value: "174" },
+            { title: "索尼影业 (Sony Pictures)", value: "5" },
+            { title: "环球影业 (Universal Pictures)", value: "33" },
+            { title: "20世纪福克斯 (20th Century Fox)", value: "25" },
+            { title: "派拉蒙影业 (Paramount Pictures)", value: "4" },
+            { title: "狮门影业 (Lionsgate)", value: "1632" },
+            { title: "新线影业 (New Line Cinema)", value: "12" },
+            { title: "哥伦比亚影业 (Columbia Pictures)", value: "5" },
+            { title: "梦工厂 (DreamWorks)", value: "521" },
+            { title: "米高梅 (Metro-Goldwyn-Mayer)", value: "8411" },
+            { title: "Netflix", value: "11073" },
+            { title: "Amazon Studios", value: "20580" },
+            { title: "Apple Original Films", value: "151347" }
+          ]
+        },
+        {
+          name: "type",
+          title: "🎭内容类型",
+          type: "enumeration",
+          description: "选择要筛选的内容类型",
+          value: "movie",
+          enumOptions: [
+            { title: "电影", value: "movie" },
+            { title: "剧集", value: "tv" }
+          ]
+        },
+        {
+          name: "with_genres",
+          title: "🎬题材类型",
+          type: "enumeration",
+          description: "选择要筛选的题材类型（可选）",
+          value: "",
+          enumOptions: [
+            { title: "全部类型", value: "" },
+            { title: "动作", value: "28" },
+            { title: "冒险", value: "12" },
+            { title: "动画", value: "16" },
+            { title: "喜剧", value: "35" },
+            { title: "犯罪", value: "80" },
+            { title: "纪录片", value: "99" },
+            { title: "剧情", value: "18" },
+            { title: "家庭", value: "10751" },
+            { title: "奇幻", value: "14" },
+            { title: "历史", value: "36" },
+            { title: "恐怖", value: "27" },
+            { title: "音乐", value: "10402" },
+            { title: "悬疑", value: "9648" },
+            { title: "爱情", value: "10749" },
+            { title: "科幻", value: "878" },
+            { title: "惊悚", value: "53" },
+            { title: "战争", value: "10752" },
+            { title: "西部", value: "37" }
+          ]
+        },
+        {
+          name: "sort_by",
+          title: "📊排序方式",
+          type: "enumeration",
+          description: "选择排序方式",
+          value: "popularity.desc",
+          enumOptions: [
+            { title: "热门度↓", value: "popularity.desc" },
+            { title: "热门度↑", value: "popularity.asc" },
+            { title: "评分↓", value: "vote_average.desc" },
+            { title: "评分↑", value: "vote_average.asc" },
+            { title: "上映日期↓", value: "release_date.desc" },
+            { title: "上映日期↑", value: "release_date.asc" },
+            { title: "首播日期↓", value: "first_air_date.desc" },
+            { title: "首播日期↑", value: "first_air_date.asc" },
+            { title: "投票数↓", value: "vote_count.desc" },
+            { title: "投票数↑", value: "vote_count.asc" },
+            { title: "收入↓", value: "revenue.desc" },
+            { title: "收入↑", value: "revenue.asc" }
+          ]
+        },
+        { name: "page", title: "页码", type: "page" },
+        { name: "language", title: "语言", type: "language", value: "zh-CN" }
+      ]
+    },
+    // -------------IMDB模块-------------
+    {
+      title: "IMDB 热门内容",
+      description: "基于IMDB评分的热门电影和剧集",
+      requiresWebView: false,
+      functionName: "imdbPopularContent",
+      cacheDuration: 3600,
+      params: [
+        {
+          name: "type",
+          title: "🎭内容类型",
+          type: "enumeration",
+          description: "选择要查看的内容类型",
+          value: "movie",
+          enumOptions: [
+            { title: "电影", value: "movie" },
+            { title: "剧集", value: "tv" }
+          ]
+        },
+        {
+          name: "with_genres",
+          title: "🎬主题类型",
+          type: "enumeration",
+          description: "选择主题类型进行筛选",
+          value: "",
+          enumOptions: [
+            { title: "全部主题", value: "" },
+            { title: "动作", value: "28" },
+            { title: "冒险", value: "12" },
+            { title: "动画", value: "16" },
+            { title: "喜剧", value: "35" },
+            { title: "犯罪", value: "80" },
+            { title: "纪录片", value: "99" },
+            { title: "剧情", value: "18" },
+            { title: "家庭", value: "10751" },
+            { title: "奇幻", value: "14" },
+            { title: "历史", value: "36" },
+            { title: "恐怖", value: "27" },
+            { title: "音乐", value: "10402" },
+            { title: "悬疑", value: "9648" },
+            { title: "爱情", value: "10749" },
+            { title: "科幻", value: "878" },
+            { title: "惊悚", value: "53" },
+            { title: "战争", value: "10752" },
+            { title: "西部", value: "37" }
+          ]
+        },
+        {
+          name: "with_origin_country",
+          title: "🌍地区筛选",
+          type: "enumeration",
+          description: "按制片地区筛选内容",
+          value: "",
+          enumOptions: [
+            { title: "全部地区", value: "" },
+            { title: "美国", value: "US" },
+            { title: "中国", value: "CN" },
+            { title: "日本", value: "JP" },
+            { title: "韩国", value: "KR" },
+            { title: "英国", value: "GB" },
+            { title: "法国", value: "FR" },
+            { title: "德国", value: "DE" },
+            { title: "意大利", value: "IT" },
+            { title: "西班牙", value: "ES" },
+            { title: "俄罗斯", value: "RU" },
+            { title: "印度", value: "IN" },
+            { title: "泰国", value: "TH" },
+            { title: "加拿大", value: "CA" },
+            { title: "澳大利亚", value: "AU" },
+            { title: "墨西哥", value: "MX" }
+          ]
+        },
+        {
+          name: "sort_by",
+          title: "📊排序方式",
+          type: "enumeration",
+          description: "选择排序方式",
+          value: "vote_average.desc",
+          enumOptions: [
+            { title: "IMDB评分↓", value: "vote_average.desc" },
+            { title: "IMDB评分↑", value: "vote_average.asc" },
+            { title: "热门度↓", value: "popularity.desc" },
+            { title: "热门度↑", value: "popularity.asc" },
+            { title: "上映日期↓", value: "release_date.desc" },
+            { title: "上映日期↑", value: "release_date.asc" },
+            { title: "首播日期↓", value: "first_air_date.desc" },
+            { title: "首播日期↑", value: "first_air_date.asc" },
+            { title: "投票数↓", value: "vote_count.desc" },
+            { title: "投票数↑", value: "vote_count.asc" }
+          ]
+        },
+        {
+          name: "vote_average_gte",
+          title: "⭐最低评分",
+          type: "enumeration",
+          description: "设置IMDB最低评分要求",
+          value: "7.0",
+          enumOptions: [
+            { title: "无要求", value: "0" },
+            { title: "6.0分以上", value: "6.0" },
+            { title: "7.0分以上", value: "7.0" },
+            { title: "8.0分以上", value: "8.0" },
+            { title: "9.0分以上", value: "9.0" }
+          ]
+        },
+        { name: "page", title: "页码", type: "page" },
+        { name: "language", title: "语言", type: "language", value: "zh-CN" }
+      ]
+    },
+    {
+      title: "IMDB 年度精选",
+      description: "按年份和地区筛选IMDB高分内容",
+      requiresWebView: false,
+      functionName: "imdbYearlySelection",
+      cacheDuration: 3600,
+      params: [
+        {
+          name: "type",
+          title: "🎭内容类型",
+          type: "enumeration",
+          description: "选择要查看的内容类型",
+          value: "movie",
+          enumOptions: [
+            { title: "电影", value: "movie" },
+            { title: "剧集", value: "tv" }
+          ]
+        },
+        {
+          name: "primary_release_year",
+          title: "📅年份筛选",
+          type: "enumeration",
+          description: "选择上映/播出年份",
+          value: "2024",
+          enumOptions: [
+            { title: "全部年份", value: "" },
+            { title: "2024年", value: "2024" },
+            { title: "2023年", value: "2023" },
+            { title: "2022年", value: "2022" },
+            { title: "2021年", value: "2021" },
+            { title: "2020年", value: "2020" },
+            { title: "2019年", value: "2019" },
+            { title: "2018年", value: "2018" },
+            { title: "2017年", value: "2017" },
+            { title: "2016年", value: "2016" },
+            { title: "2015年", value: "2015" }
+          ]
+        },
+        {
+          name: "with_origin_country",
+          title: "🌍制片地区",
+          type: "enumeration",
+          description: "按制片地区筛选",
+          value: "",
+          enumOptions: [
+            { title: "全部地区", value: "" },
+            { title: "美国", value: "US" },
+            { title: "中国大陆", value: "CN" },
+            { title: "香港", value: "HK" },
+            { title: "台湾", value: "TW" },
+            { title: "日本", value: "JP" },
+            { title: "韩国", value: "KR" },
+            { title: "英国", value: "GB" },
+            { title: "法国", value: "FR" },
+            { title: "德国", value: "DE" },
+            { title: "北欧", value: "SE,NO,DK,FI" },
+            { title: "印度", value: "IN" },
+            { title: "泰国", value: "TH" }
+          ]
+        },
+        {
+          name: "with_genres",
+          title: "🎬主题筛选",
+          type: "enumeration",
+          description: "选择主题类型",
+          value: "",
+          enumOptions: [
+            { title: "全部主题", value: "" },
+            { title: "剧情", value: "18" },
+            { title: "动作", value: "28" },
+            { title: "喜剧", value: "35" },
+            { title: "惊悚", value: "53" },
+            { title: "科幻", value: "878" },
+            { title: "犯罪", value: "80" },
+            { title: "爱情", value: "10749" },
+            { title: "恐怖", value: "27" },
+            { title: "悬疑", value: "9648" },
+            { title: "动画", value: "16" }
+          ]
+        },
+        {
+          name: "sort_by",
+          title: "📊排序方式",
+          type: "enumeration",
+          description: "选择排序方式",
+          value: "vote_average.desc",
+          enumOptions: [
+            { title: "IMDB评分↓", value: "vote_average.desc" },
+            { title: "热门度↓", value: "popularity.desc" },
+            { title: "上映日期↓", value: "release_date.desc" },
+            { title: "首播日期↓", value: "first_air_date.desc" },
+            { title: "投票数↓", value: "vote_count.desc" }
+          ]
+        },
+        {
+          name: "vote_average_gte",
+          title: "⭐最低评分",
+          type: "enumeration",
+          description: "设置最低IMDB评分",
+          value: "6.5",
+          enumOptions: [
+            { title: "无要求", value: "0" },
+            { title: "6.0分以上", value: "6.0" },
+            { title: "6.5分以上", value: "6.5" },
+            { title: "7.0分以上", value: "7.0" },
+            { title: "8.0分以上", value: "8.0" }
+          ]
+        },
+        { name: "page", title: "页码", type: "page" },
+        { name: "language", title: "语言", type: "language", value: "zh-CN" }
+      ]
+    },
+    // -------------TMDB剧集模块-------------
+    {
+      title: "TMDB 热门剧集",
+      description: "热门电视剧集和迷你剧",
+      requiresWebView: false,
+      functionName: "tmdbPopularTVShows",
+      cacheDuration: 3600,
+      params: [
+        {
+          name: "with_origin_country",
+          title: "🌍制作地区",
+          type: "enumeration",
+          description: "按制作地区筛选剧集",
+          value: "",
+          enumOptions: [
+            { title: "全部地区", value: "" },
+            { title: "美国", value: "US" },
+            { title: "中国", value: "CN" },
+            { title: "日本", value: "JP" },
+            { title: "韩国", value: "KR" },
+            { title: "欧洲", value: "GB,FR,DE,ES,IT" }
+          ]
+        },
+        {
+          name: "with_genres",
+          title: "🎭剧集类型",
+          type: "enumeration",
+          description: "选择剧集类型",
+          value: "",
+          enumOptions: [
+            { title: "全部类型", value: "" },
+            { title: "剧情", value: "18" },
+            { title: "喜剧", value: "35" },
+            { title: "犯罪", value: "80" },
+            { title: "动作冒险", value: "10759" },
+            { title: "科幻奇幻", value: "10765" },
+            { title: "悬疑", value: "9648" },
+            { title: "惊悚", value: "53" },
+            { title: "爱情", value: "10749" },
+            { title: "家庭", value: "10751" },
+            { title: "纪录片", value: "99" },
+            { title: "真人秀", value: "10764" },
+            { title: "脱口秀", value: "10767" },
+            { title: "新闻", value: "10763" }
+          ]
+        },
+        {
+          name: "sort_by",
+          title: "📊排序方式",
+          type: "enumeration",
+          description: "选择排序方式",
+          value: "popularity.desc",
+          enumOptions: [
+            { title: "热门度↓", value: "popularity.desc" },
+            { title: "热门度↑", value: "popularity.asc" },
+            { title: "评分↓", value: "vote_average.desc" },
+            { title: "评分↑", value: "vote_average.asc" },
+            { title: "首播日期↓", value: "first_air_date.desc" },
+            { title: "首播日期↑", value: "first_air_date.asc" },
+            { title: "投票数↓", value: "vote_count.desc" },
+            { title: "投票数↑", value: "vote_count.asc" }
+          ]
+        },
+        {
+          name: "vote_average_gte",
+          title: "⭐最低评分",
+          type: "enumeration",
+          description: "设置最低评分要求",
+          value: "0",
+          enumOptions: [
+            { title: "无要求", value: "0" },
+            { title: "6.0分以上", value: "6.0" },
+            { title: "7.0分以上", value: "7.0" },
+            { title: "8.0分以上", value: "8.0" },
+            { title: "9.0分以上", value: "9.0" }
+          ]
+        },
+        { name: "page", title: "页码", type: "page" },
+        { name: "language", title: "语言", type: "language", value: "zh-CN" }
+      ]
+    },
+    {
+      title: "TMDB 剧集时间榜",
+      description: "按时间和地区筛选的剧集内容",
+      requiresWebView: false,
+      functionName: "tmdbTVShowsByTime",
+      cacheDuration: 3600,
+      params: [
+        {
+          name: "time_period",
+          title: "📅时间范围",
+          type: "enumeration",
+          description: "选择时间范围",
+          value: "current_year",
+          enumOptions: [
+            { title: "本年度", value: "current_year" },
+            { title: "去年", value: "last_year" },
+            { title: "最近3年", value: "recent_3_years" },
+            { title: "最近5年", value: "recent_5_years" },
+            { title: "2020年代", value: "2020s" },
+            { title: "2010年代", value: "2010s" },
+            { title: "2000年代", value: "2000s" },
+            { title: "更早期", value: "earlier" }
+          ]
+        },
+        {
+          name: "with_origin_country",
+          title: "🌍制作地区",
+          type: "enumeration",
+          description: "按制作地区筛选",
+          value: "",
+          enumOptions: [
+            { title: "全部地区", value: "" },
+            { title: "美国", value: "US" },
+            { title: "中国", value: "CN" },
+            { title: "日本", value: "JP" },
+            { title: "韩国", value: "KR" },
+            { title: "欧洲", value: "GB,FR,DE,ES,IT" }
+          ]
+        },
+        {
+          name: "with_genres",
+          title: "🎭剧集类型",
+          type: "enumeration",
+          description: "选择剧集类型",
+          value: "",
+          enumOptions: [
+            { title: "全部类型", value: "" },
+            { title: "剧情", value: "18" },
+            { title: "喜剧", value: "35" },
+            { title: "犯罪", value: "80" },
+            { title: "动作冒险", value: "10759" },
+            { title: "科幻奇幻", value: "10765" },
+            { title: "悬疑惊悚", value: "9648,53" },
+            { title: "爱情", value: "10749" },
+            { title: "家庭", value: "10751" },
+            { title: "纪录片", value: "99" }
+          ]
+        },
+        {
+          name: "sort_by",
+          title: "📊排序方式",
+          type: "enumeration",
+          description: "选择排序方式",
+          value: "first_air_date.desc",
+          enumOptions: [
+            { title: "首播日期↓", value: "first_air_date.desc" },
+            { title: "首播日期↑", value: "first_air_date.asc" },
+            { title: "评分↓", value: "vote_average.desc" },
+            { title: "评分↑", value: "vote_average.asc" },
+            { title: "热门度↓", value: "popularity.desc" },
+            { title: "热门度↑", value: "popularity.asc" },
+            { title: "投票数↓", value: "vote_count.desc" }
+          ]
+        },
+        {
+          name: "vote_average_gte",
+          title: "⭐最低评分",
+          type: "enumeration",
+          description: "设置最低评分要求",
+          value: "0",
+          enumOptions: [
+            { title: "无要求", value: "0" },
+            { title: "6.0分以上", value: "6.0" },
+            { title: "7.0分以上", value: "7.0" },
+            { title: "8.0分以上", value: "8.0" },
+            { title: "8.5分以上", value: "8.5" }
+          ]
+        },
+        { name: "page", title: "页码", type: "page" },
+        { name: "language", title: "语言", type: "language", value: "zh-CN" }
+      ]
+    },
+    // -------------Bangumi模块-------------
+    {
+      title: "Bangumi 热门新番",
+      description: "最新热门新番动画",
+      requiresWebView: false,
+      functionName: "bangumiHotNewAnime",
+      cacheDuration: 1800,
+      params: [
+        {
+          name: "season_year",
+          title: "📅年份",
+          type: "enumeration",
+          description: "选择新番年份",
+          value: "2024",
+          enumOptions: [
+            { title: "2024年", value: "2024" },
+            { title: "2023年", value: "2023" },
+            { title: "2022年", value: "2022" }
+          ]
+        },
+        {
+          name: "with_origin_country",
+          title: "🌸制作地区",
+          type: "enumeration",
+          description: "选择动画制作地区",
+          value: "JP",
+          enumOptions: [
+            { title: "日本动画", value: "JP" },
+            { title: "中国动画", value: "CN" },
+            { title: "韩国动画", value: "KR" },
+            { title: "全部地区", value: "" }
+          ]
+        },
+        {
+          name: "sort_by",
+          title: "📊排序方式",
+          type: "enumeration",
+          description: "选择排序方式",
+          value: "popularity.desc",
+          enumOptions: [
+            { title: "热门度↓", value: "popularity.desc" },
+            { title: "评分↓", value: "vote_average.desc" },
+            { title: "播出日期↓", value: "first_air_date.desc" },
+            { title: "投票数↓", value: "vote_count.desc" }
+          ]
+        },
+        {
+          name: "vote_average_gte",
+          title: "⭐最低评分",
+          type: "enumeration",
+          description: "设置最低评分要求",
+          value: "6.0",
+          enumOptions: [
+            { title: "无要求", value: "0" },
+            { title: "6.0分以上", value: "6.0" },
+            { title: "7.0分以上", value: "7.0" },
+            { title: "8.0分以上", value: "8.0" }
+          ]
+        },
+        { name: "page", title: "页码", type: "page" },
+        { name: "language", title: "语言", type: "language", value: "zh-CN" }
+      ]
+    },
+    {
+      title: "Bangumi 排行榜",
+      description: "Bangumi动画评分排行榜",
+      requiresWebView: false,
+      functionName: "bangumiRankingList",
+      cacheDuration: 3600,
+      params: [
+        {
+          name: "ranking_type",
+          title: "🏆排行榜类型",
+          type: "enumeration",
+          description: "选择排行榜类型",
+          value: "top_rated",
+          enumOptions: [
+            { title: "评分排行榜", value: "top_rated" },
+            { title: "热门排行榜", value: "popular" },
+            { title: "新番排行榜", value: "recent" },
+            { title: "经典排行榜", value: "classic" }
+          ]
+        },
+        {
+          name: "with_origin_country",
+          title: "🌸制作地区",
+          type: "enumeration",
+          description: "制作地区筛选",
+          value: "JP",
+          enumOptions: [
+            { title: "日本", value: "JP" },
+            { title: "中国", value: "CN" },
+            { title: "韩国", value: "KR" },
+            { title: "美国", value: "US" },
+            { title: "全部", value: "" }
+          ]
+        },
+        {
+          name: "vote_average_gte",
+          title: "⭐最低评分",
+          type: "enumeration",
+          description: "最低评分门槛",
+          value: "7.0",
+          enumOptions: [
+            { title: "7.0分以上", value: "7.0" },
+            { title: "7.5分以上", value: "7.5" },
+            { title: "8.0分以上", value: "8.0" },
+            { title: "8.5分以上", value: "8.5" },
+            { title: "无要求", value: "0" }
+          ]
+        },
+        { name: "page", title: "页码", type: "page" },
+        { name: "language", title: "语言", type: "language", value: "zh-CN" }
+      ]
+    },
+    // ------------- 豆瓣热门片单 -------------
+{
+  title: "豆瓣一周口碑榜",
+  description: "豆瓣电影每周口碑榜 Top10",
+  requiresWebView: false,
+  functionName: "loadEnhancedDoubanList",
+  cacheDuration: 3600,
+  params: [
+    { name: "url", type: "constant", value: "https://m.douban.com/rexxar/api/v2/subject_collection/movie_weekly_best/items?start=0&count=20" },
+    { name: "page", type: "page" }
+  ]
+},
+{
+  title: "豆瓣实时热门电影",
+  description: "此刻正在热搜的电影",
+  requiresWebView: false,
+  functionName: "loadEnhancedDoubanList",
+  cacheDuration: 1800,
+  params: [
+    { name: "url", type: "constant", value: "https://m.douban.com/rexxar/api/v2/subject_collection/movie_real_time_hotest/items?start=0&count=20" },
+    { name: "page", type: "page" }
+  ]
+},
+{
+  title: "豆瓣热门剧集",
+  description: "近期热度最高的剧集",
+  requiresWebView: false,
+  functionName: "loadEnhancedDoubanList",
+  cacheDuration: 1800,
+  params: [
+    { name: "url", type: "constant", value: "https://m.douban.com/rexxar/api/v2/subject_collection/tv_hot/items?start=0&count=20" },
+    { name: "page", type: "page" }
+  ]
+},
+{
+  title: "豆瓣一周口碑剧集",
+  description: "上周评分最高的剧集",
+  requiresWebView: false,
+  functionName: "loadEnhancedDoubanList",
+  cacheDuration: 3600,
+  params: [
+    { name: "url", type: "constant", value: "https://m.douban.com/rexxar/api/v2/subject_collection/tv_weekly_best/items?start=0&count=20" },
+    { name: "page", type: "page" }
+  ]
+},
+{
+  title: "豆瓣华语口碑榜",
+  description: "近期最受好评的华语电影",
+  requiresWebView: false,
+  functionName: "loadEnhancedDoubanList",
+  cacheDuration: 3600,
+  params: [
+    { name: "url", type: "constant", value: "https://m.douban.com/rexxar/api/v2/subject_collection/movie_chinese_best_weekly/items?start=0&count=20" },
+    { name: "page", type: "page" }
+  ]
+},
+{
+  title: "豆瓣全球口碑榜",
+  description: "全球非华语高评分电影",
+  requiresWebView: false,
+  functionName: "loadEnhancedDoubanList",
+  cacheDuration: 3600,
+  params: [
+    { name: "url", type: "constant", value: "https://m.douban.com/rexxar/api/v2/subject_collection/movie_global_best_weekly/items?start=0&count=20" },
+    { name: "page", type: "page" }
+  ]
+},
+{
+  title: "豆瓣新片榜",
+  description: "本月最受关注的新上映电影",
+  requiresWebView: false,
+  functionName: "loadEnhancedDoubanList",
+  cacheDuration: 3600,
+  params: [
+    { name: "url", type: "constant", value: "https://m.douban.com/rexxar/api/v2/subject_collection/movie_latest/items?start=0&count=20" },
+    { name: "page", type: "page" }
+  ]
+},
+{
+  title: "豆瓣热门动画",
+  description: "近期热度最高的动画电影/剧集",
+  requiresWebView: false,
+  functionName: "loadEnhancedDoubanList",
+  cacheDuration: 1800,
+  params: [
+    { name: "url", type: "constant", value: "https://m.douban.com/rexxar/api/v2/subject_collection/tv_animation/items?start=0&count=20" },
+    { name: "page", type: "page" }
+  ]
+},
+    // -------------豆瓣模块-------------
+    {
+      title: "豆瓣自定义片单",
+      description: "支持格式:桌面/移动端豆列、官方榜单、App dispatch",
+      requiresWebView: false,
+      functionName: "loadEnhancedDoubanList",
+      cacheDuration: 3600,
+      params: [
+        { name: "url", title: "🔗 片单地址", type: "input", description: "支持格式:桌面/移动端豆列、官方榜单、App dispatch" },
+        { name: "page", title: "页码", type: "page" }
+      ]
+    },
+    {
+      title: "豆瓣电影实时热榜",
+      description: "来自豆瓣的当前热门电影榜单",
+      requiresWebView: false,
+      functionName: "loadDoubanHotListWithTmdb",
+      cacheDuration: 3600,
+      params: [
+        { name: "url", title: "🔗 列表地址", type: "constant", value: "https://www.douban.com/doubanapp/dispatch?uri=/subject_collection/movie_real_time_hotest/&dt_dapp=1" },
+        { name: "type", title: "🎭 类型", type: "constant", value: "movie" }
+      ]
     }
   ]
 };
 
-// ===============辅助函数===============
-let tmdbGenresCache = null;
+const API_KEY = 'f3ae69ddca232b56265600eb919d46ab'; // TMDB API Key
 
+// 提取 TMDB 的种类信息
 async function fetchTmdbGenres() {
-    if (tmdbGenresCache) return tmdbGenresCache;
-    
+  try {
     const [movieGenres, tvGenres] = await Promise.all([
-        Widget.tmdb.get('/genre/movie/list', { params: { language: 'zh-CN' } }),
-        Widget.tmdb.get('/genre/tv/list', { params: { language: 'zh-CN' } })
-    ]);
-    
-    tmdbGenresCache = {
-        movie: movieGenres.genres.reduce((acc, g) => ({ ...acc, [g.id]: g.name }), {}),
-        tv: tvGenres.genres.reduce((acc, g) => ({ ...acc, [g.id]: g.name }), {})
-    };
-    return tmdbGenresCache;
-}
-
-function getTmdbGenreTitles(genreIds, mediaType) {
-    const genres = tmdbGenresCache?.[mediaType] || {};
-    const topThreeIds = genreIds.slice(0, 3); 
-    return topThreeIds
-        .map(id => genres[id]?.trim() || `\u672a\u77e5\u7c7b\u578b(${id})`)
-        .filter(Boolean)
-        .join('•');
-}
-
-function formatItemDescription(item) {
-    let description = item.description || '';
-    const hasRating = /\u8bc4\u5206|rating/i.test(description);
-    const hasYear = /\u5e74\u4efd|year/i.test(description);
-    const hasType = /\u7c7b\u578b|type/i.test(description);
-    
-    if (item.itemType && !hasType) {
-        description = `\u7c7b\u578b: ${item.itemType} | ${description}`;
-    }
-    
-    if (item.rating && !hasRating) {
-        description = `\u8bc4\u5206: ${item.rating} | ${description}`;
-    }
-    
-    if (item.releaseDate && !hasYear) {
-        const year = String(item.releaseDate).substring(0,4);
-        if (/^\d{4}$/.test(year)) {
-            description = `\u5e74\u4efd: ${year} | ${description}`;
-        }
-    }
-    
-    return description
-        .replace(/^\|\s*/, '')
-        .replace(/\s*\|$/, '')
-        .trim();
-}
-
-function calculatePagination(params) {
-    let page = parseInt(params.page) || 1;
-    const limit = parseInt(params.limit) || 20;
-    
-    if (typeof params.start !== 'undefined') {
-        page = Math.floor(parseInt(params.start) / limit) + 1;
-    }
-    
-    const start = (page - 1) * limit;
-    return { page, limit, start };
-}
-
-function getBeijingDate() {
-    const now = new Date();
-    const beijingTime = now.getTime() + (8 * 60 * 60 * 1000);
-    const beijingDate = new Date(beijingTime);
-    return `${beijingDate.getUTCFullYear()}-${String(beijingDate.getUTCMonth() + 1).padStart(2, '0')}-${String(beijingDate.getUTCDate()).padStart(2, '0')}`;
-}
-
-// ================TMDB功能函数===============
-async function fetchTmdbData(api, params) {
-    const [data, genres] = await Promise.all([
-        Widget.tmdb.get(api, { params: params }),
-        fetchTmdbGenres()
+      Widget.tmdb.get('/genre/movie/list', { params: { language: 'zh-CN', api_key: API_KEY } }),
+      Widget.tmdb.get('/genre/tv/list', { params: { language: 'zh-CN', api_key: API_KEY } })
     ]);
 
-    return data.results
-        .filter((item) => {
-            return item.poster_path &&
-                   item.id &&
-                   (item.title || item.name) &&
-                   (item.title || item.name).trim().length > 0;
-        })
-        .map((item) => {
-            const mediaType = item.media_type || (item.title ? 'movie' : 'tv');
-            const genreIds = item.genre_ids || [];
-            const genreTitle = getTmdbGenreTitles(genreIds, mediaType);
-
-            return {
-                id: item.id,
-                type: "tmdb",
-                title: item.title || item.name,
-                description: item.overview,
-                releaseDate: item.release_date || item.first_air_date,
-                backdropPath: item.backdrop_path,
-                posterPath: item.poster_path,
-                rating: item.vote_average,
-                mediaType: mediaType,
-                genreTitle: genreTitle
-            };
-        });
+    return {
+      movie: movieGenres.genres.reduce((acc, g) => ({ ...acc, [g.id]: g.name }), {}),
+      tv: tvGenres.genres.reduce((acc, g) => ({ ...acc, [g.id]: g.name }), {})
+    };
+  } catch (error) {
+    console.error("Error fetching genres:", error);
+    return {};
+  }
 }
 
-async function loadTmdbTrendingData() {
-    const response = await Widget.http.get("https://raw.githubusercontent.com/quantumultxx/ForwardWidgets/refs/heads/main/data/TMDB_Trending.json");
-    return response.data;
+// 格式化每个影视项目
+function formatTmdbItem(item, genreMap) {
+  return {
+    id: item.id,
+    type: "tmdb",
+    title: item.title || item.name,
+    description: item.overview || "暂无简介",
+    releaseDate: item.release_date || item.first_air_date || "未知日期",
+    posterPath: item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : "",
+    backdropPath: item.backdrop_path ? `https://image.tmdb.org/t/p/w1280${item.backdrop_path}` : "",
+    rating: item.vote_average || "无评分",
+    mediaType: item.media_type || (item.title ? "movie" : "tv"),
+    genreTitle: genreMap[item.genre_ids[0]] || "未知类型" // 显示第一种类型
+  };
 }
 
-async function loadTodayGlobalMedia() {
-    const data = await loadTmdbTrendingData();
-    return data.today_global.map(item => ({
-        id: item.id.toString(),
-        type: "tmdb",
-        title: item.title,
-        genreTitle: item.genreTitle,
-        rating: item.rating,
-        description: item.overview,
-        releaseDate: item.release_date,
-        posterPath: item.poster_url,
-        backdropPath: item.title_backdrop,
-        mediaType: item.type,
-    }));
+// 获取当前热门电影与剧集
+async function loadTodayGlobalMedia(params = {}) {
+  const { language = "zh-CN" } = params;
+  try {
+    const res = await Widget.tmdb.get("/trending/all/day", { 
+      params: { language, api_key: API_KEY }
+    });
+    const genreMap = await fetchTmdbGenres();
+    return res.results.map(item => formatTmdbItem(item, genreMap.movie));
+  } catch (error) {
+    console.error("Error fetching trending media:", error);
+    return [];
+  }
 }
 
-async function loadWeekGlobalMovies(params) {
-    const data = await loadTmdbTrendingData();
-    return data.week_global_all.map(item => ({
-        id: item.id.toString(),
-        type: "tmdb",
-        title: item.title,
-        genreTitle: item.genreTitle,
-        rating: item.rating,
-        description: item.overview,
-        releaseDate: item.release_date,
-        posterPath: item.poster_url,
-        backdropPath: item.title_backdrop,
-        mediaType: item.type,
-    }));
+// 获取当前本周热门电影与剧集
+async function loadWeekGlobalMovies(params = {}) {
+  const { language = "zh-CN" } = params;
+  try {
+    const res = await Widget.tmdb.get("/trending/all/week", { 
+      params: { language, api_key: API_KEY }
+    });
+    const genreMap = await fetchTmdbGenres();
+    return res.results.map(item => formatTmdbItem(item, genreMap.movie));
+  } catch (error) {
+    console.error("Error fetching weekly global movies:", error);
+    return [];
+  }
 }
 
-async function tmdbPopularMovies(params) {
-    if ((parseInt(params.page) || 1) === 1) {
-        const data = await loadTmdbTrendingData();
-        return data.popular_movies
-      .slice(0, 15)
-      .map(item => ({
-        id: item.id.toString(),
-        type: "tmdb",
-        title: item.title,
-        genreTitle: item.genreTitle,
-        rating: item.rating,
-        description: item.overview,
-        releaseDate: item.release_date,
-        posterPath: item.poster_url,
-        backdropPath: item.title_backdrop,
-        mediaType: item.type
-            }));
+// 获取当前热门电影
+async function tmdbPopularMovies(params = {}) {
+  const { language = "zh-CN", page = 1, sort_by = "popularity.desc" } = params;
+  try {
+    // 如果选择的是热门度排序，使用popular端点；否则使用discover端点
+    if (sort_by.startsWith("popularity")) {
+      const res = await Widget.tmdb.get("/movie/popular", { 
+        params: { language, page, api_key: API_KEY }
+      });
+      const genreMap = await fetchTmdbGenres();
+      return res.results.map(item => formatTmdbItem(item, genreMap.movie));
+    } else {
+      const res = await Widget.tmdb.get("/discover/movie", {
+        params: { 
+          language, 
+          page, 
+          sort_by,
+          api_key: API_KEY 
+        }
+      });
+      const genreMap = await fetchTmdbGenres();
+      return res.results.map(item => formatTmdbItem(item, genreMap.movie));
+    }
+  } catch (error) {
+    console.error("Error fetching popular movies:", error);
+    return [];
+  }
+}
+
+// 获取高评分电影或剧集
+async function tmdbTopRated(params = {}) {
+  const { language = "zh-CN", page = 1, type = "movie", sort_by = "vote_average.desc" } = params;
+  try {
+    // 如果选择的是评分排序，使用top_rated端点；否则使用discover端点
+    if (sort_by.startsWith("vote_average")) {
+      const api = type === "movie" ? "/movie/top_rated" : "/tv/top_rated";
+      const res = await Widget.tmdb.get(api, { 
+        params: { language, page, api_key: API_KEY }
+      });
+      const genreMap = await fetchTmdbGenres();
+      return res.results.map(item => formatTmdbItem(item, genreMap[type]));
+    } else {
+      const endpoint = type === "movie" ? "/discover/movie" : "/discover/tv";
+      const res = await Widget.tmdb.get(endpoint, {
+        params: { 
+          language, 
+          page, 
+          sort_by,
+          api_key: API_KEY 
+        }
+      });
+      const genreMap = await fetchTmdbGenres();
+      return res.results.map(item => formatTmdbItem(item, genreMap[type]));
+    }
+  } catch (error) {
+    console.error("Error fetching top rated:", error);
+    return [];
+  }
+}
+
+// 获取播出平台内容
+async function tmdbDiscoverByNetwork(params = {}) {
+  const { language = "zh-CN", page = 1, with_networks, sort_by = "popularity.desc" } = params;
+  try {
+    const res = await Widget.tmdb.get("/discover/tv", {
+      params: { 
+        language, 
+        page, 
+        with_networks,
+        sort_by,
+        api_key: API_KEY 
+      }
+    });
+    const genreMap = await fetchTmdbGenres();
+    return res.results.map(item => formatTmdbItem(item, genreMap.tv));
+  } catch (error) {
+    console.error("Error fetching discover by network:", error);
+    return [];
+  }
+}
+
+// 获取出品公司内容
+async function tmdbDiscoverByCompany(params = {}) {
+  const { language = "zh-CN", page = 1, with_companies, type = "movie", with_genres, sort_by = "popularity.desc" } = params;
+  try {
+    // 构建API端点
+    const endpoint = type === "movie" ? "/discover/movie" : "/discover/tv";
+    
+    // 构建查询参数
+    const queryParams = { 
+      language, 
+      page, 
+      sort_by,
+      api_key: API_KEY
+    };
+    
+    // 添加出品公司过滤器
+    if (with_companies) {
+      queryParams.with_companies = with_companies;
     }
     
-    const [data, genres] = await Promise.all([
-        Widget.tmdb.get(`/movie/popular`, { 
-            params: { 
-                language: params.language || 'zh-CN',
-                page: parseInt(params.page) || 1,
-                region: 'CN'
-            } 
-        }),
-        fetchTmdbGenres()
-    ]);
+    // 添加题材类型过滤器
+    if (with_genres) {
+      queryParams.with_genres = with_genres;
+    }
     
-    return data.results.map(item => ({
-        id: String(item.id),
-        type: "tmdb",
-        title: item.title,
-        description: item.overview,
-        releaseDate: item.release_date,
-        backdropPath: item.backdrop_path,
-        posterPath: item.poster_path,
-        rating: item.vote_average,
-        mediaType: "movie",
-        genreTitle: getTmdbGenreTitles(item.genre_ids, "movie")
-    }));
+    // 发起API请求
+    const res = await Widget.tmdb.get(endpoint, {
+      params: queryParams
+    });
+    
+    const genreMap = await fetchTmdbGenres();
+    return res.results.map(item => formatTmdbItem(item, genreMap[type]));
+  } catch (error) {
+    console.error("Error fetching discover by company:", error);
+    return [];
+  }
 }
 
-async function tmdbTopRated(params) {
-    const type = params.type || 'movie';
-    const api = type === 'movie' ? `movie/top_rated` : `tv/top_rated`;
-    return await fetchTmdbData(api, params);
-}
+// -------------IMDB模块函数-------------
 
-// 新的函数：根据平台筛选剧集（替换旧的 tmdbDiscoverByNetwork）
-async function tmdbDiscoverTVShows(params = {}) {
-    const api = "discover/tv";
-    const discoveryParams = {
-        language: params.language || 'zh-CN',
-        page: params.page || 1,
-        with_networks: params.platform,
-        sort_by: params.sort_by || "popularity.desc",
+// IMDB热门内容 - 基于IMDB评分的高质量内容
+async function imdbPopularContent(params = {}) {
+  const { 
+    language = "zh-CN", 
+    page = 1, 
+    type = "movie", 
+    with_genres, 
+    with_origin_country,
+    sort_by = "vote_average.desc",
+    vote_average_gte = "7.0"
+  } = params;
+  
+  try {
+    // 构建API端点
+    const endpoint = type === "movie" ? "/discover/movie" : "/discover/tv";
+    
+    // 构建查询参数
+    const queryParams = { 
+      language, 
+      page, 
+      sort_by,
+      api_key: API_KEY,
+      // IMDB高分筛选
+      vote_count_gte: 100,  // 至少100个投票
+      with_watch_monetization_types: "flatrate|free|ads|rent|buy" // 确保内容可观看
     };
-
-    if (params.genre) {
-        discoveryParams.with_genres = params.genre;
+    
+    // 添加最低评分要求
+    if (vote_average_gte && vote_average_gte !== "0") {
+      queryParams.vote_average_gte = vote_average_gte;
     }
-
-    if (params.year) {
-        if (params.year.includes('-')) {
-            const [startYear, endYear] = params.year.split('-');
-            discoveryParams['first_air_date.gte'] = `${startYear.trim()}-01-01`;
-            discoveryParams['first_air_date.lte'] = `${endYear.trim()}-12-31`;
-        } else {
-            discoveryParams['first_air_date.gte'] = `${params.year.trim()}-01-01`;
-            discoveryParams['first_air_date.lte'] = `${params.year.trim()}-12-31`;
-        }
+    
+    // 添加题材类型过滤器
+    if (with_genres) {
+      queryParams.with_genres = with_genres;
     }
-
-    return await fetchTmdbData(api, discoveryParams);
+    
+    // 添加地区过滤器
+    if (with_origin_country) {
+      queryParams.with_origin_country = with_origin_country;
+    }
+    
+    // 发起API请求
+    const res = await Widget.tmdb.get(endpoint, {
+      params: queryParams
+    });
+    
+    const genreMap = await fetchTmdbGenres();
+    return res.results.map(item => {
+      const formattedItem = formatTmdbItem(item, genreMap[type]);
+      // 添加IMDB特殊标识
+      formattedItem.type = "imdb";
+      formattedItem.source = "IMDB高分精选";
+      return formattedItem;
+    });
+  } catch (error) {
+    console.error("Error fetching IMDB popular content:", error);
+    return [];
+  }
 }
 
-// 新的函数：根据公司筛选电影（替换旧的 tmdbCompanies）
-async function tmdbDiscoverMoviesByCompany(params = {}) {
-    const api = "discover/movie";
-    const discoveryParams = {
-        language: params.language || 'zh-CN',
-        page: params.page || 1,
-        with_companies: params.company,
-        sort_by: params.sort_by || "popularity.desc",
+// IMDB年度精选 - 按年份和地区筛选的精品内容
+async function imdbYearlySelection(params = {}) {
+  const { 
+    language = "zh-CN", 
+    page = 1, 
+    type = "movie", 
+    primary_release_year,
+    with_origin_country,
+    with_genres,
+    sort_by = "vote_average.desc",
+    vote_average_gte = "6.5"
+  } = params;
+  
+  try {
+    // 构建API端点
+    const endpoint = type === "movie" ? "/discover/movie" : "/discover/tv";
+    
+    // 构建查询参数
+    const queryParams = { 
+      language, 
+      page, 
+      sort_by,
+      api_key: API_KEY,
+      // 确保内容质量
+      vote_count_gte: 50  // 至少50个投票
     };
-
-    if (params.genre) {
-        discoveryParams.with_genres = params.genre;
+    
+    // 添加年份筛选
+    if (primary_release_year) {
+      if (type === "movie") {
+        queryParams.primary_release_year = primary_release_year;
+      } else {
+        queryParams.first_air_date_year = primary_release_year;
+      }
     }
-
-    if (params.year) {
-        if (params.year.includes('-')) {
-            const [startYear, endYear] = params.year.split('-');
-            discoveryParams['primary_release_date.gte'] = `${startYear.trim()}-01-01`;
-            discoveryParams['primary_release_date.lte'] = `${endYear.trim()}-12-31`;
-        } else {
-            discoveryParams['primary_release_date.gte'] = `${params.year.trim()}-01-01`;
-            discoveryParams['primary_release_date.lte'] = `${params.year.trim()}-12-31`;
-        }
+    
+    // 添加最低评分要求
+    if (vote_average_gte && vote_average_gte !== "0") {
+      queryParams.vote_average_gte = vote_average_gte;
     }
+    
+    // 添加地区过滤器
+    if (with_origin_country) {
+      queryParams.with_origin_country = with_origin_country;
+    }
+    
+    // 添加题材类型过滤器
+    if (with_genres) {
+      queryParams.with_genres = with_genres;
+    }
+    
+    // 发起API请求
+    const res = await Widget.tmdb.get(endpoint, {
+      params: queryParams
+    });
+    
+    const genreMap = await fetchTmdbGenres();
+    return res.results.map(item => {
+      const formattedItem = formatTmdbItem(item, genreMap[type]);
+      // 添加年度精选标识
+      formattedItem.type = "imdb-yearly";
+      formattedItem.source = `IMDB ${primary_release_year || '全年'}精选`;
+      formattedItem.year = primary_release_year || new Date(item.release_date || item.first_air_date).getFullYear();
+      return formattedItem;
+    });
+  } catch (error) {
+    console.error("Error fetching IMDB yearly selection:", error);
+    return [];
+  }
+}
 
-    return await fetchTmdbData(api, discoveryParams);
+// -------------Bangumi模块函数-------------
+
+// Bangumi热门新番 - 最新热门新番动画
+async function bangumiHotNewAnime(params = {}) {
+  const { 
+    language = "zh-CN", 
+    page = 1, 
+    season_year = "2024",
+    with_origin_country = "JP",
+    sort_by = "popularity.desc",
+    vote_average_gte = "6.0"
+  } = params;
+  
+  try {
+    const endpoint = "/discover/tv";
+    
+    // 构建查询参数 - 专注指定年份的新番
+    const queryParams = { 
+      language, 
+      page, 
+      sort_by,
+      api_key: API_KEY,
+      // 新番动画筛选
+      with_genres: "16", // 动画类型
+      first_air_date_year: season_year, // 指定年份新番
+      vote_count_gte: 10  // 新番投票较少，降低门槛
+    };
+    
+    // 添加制作地区
+    if (with_origin_country) {
+      queryParams.with_origin_country = with_origin_country;
+    }
+    
+    // 添加最低评分要求
+    if (vote_average_gte && vote_average_gte !== "0") {
+      queryParams.vote_average_gte = vote_average_gte;
+    }
+    
+    // 发起API请求
+    const res = await Widget.tmdb.get(endpoint, {
+      params: queryParams
+    });
+    
+    const genreMap = await fetchTmdbGenres();
+    return res.results.map(item => {
+      const formattedItem = formatTmdbItem(item, genreMap.tv);
+      // 添加Bangumi新番标识
+      formattedItem.type = "bangumi-new";
+      formattedItem.source = `Bangumi ${season_year}年新番`;
+      formattedItem.seasonYear = season_year;
+      formattedItem.isNewAnime = true;
+      return formattedItem;
+    });
+  } catch (error) {
+    console.error("Error fetching Bangumi hot new anime:", error);
+    return [];
+  }
+}
+
+// Bangumi排行榜 - 不同类型的动画排行榜
+async function bangumiRankingList(params = {}) {
+  const { 
+    language = "zh-CN", 
+    page = 1, 
+    ranking_type = "top_rated",
+    with_origin_country = "JP",
+    vote_average_gte = "7.0"
+  } = params;
+  
+  try {
+    const endpoint = "/discover/tv";
+    
+    // 根据排行榜类型配置不同参数
+    const queryParams = { 
+      language, 
+      page, 
+      api_key: API_KEY,
+      with_genres: "16" // 动画类型
+    };
+    
+    // 根据排行榜类型设置不同的筛选条件
+    switch (ranking_type) {
+      case "top_rated":
+        // 评分排行榜
+        queryParams.sort_by = "vote_average.desc";
+        queryParams.vote_count_gte = 100;
+        queryParams.vote_average_gte = vote_average_gte || "7.5";
+        break;
+      case "popular":
+        // 热门排行榜
+        queryParams.sort_by = "popularity.desc";
+        queryParams.vote_count_gte = 50;
+        queryParams.vote_average_gte = vote_average_gte || "6.0";
+        break;
+      case "recent":
+        // 新番排行榜
+        queryParams.sort_by = "first_air_date.desc";
+        queryParams.first_air_date_gte = "2023-01-01";
+        queryParams.vote_count_gte = 20;
+        queryParams.vote_average_gte = vote_average_gte || "6.0";
+        break;
+      case "classic":
+        // 经典排行榜
+        queryParams.sort_by = "vote_average.desc";
+        queryParams.first_air_date_lte = "2022-12-31";
+        queryParams.vote_count_gte = 200;
+        queryParams.vote_average_gte = vote_average_gte || "8.0";
+        break;
+      default:
+        queryParams.sort_by = "vote_average.desc";
+        queryParams.vote_count_gte = 50;
+    }
+    
+    // 添加制作地区
+    if (with_origin_country) {
+      queryParams.with_origin_country = with_origin_country;
+    }
+    
+    // 发起API请求
+    const res = await Widget.tmdb.get(endpoint, {
+      params: queryParams
+    });
+    
+    const genreMap = await fetchTmdbGenres();
+    return res.results.map(item => {
+      const formattedItem = formatTmdbItem(item, genreMap.tv);
+      // 添加排行榜标识
+      formattedItem.type = "bangumi-ranking";
+      formattedItem.source = `Bangumi${getRankingTypeName(ranking_type)}`;
+      formattedItem.rankingType = ranking_type;
+      return formattedItem;
+    });
+  } catch (error) {
+    console.error("Error fetching Bangumi ranking list:", error);
+    return [];
+  }
+}
+
+// 获取排行榜类型中文名称
+function getRankingTypeName(ranking_type) {
+  const nameMap = {
+    top_rated: "评分排行榜",
+    popular: "热门排行榜",
+    recent: "新番排行榜",
+    classic: "经典排行榜"
+  };
+  return nameMap[ranking_type] || "排行榜";
+}
+
+// -------------TMDB剧集模块函数-------------
+
+// TMDB热门剧集 - 热门电视剧集和迷你剧
+async function tmdbPopularTVShows(params = {}) {
+  const { 
+    language = "zh-CN", 
+    page = 1, 
+    with_origin_country,
+    with_genres,
+    sort_by = "popularity.desc",
+    vote_average_gte = "0"
+  } = params;
+  
+  try {
+    const endpoint = "/discover/tv";
+    
+    // 构建查询参数
+    const queryParams = { 
+      language, 
+      page, 
+      sort_by,
+      api_key: API_KEY,
+      // 剧集筛选
+      vote_count_gte: 50  // 确保有足够投票数
+    };
+    
+    // 添加制作地区
+    if (with_origin_country) {
+      queryParams.with_origin_country = with_origin_country;
+    }
+    
+    // 添加剧集类型
+    if (with_genres) {
+      queryParams.with_genres = with_genres;
+    }
+    
+    // 添加最低评分要求
+    if (vote_average_gte && vote_average_gte !== "0") {
+      queryParams.vote_average_gte = vote_average_gte;
+    }
+    
+    // 发起API请求
+    const res = await Widget.tmdb.get(endpoint, {
+      params: queryParams
+    });
+    
+    const genreMap = await fetchTmdbGenres();
+    return res.results.map(item => {
+      const formattedItem = formatTmdbItem(item, genreMap.tv);
+      // 添加剧集特殊标识
+      formattedItem.type = "tmdb-tv";
+      formattedItem.source = "TMDB热门剧集";
+      formattedItem.contentType = "TV剧集";
+      return formattedItem;
+    });
+  } catch (error) {
+    console.error("Error fetching TMDB popular TV shows:", error);
+    return [];
+  }
+}
+
+// TMDB剧集时间榜 - 按时间和地区筛选的剧集内容
+async function tmdbTVShowsByTime(params = {}) {
+  const { 
+    language = "zh-CN", 
+    page = 1, 
+    time_period = "current_year",
+    with_origin_country,
+    with_genres,
+    sort_by = "first_air_date.desc",
+    vote_average_gte = "0"
+  } = params;
+  
+  try {
+    const endpoint = "/discover/tv";
+    
+    // 根据时间范围计算日期
+    const dateRange = getTimePeriodDateRange(time_period);
+    
+    // 构建查询参数
+    const queryParams = { 
+      language, 
+      page, 
+      sort_by,
+      api_key: API_KEY,
+      // 时间筛选
+      vote_count_gte: 20  // 较低门槛，包含更多时间范围内的剧集
+    };
+    
+    // 添加时间范围
+    if (dateRange.start) {
+      queryParams.first_air_date_gte = dateRange.start;
+    }
+    if (dateRange.end) {
+      queryParams.first_air_date_lte = dateRange.end;
+    }
+    
+    // 添加制作地区
+    if (with_origin_country) {
+      queryParams.with_origin_country = with_origin_country;
+    }
+    
+    // 添加剧集类型
+    if (with_genres) {
+      queryParams.with_genres = with_genres;
+    }
+    
+    // 添加最低评分要求
+    if (vote_average_gte && vote_average_gte !== "0") {
+      queryParams.vote_average_gte = vote_average_gte;
+    }
+    
+    // 发起API请求
+    const res = await Widget.tmdb.get(endpoint, {
+      params: queryParams
+    });
+    
+    const genreMap = await fetchTmdbGenres();
+    return res.results.map(item => {
+      const formattedItem = formatTmdbItem(item, genreMap.tv);
+      // 添加时间榜标识
+      formattedItem.type = "tmdb-tv-time";
+      formattedItem.source = `TMDB ${getTimePeriodName(time_period)}剧集`;
+      formattedItem.timePeriod = time_period;
+      formattedItem.contentType = "时间榜剧集";
+      return formattedItem;
+    });
+  } catch (error) {
+    console.error("Error fetching TMDB TV shows by time:", error);
+    return [];
+  }
+}
+
+// -------------TMDB剧集辅助函数-------------
+
+// 获取时间范围的日期区间
+function getTimePeriodDateRange(time_period) {
+  const currentYear = new Date().getFullYear();
+  const lastYear = currentYear - 1;
+  
+  const periodMap = {
+    current_year: { start: `${currentYear}-01-01`, end: `${currentYear}-12-31` },
+    last_year: { start: `${lastYear}-01-01`, end: `${lastYear}-12-31` },
+    recent_3_years: { start: `${currentYear - 2}-01-01`, end: `${currentYear}-12-31` },
+    recent_5_years: { start: `${currentYear - 4}-01-01`, end: `${currentYear}-12-31` },
+    "2020s": { start: "2020-01-01", end: "2029-12-31" },
+    "2010s": { start: "2010-01-01", end: "2019-12-31" },
+    "2000s": { start: "2000-01-01", end: "2009-12-31" },
+    earlier: { start: "1900-01-01", end: "1999-12-31" }
+  };
+  
+  return periodMap[time_period] || { start: null, end: null };
+}
+
+// 获取时间范围的中文名称
+function getTimePeriodName(time_period) {
+  const nameMap = {
+    current_year: "本年度",
+    last_year: "去年",
+    recent_3_years: "最近3年",
+    recent_5_years: "最近5年",
+    "2020s": "2020年代",
+    "2010s": "2010年代", 
+    "2000s": "2000年代",
+    earlier: "早期"
+  };
+  return nameMap[time_period] || "全部时期";
 }
