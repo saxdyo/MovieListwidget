@@ -759,46 +759,46 @@ WidgetMetadata = {
       ]
     },
     // ------------- 豆瓣热门片单 -------------
-{
-  title: "豆瓣一周口碑榜",
-  description: "豆瓣电影每周口碑榜 Top10",
-  requiresWebView: false,
-  functionName: "loadEnhancedDoubanList",
-  cacheDuration: 3600,
-  params: [
-    { name: "url", type: "constant", value: "https://m.douban.com/rexxar/api/v2/subject_collection/movie_weekly_best/items?start=0&count=20" },
-    { name: "page", type: "page" }
-  ]
-},
-{
-  title: "豆瓣实时热门电影",
-  description: "此刻正在热搜的电影",
-  requiresWebView: false,
-  functionName: "loadEnhancedDoubanList",
-  cacheDuration: 1800,
-  params: [
-    { name: "url", type: "constant", value: "https://m.douban.com/rexxar/api/v2/subject_collection/movie_real_time_hotest/items?start=0&count=20" },
-    { name: "page", type: "page" }
-  ]
-},
-{
-  title: "豆瓣热门剧集",
-  description: "近期热度最高的剧集",
-  requiresWebView: false,
-  functionName: "loadEnhancedDoubanList",
-  cacheDuration: 1800,
-  params: [
-    { name: "url", type: "constant", value: "https://m.douban.com/rexxar/api/v2/subject_collection/tv_hot/items?start=0&count=20" },
-    { name: "page", type: "page" }
-  ]
-},
-{
-  title: "豆瓣一周口碑剧集",
-  description: "上周评分最高的剧集",
-  requiresWebView: false,
-  functionName: "loadEnhancedDoubanList",
-  cacheDuration: 3600,
-  params: [
+  {
+    title: "豆瓣一周口碑榜",
+    description: "豆瓣电影每周口碑榜 Top10",
+    requiresWebView: false,
+    functionName: "loadEnhancedDoubanList",
+    cacheDuration: 3600,
+    params: [
+      { name: "url", type: "constant", value: "https://m.douban.com/rexxar/api/v2/subject_collection/movie_weekly_best/items?start=0&count=20" },
+      { name: "page", type: "page" }
+      ]
+    },
+  {
+    title: "豆瓣实时热门电影",
+    description: "此刻正在热搜的电影",
+    requiresWebView: false,
+    functionName: "loadEnhancedDoubanList",
+    cacheDuration: 1800,
+    params: [
+      { name: "url", type: "constant", value: "https://m.douban.com/rexxar/api/v2/subject_collection/movie_real_time_hotest/items?start=0&count=20" },
+      { name: "page", type: "page" }
+    ]
+  },
+  {
+    title: "豆瓣热门剧集",
+    description: "近期热度最高的剧集",
+    requiresWebView: false,
+    functionName: "loadEnhancedDoubanList",
+    cacheDuration: 1800,
+    params: [
+      { name: "url", type: "constant", value: "https://m.douban.com/rexxar/api/v2/subject_collection/tv_hot/items?start=0&count=20" },
+      { name: "page", type: "page" }
+    ]
+  },
+  {
+    title: "豆瓣一周口碑剧集",
+    description: "上周评分最高的剧集",
+    requiresWebView: false,
+    functionName: "loadEnhancedDoubanList",
+    cacheDuration: 3600,
+    params: [
     { name: "url", type: "constant", value: "https://m.douban.com/rexxar/api/v2/subject_collection/tv_weekly_best/items?start=0&count=20" },
     { name: "page", type: "page" }
   ]
