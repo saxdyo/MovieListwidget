@@ -516,7 +516,44 @@ WidgetMetadata = {
            type: "page"
          }
        ]
-     }
+     },
+     {
+      title: "影视主题分类",
+      description: "按类型/题材分类展示电影或剧集",
+      requiresWebView: false,
+      functionName: "classifyByGenre",
+      cacheDuration: 3600,
+      params: [
+        {
+          name: "type",
+          title: "内容类型",
+          type: "enumeration",
+          description: "选择电影或剧集",
+          value: "movie",
+          enumOptions: [
+            { title: "电影", value: "movie" },
+            { title: "剧集", value: "tv" }
+          ]
+        },
+        {
+          name: "genre",
+          title: "主题类型",
+          type: "input",
+          description: "输入类型ID或名称，如18(剧情)、35(喜剧)等"
+        },
+        {
+          name: "page",
+          title: "页码",
+          type: "page"
+        },
+        {
+          name: "language",
+          title: "语言",
+          type: "language",
+          value: "zh-CN"
+        }
+      ]
+    }
 
    ]
  };
@@ -1470,6 +1507,44 @@ async function loadCardItems(params = {}) {
   } catch (error) {
     console.error("解析豆瓣片单(TMDB版)失败:", error);
     throw error;
+  }
+}
+
+// 按类型/题材分类展示电影或剧集
+async function classifyByGenre(params = {}) {
+  const { type = "movie", genre = "", page = 1, language = "zh-CN" } = params;
+  try {
+    const endpoint = type === "movie" ? "/discover/movie" : "/discover/tv";
+    const queryParams = {
+      language,
+      page,
+      api_key: API_KEY
+    };
+    if (genre) {
+      queryParams.with_genres = genre;
+    }
+    const res = await Widget.tmdb.get(endpoint, { params: queryParams });
+    const genreMap = await fetchTmdbGenres();
+    const genreDict = type === "movie" ? genreMap.movie : genreMap.tv;
+    return res.results
+      .map(item => formatTmdbItem(item, genreDict))
+      .filter(item => {
+        // 复用过滤逻辑
+        if (!item.posterPath) return false;
+        const varietyGenreIds = [10767];
+        if (item.genre_ids && item.genre_ids.some(id => varietyGenreIds.includes(id))) return false;
+        const lowerTitle = (item.title || '').toLowerCase();
+        const lowerDesc = (item.description || '').toLowerCase();
+        const showKeywords = ['综艺', '真人秀', '脱口秀', '访谈', '节目'];
+        if (showKeywords.some(k => lowerTitle.includes(k) || lowerDesc.includes(k))) return false;
+        if (lowerTitle.includes('短剧') || lowerDesc.includes('短剧')) return false;
+        const adultKeywords = ['19禁', '성인', '成人', '情色', '色情', 'AV', '에로', '야동'];
+        if (adultKeywords.some(k => lowerTitle.includes(k) || lowerDesc.includes(k) || (item.genreTitle && item.genreTitle.includes(k)))) return false;
+        return true;
+      });
+  } catch (error) {
+    console.error("Error in classifyByGenre:", error);
+    return [];
   }
 }
 
