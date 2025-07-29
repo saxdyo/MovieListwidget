@@ -626,17 +626,24 @@ async function fetchTmdbGenres() {
 
 // 格式化每个影视项目
 function formatTmdbItem(item, genreMap) {
+  // 优先选用中文标题
+  function pickChinese(...args) {
+    for (const str of args) {
+      if (str && /[\u4e00-\u9fa5]/.test(str)) return str;
+    }
+    return args.find(Boolean) || '';
+  }
   return {
     id: item.id,
     type: "tmdb",
-    title: item.title || item.name,
+    title: pickChinese(item.original_title, item.original_name, item.title, item.name),
     description: item.overview || "暂无简介",
     releaseDate: item.release_date || item.first_air_date || "未知日期",
     posterPath: item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : "",
     backdropPath: item.backdrop_path ? `https://image.tmdb.org/t/p/w1280${item.backdrop_path}` : "",
     rating: item.vote_average || "无评分",
     mediaType: item.media_type || (item.title ? "movie" : "tv"),
-    genreTitle: genreMap[item.genre_ids[0]] || "未知类型" // 显示第一种类型
+    genreTitle: genreMap[item.genre_ids && item.genre_ids[0]] || "未知类型"
   };
 }
 
