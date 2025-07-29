@@ -744,18 +744,18 @@ WidgetMetadata = {
     },
     // -------------豆瓣模块-------------
     {
-      title: "豆瓣片单排行",
-      description: "豆瓣各种片单排行榜单（支持多选榜单类型）",
+      title: "豆瓣电影Top250",
+      description: "豆瓣电影Top250榜单",
       requiresWebView: false,
       functionName: "loadDoubanList",
       cacheDuration: 3600,
       params: [
         {
-          name: "list_types",
+          name: "list_type",
           title: "榜单类型",
-          type: "multi_enumeration",
-          description: "选择要查看的豆瓣榜单类型（可多选）",
-          value: ["movie_top250"],
+          type: "enumeration",
+          description: "选择要查看的豆瓣榜单类型",
+          value: "movie_top250",
           enumOptions: [
             { title: "电影Top250", value: "movie_top250" },
             { title: "剧集Top250", value: "tv_top250" },
@@ -1573,10 +1573,7 @@ function formatDoubanItem(item, source = "豆瓣") {
 
 // 统一的豆瓣榜单获取函数
 async function loadDoubanList(params = {}) {
-  const { list_types = ["movie_top250"], page = 1 } = params;
-  
-  // 确保list_types是数组
-  const selectedTypes = Array.isArray(list_types) ? list_types : [list_types];
+  const { list_type = "movie_top250", page = 1 } = params;
   
   // 获取榜单名称和正确的API端点
   const listConfigs = {
@@ -1607,86 +1604,58 @@ async function loadDoubanList(params = {}) {
     return endpoints;
   };
   
-  // 获取单个榜单数据
-  const fetchSingleList = async (listType) => {
-    const listConfig = listConfigs[listType] || { name: "豆瓣榜单", endpoint: listType };
-    const listName = listConfig.name;
-    const endpoint = listConfig.endpoint;
+  const listConfig = listConfigs[list_type] || { name: "豆瓣榜单", endpoint: list_type };
+  const listName = listConfig.name;
+  const endpoint = listConfig.endpoint;
+  
+  try {
+    const start = (page - 1) * 20;
     
-    try {
-      const start = (page - 1) * 20;
-      
-      // 尝试多个可能的端点
-      const endpoints = tryEndpoints(endpoint);
-      let response = null;
-      
-      for (const tryEndpoint of endpoints) {
-        try {
-          response = await Widget.http.get(`${DOUBAN_API_BASE}/subject_collection/${tryEndpoint}/items`, {
-            headers: {
-              "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Mobile/15E148 Safari/604.1",
-              "Referer": `https://m.douban.com/subject_collection/${tryEndpoint}/`,
-              "Accept": "application/json, text/plain, */*",
-              "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8",
-              "Accept-Encoding": "gzip, deflate, br",
-              "Connection": "keep-alive",
-              "X-Requested-With": "XMLHttpRequest",
-              "Cache-Control": "no-cache"
-            },
-            params: {
-              start: start,
-              count: 20,
-              updated_at: "",
-              items_only: 1,
-              for_mobile: 1
-            },
-            timeout: 10000
-          });
-          
-          if (response.data && response.data.subject_collection_items) {
-            break;
-          }
-        } catch (endpointError) {
-          continue;
+    // 尝试多个可能的端点
+    const endpoints = tryEndpoints(endpoint);
+    let response = null;
+    
+    for (const tryEndpoint of endpoints) {
+      try {
+        response = await Widget.http.get(`${DOUBAN_API_BASE}/subject_collection/${tryEndpoint}/items`, {
+          headers: {
+            "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Mobile/15E148 Safari/604.1",
+            "Referer": `https://m.douban.com/subject_collection/${tryEndpoint}/`,
+            "Accept": "application/json, text/plain, */*",
+            "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8",
+            "Accept-Encoding": "gzip, deflate, br",
+            "Connection": "keep-alive",
+            "X-Requested-With": "XMLHttpRequest",
+            "Cache-Control": "no-cache"
+          },
+          params: {
+            start: start,
+            count: 20,
+            updated_at: "",
+            items_only: 1,
+            for_mobile: 1
+          },
+          timeout: 10000
+        });
+        
+        if (response.data && response.data.subject_collection_items) {
+          break;
         }
+      } catch (endpointError) {
+        continue;
       }
-      
-      if (!response || !response.data || !response.data.subject_collection_items) {
-        console.error(`All endpoints failed for list_type: ${listType}`);
-        return [];
-      }
-      
-      return response.data.subject_collection_items
-        .map(item => formatDoubanItem(item, listName))
-        .filter(item => item !== null);
-    } catch (error) {
-      console.error(`Error fetching Douban list ${listType}:`, error);
+    }
+    
+    if (!response || !response.data || !response.data.subject_collection_items) {
+      console.error(`All endpoints failed for list_type: ${list_type}`);
       return [];
     }
-  };
-  
-  // 获取所有选中的榜单数据
-  const allResults = [];
-  
-  for (const listType of selectedTypes) {
-    const items = await fetchSingleList(listType);
-    allResults.push(...items);
+    
+    return response.data.subject_collection_items
+      .map(item => formatDoubanItem(item, listName))
+      .filter(item => item !== null);
+  } catch (error) {
+    console.error(`Error fetching Douban list ${list_type}:`, error);
+    return [];
   }
-  
-  // 根据榜单类型设置不同的缓存时间
-  const hasRealTime = selectedTypes.some(type => type.includes("real_time") || type === "movie_showing");
-  const cacheDuration = hasRealTime ? 1800 : 3600;
-  
-  // 去重并返回结果
-  const uniqueResults = [];
-  const seenIds = new Set();
-  
-  for (const item of allResults) {
-    if (!seenIds.has(item.id)) {
-      seenIds.add(item.id);
-      uniqueResults.push(item);
-    }
-  }
-  
-  return uniqueResults;
 }
