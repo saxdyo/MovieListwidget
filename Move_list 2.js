@@ -555,6 +555,38 @@ WidgetMetadata = {
           ]
         },
         {
+          name: "with_origin_country",
+          title: "地区",
+          type: "enumeration",
+          description: "选择制作地区",
+          value: "",
+          enumOptions: [
+            { title: "全部", value: "" },
+            { title: "中国", value: "CN" },
+            { title: "美国", value: "US" },
+            { title: "日本", value: "JP" },
+            { title: "韩国", value: "KR" },
+            { title: "欧洲", value: "GB,FR,DE,ES,IT" }
+          ]
+        },
+        {
+          name: "sort_by",
+          title: "排序方式",
+          type: "enumeration",
+          description: "选择排序方式",
+          value: "popularity.desc",
+          enumOptions: [
+            { title: "热门度↓", value: "popularity.desc" },
+            { title: "热门度↑", value: "popularity.asc" },
+            { title: "评分↓", value: "vote_average.desc" },
+            { title: "评分↑", value: "vote_average.asc" },
+            { title: "上映日期↓", value: "release_date.desc" },
+            { title: "上映日期↑", value: "release_date.asc" },
+            { title: "投票数↓", value: "vote_count.desc" },
+            { title: "投票数↑", value: "vote_count.asc" }
+          ]
+        },
+        {
           name: "page",
           title: "页码",
           type: "page"
@@ -1525,16 +1557,20 @@ async function loadCardItems(params = {}) {
 
 // 按类型/题材分类展示电影或剧集
 async function classifyByGenre(params = {}) {
-  const { type = "movie", genre = "", page = 1, language = "zh-CN" } = params;
+  const { type = "movie", genre = "", page = 1, language = "zh-CN", with_origin_country = "", sort_by = "popularity.desc" } = params;
   try {
     const endpoint = type === "movie" ? "/discover/movie" : "/discover/tv";
     const queryParams = {
       language,
       page,
-      api_key: API_KEY
+      api_key: API_KEY,
+      sort_by
     };
     if (genre) {
       queryParams.with_genres = genre;
+    }
+    if (with_origin_country) {
+      queryParams.with_origin_country = with_origin_country;
     }
     const res = await Widget.tmdb.get(endpoint, { params: queryParams });
     const genreMap = await fetchTmdbGenres();
