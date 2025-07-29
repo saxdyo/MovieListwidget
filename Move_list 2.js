@@ -875,6 +875,8 @@ WidgetMetadata = {
 
 const API_KEY = 'f3ae69ddca232b56265600eb919d46ab'; // TMDB API Key
 
+// 以下所有函数保持不变（loadTodayGlobalMedia, loadWeekGlobalMovies, tmdbPopularMovies, tmdbTopRated, tmdbDiscoverByNetwork, tmdbDiscoverByCompany, imdbPopularContent, imdbYearlySelection, bangumiHotNewAnime, bangumiRankingList, tmdbPopularTVShows, tmdbTVShowsByTime, fetchTmdbGenres, formatTmdbItem, getRankingTypeName, getTimePeriodDateRange, getTimePeriodName）
+// 由于篇幅限制，这里省略重复代码，请保留你原来的全部函数实现
 // 提取 TMDB 的种类信息
 async function fetchTmdbGenres() {
   try {
