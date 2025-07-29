@@ -1577,4 +1577,69 @@ function generateGenreTitleFromTmdb(tmdbItem, doubanItem) {
     return '影视';
 }
 
+// 解析豆瓣片单（TMDB版）
+async function loadCardItems(params = {}) {
+  try {
+    const url = params.url;
+    if (!url) throw new Error("缺少片单 URL");
+    if (url.includes("douban.com/doulist/")) {
+      // 豆瓣桌面端豆列
+      const listId = url.match(/doulist\/(\d+)/)?.[1];
+      if (!listId) throw new Error("无法获取片单 ID");
+      const page = params.page || 1;
+      const count = 25;
+      const start = (page - 1) * count;
+      const pageUrl = `https://www.douban.com/doulist/${listId}/?start=${start}&sort=seq&playable=0&sub_type=`;
+      const response = await Widget.http.get(pageUrl, {
+        headers: {
+          Referer: `https://movie.douban.com/explore`,
+          "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+        },
+      });
+      if (!response || !response.data) throw new Error("获取片单数据失败");
+      const docId = Widget.dom.parse(response.data);
+      if (docId < 0) throw new Error("解析 HTML 失败");
+      const videoElementIds = Widget.dom.select(docId, ".doulist-item .title a");
+      let doubanIds = [];
+      for (const itemId of videoElementIds) {
+        const text = await Widget.dom.text(itemId);
+        const chineseTitle = text.trim().split(' ')[0];
+        if (chineseTitle) doubanIds.push({ title: chineseTitle, type: "multi" });
+      }
+      return await fetchImdbItemsForDouban(doubanIds);
+    } else if (url.includes("douban.com/subject_collection/")) {
+      // 豆瓣官方榜单
+      const listId = url.match(/subject_collection\/(\w+)/)?.[1];
+      if (!listId) throw new Error("无法获取合集 ID");
+      const page = params.page || 1;
+      const count = 20;
+      const start = (page - 1) * count;
+      let pageUrl = `https://m.douban.com/rexxar/api/v2/subject_collection/${listId}/items?start=${start}&count=${count}&updated_at&items_only=1&type_tag&for_mobile=1`;
+      params.url = pageUrl;
+      const response = await Widget.http.get(pageUrl, {
+        headers: {
+          Referer: `https://m.douban.com/subject_collection/${listId}/`,
+          "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+        },
+      });
+      if (response.data && response.data.subject_collection_items) {
+        return await fetchImdbItemsForDouban(response.data.subject_collection_items);
+      }
+      return [];
+    } else if (url.includes("m.douban.com/doulist/")) {
+      // 移动端豆列转桌面端
+      const desktopUrl = url.replace("m.douban.com", "www.douban.com");
+      return await loadCardItems({ ...params, url: desktopUrl });
+    } else if (url.includes("douban.com/doubanapp/dispatch")) {
+      // App dispatch
+      const parsedUrl = parseDoubanAppDispatchUrl(url);
+      return await loadCardItems({ ...params, url: parsedUrl });
+    }
+    return [];
+  } catch (error) {
+    console.error("解析豆瓣片单(TMDB版)失败:", error);
+    throw error;
+  }
+}
+
 
