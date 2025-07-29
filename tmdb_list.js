@@ -745,112 +745,32 @@ WidgetMetadata = {
     },
     // -------------豆瓣模块-------------
     {
-      title: "豆瓣电影Top250",
-      description: "豆瓣电影Top250榜单",
+      title: "豆瓣片单排行",
+      description: "豆瓣各种片单排行榜单",
       requiresWebView: false,
-      functionName: "loadDoubanTop250Movies",
+      functionName: "loadDoubanList",
       cacheDuration: 3600,
       params: [
-        { name: "page", title: "页码", type: "page" }
-      ]
-    },
-    {
-      title: "豆瓣剧集Top250",
-      description: "豆瓣剧集Top250榜单",
-      requiresWebView: false,
-      functionName: "loadDoubanTop250Shows",
-      cacheDuration: 3600,
-      params: [
-        { name: "page", title: "页码", type: "page" }
-      ]
-    },
-    {
-      title: "豆瓣一周电影口碑榜",
-      description: "豆瓣一周电影口碑榜",
-      requiresWebView: false,
-      functionName: "loadDoubanWeeklyMovies",
-      cacheDuration: 3600,
-      params: [
-        { name: "page", title: "页码", type: "page" }
-      ]
-    },
-    {
-      title: "豆瓣华语口碑剧集榜",
-      description: "豆瓣华语口碑剧集榜",
-      requiresWebView: false,
-      functionName: "loadDoubanChineseShows",
-      cacheDuration: 3600,
-      params: [
-        { name: "page", title: "页码", type: "page" }
-      ]
-    },
-    {
-      title: "豆瓣全球口碑剧集榜",
-      description: "豆瓣全球口碑剧集榜",
-      requiresWebView: false,
-      functionName: "loadDoubanGlobalShows",
-      cacheDuration: 3600,
-      params: [
-        { name: "page", title: "页码", type: "page" }
-      ]
-    },
-    {
-      title: "豆瓣国内热播综艺",
-      description: "豆瓣国内热播综艺榜",
-      requiresWebView: false,
-      functionName: "loadDoubanDomesticShows",
-      cacheDuration: 3600,
-      params: [
-        { name: "page", title: "页码", type: "page" }
-      ]
-    },
-    {
-      title: "豆瓣国外热播综艺",
-      description: "豆瓣国外热播综艺榜",
-      requiresWebView: false,
-      functionName: "loadDoubanForeignShows",
-      cacheDuration: 3600,
-      params: [
-        { name: "page", title: "页码", type: "page" }
-      ]
-    },
-    {
-      title: "豆瓣当地影院热映",
-      description: "豆瓣当地影院热映榜",
-      requiresWebView: false,
-      functionName: "loadDoubanShowingMovies",
-      cacheDuration: 1800,
-      params: [
-        { name: "page", title: "页码", type: "page" }
-      ]
-    },
-    {
-      title: "豆瓣电影实时热榜",
-      description: "豆瓣电影实时热榜",
-      requiresWebView: false,
-      functionName: "loadDoubanRealTimeMovies",
-      cacheDuration: 1800,
-      params: [
-        { name: "page", title: "页码", type: "page" }
-      ]
-    },
-    {
-      title: "豆瓣剧集实时热榜",
-      description: "豆瓣剧集实时热榜",
-      requiresWebView: false,
-      functionName: "loadDoubanRealTimeShows",
-      cacheDuration: 1800,
-      params: [
-        { name: "page", title: "页码", type: "page" }
-      ]
-    },
-    {
-      title: "豆瓣书影音实时热榜",
-      description: "豆瓣书影音实时热榜",
-      requiresWebView: false,
-      functionName: "loadDoubanRealTimeAll",
-      cacheDuration: 1800,
-      params: [
+        {
+          name: "list_type",
+          title: "榜单类型",
+          type: "enumeration",
+          description: "选择要查看的豆瓣榜单类型",
+          value: "movie_top250",
+          enumOptions: [
+            { title: "电影Top250", value: "movie_top250" },
+            { title: "剧集Top250", value: "tv_top250" },
+            { title: "一周电影口碑榜", value: "movie_weekly_best" },
+            { title: "华语口碑剧集榜", value: "tv_chinese_best_weekly" },
+            { title: "全球口碑剧集榜", value: "tv_global_best_weekly" },
+            { title: "国内热播综艺", value: "show_domestic" },
+            { title: "国外热播综艺", value: "show_foreign" },
+            { title: "当地影院热映", value: "movie_showing" },
+            { title: "电影实时热榜", value: "movie_real_time_hotest" },
+            { title: "剧集实时热榜", value: "tv_real_time_hotest" },
+            { title: "书影音实时热榜", value: "subject_real_time_hotest" }
+          ]
+        },
         { name: "page", title: "页码", type: "page" }
       ]
     }
@@ -1687,57 +1607,61 @@ async function loadDoubanList(collectionId, params = {}) {
   }
 }
 
-// 豆瓣电影Top250
-async function loadDoubanTop250Movies(params = {}) {
-  return await loadDoubanList("movie_top250", params);
-}
-
-// 豆瓣剧集Top250
-async function loadDoubanTop250Shows(params = {}) {
-  return await loadDoubanList("tv_top250", params);
-}
-
-// 豆瓣一周电影口碑榜
-async function loadDoubanWeeklyMovies(params = {}) {
-  return await loadDoubanList("movie_weekly_best", params);
-}
-
-// 豆瓣华语口碑剧集榜
-async function loadDoubanChineseShows(params = {}) {
-  return await loadDoubanList("tv_chinese_best_weekly", params);
-}
-
-// 豆瓣全球口碑剧集榜
-async function loadDoubanGlobalShows(params = {}) {
-  return await loadDoubanList("tv_global_best_weekly", params);
-}
-
-// 豆瓣国内热播综艺
-async function loadDoubanDomesticShows(params = {}) {
-  return await loadDoubanList("show_domestic", params);
-}
-
-// 豆瓣国外热播综艺
-async function loadDoubanForeignShows(params = {}) {
-  return await loadDoubanList("show_foreign", params);
-}
-
-// 豆瓣当地影院热映
-async function loadDoubanShowingMovies(params = {}) {
-  return await loadDoubanList("movie_showing", params);
-}
-
-// 豆瓣电影实时热榜
-async function loadDoubanRealTimeMovies(params = {}) {
-  return await loadDoubanList("movie_real_time_hotest", params);
-}
-
-// 豆瓣剧集实时热榜
-async function loadDoubanRealTimeShows(params = {}) {
-  return await loadDoubanList("tv_real_time_hotest", params);
-}
-
-// 豆瓣书影音实时热榜
-async function loadDoubanRealTimeAll(params = {}) {
-  return await loadDoubanList("subject_real_time_hotest", params);
+// 统一的豆瓣榜单获取函数
+async function loadDoubanList(params = {}) {
+  const { list_type = "movie_top250", page = 1 } = params;
+  
+  // 根据榜单类型设置不同的缓存时间
+  const isRealTime = list_type.includes("real_time") || list_type === "movie_showing";
+  const cacheDuration = isRealTime ? 1800 : 3600;
+  
+  // 获取榜单名称
+  const listNames = {
+    "movie_top250": "豆瓣电影Top250",
+    "tv_top250": "豆瓣剧集Top250", 
+    "movie_weekly_best": "豆瓣一周电影口碑榜",
+    "tv_chinese_best_weekly": "豆瓣华语口碑剧集榜",
+    "tv_global_best_weekly": "豆瓣全球口碑剧集榜",
+    "show_domestic": "豆瓣国内热播综艺",
+    "show_foreign": "豆瓣国外热播综艺",
+    "movie_showing": "豆瓣当地影院热映",
+    "movie_real_time_hotest": "豆瓣电影实时热榜",
+    "tv_real_time_hotest": "豆瓣剧集实时热榜",
+    "subject_real_time_hotest": "豆瓣书影音实时热榜"
+  };
+  
+  const listName = listNames[list_type] || "豆瓣榜单";
+  
+  try {
+    const start = (page - 1) * 20;
+    
+    const response = await Widget.http.get(`${DOUBAN_API_BASE}/subject_collection/${list_type}/items`, {
+      headers: {
+        "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Mobile/15E148 Safari/604.1",
+        "Referer": `https://m.douban.com/subject_collection/${list_type}/`,
+        "Accept": "application/json, text/plain, */*",
+        "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8",
+        "Accept-Encoding": "gzip, deflate, br",
+        "Connection": "keep-alive"
+      },
+      params: {
+        start: start,
+        count: 20,
+        updated_at: "",
+        items_only: 1,
+        for_mobile: 1
+      }
+    });
+    
+    if (!response.data || !response.data.subject_collection_items) {
+      throw new Error("Invalid response format");
+    }
+    
+    return response.data.subject_collection_items
+      .map(item => formatDoubanItem(item, listName))
+      .filter(item => item !== null);
+  } catch (error) {
+    console.error(`Error fetching Douban list ${list_type}:`, error);
+    return [];
+  }
 }
