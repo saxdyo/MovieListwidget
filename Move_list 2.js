@@ -967,7 +967,20 @@ async function tmdbPopularTVShows(params = {}) {
         formattedItem.contentType = "TV剧集";
         return formattedItem;
       })
-      .filter(item => item.posterPath); // TMDB热门剧集
+      .filter(item => {
+        // 过滤掉无海报
+        if (!item.posterPath) return false;
+        // 过滤掉综艺（真人秀、脱口秀、访谈、节目等）
+        const varietyGenreIds = [10764, 10767]; // 真人秀、脱口秀
+        if (item.genre_ids && item.genre_ids.some(id => varietyGenreIds.includes(id))) return false;
+        const lowerTitle = (item.title || '').toLowerCase();
+        const lowerDesc = (item.description || '').toLowerCase();
+        const showKeywords = ['综艺', '真人秀', '脱口秀', '访谈', '节目'];
+        if (showKeywords.some(k => lowerTitle.includes(k) || lowerDesc.includes(k))) return false;
+        // 过滤短剧（标题或副标题包含“短剧”）
+        if (lowerTitle.includes('短剧') || lowerDesc.includes('短剧')) return false;
+        return true;
+      }); // TMDB热门剧集
   } catch (error) {
     console.error("Error fetching TMDB popular TV shows:", error);
     return [];
