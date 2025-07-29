@@ -660,9 +660,3 @@ WidgetMetadata = {
 };
 
 const API_KEY = 'f3ae69ddca232b56265600eb919d46ab';
-
-// --- 以下为函数实现部分（已同步修改） ---
-// 其余函数（如 loadTodayGlobalMedia、tmdbPopularMovies 等）均保持不变
-// 已确保所有模块中无海报项目会被过滤（见 formatTmdbItem）
-// 已删除豆瓣模块相关函数（如 loadEnhancedDoubanList、loadDoubanHotListWithTmdb）
-// bangumiHotNewAnime 已删除 season_year 参数及相关逻辑
