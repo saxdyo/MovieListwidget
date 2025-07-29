@@ -842,6 +842,9 @@ async function tmdbPopularTVShows(params = {}) {
         if (showKeywords.some(k => lowerTitle.includes(k) || lowerDesc.includes(k))) return false;
         // 过滤短剧（标题或副标题包含"短剧"）
         if (lowerTitle.includes('短剧') || lowerDesc.includes('短剧')) return false;
+        // 过滤韩国色情影片
+        const adultKeywords = ['19禁', '성인', '成人', '情色', '色情', 'AV', '에로', '야동'];
+        if (adultKeywords.some(k => lowerTitle.includes(k) || lowerDesc.includes(k) || (item.genreTitle && item.genreTitle.includes(k)))) return false;
         return true;
       }); // TMDB热门剧集
   } catch (error) {
@@ -1172,6 +1175,9 @@ async function fetchImdbItemsForDouban(scItems) {
         if (showKeywords.some(k => lowerTitle.includes(k) || lowerDesc.includes(k))) return false;
         // 过滤短剧（标题或副标题包含"短剧"）
         if (lowerTitle.includes('短剧') || lowerDesc.includes('短剧')) return false;
+        // 过滤韩国色情影片
+        const adultKeywords = ['19禁', '성인', '成人', '情色', '色情', 'AV', '에로', '야동'];
+        if (adultKeywords.some(k => lowerTitle.includes(k) || lowerDesc.includes(k) || (item.genreTitle && item.genreTitle.includes(k)))) return false;
         return true;
     });
     return filteredItems;
