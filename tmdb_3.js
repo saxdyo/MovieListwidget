@@ -257,6 +257,175 @@ WidgetMetadata = {
         },
         { name: "page", title: "页码", type: "page" },
         { name: "language", title: "语言", type: "language", value: "zh-CN" }
+   // 在modules数组中添加以下新的模块配置
+{
+  title: "中国剧集",
+  description: "中国大陆、香港、台湾等地区制作的剧集内容",
+  requiresWebView: false,
+  functionName: "tmdbChineseTV",
+  cacheDuration: 3600,
+  params: [
+    { name: "with_genres", title: "🎭内容类型", type: "enumeration", description: "选择要筛选的内容类型", value: "", enumOptions: [
+      { title: "全部类型", value: "" },
+      { title: "古装历史", value: "36" },
+      { title: "现代都市", value: "18" },
+      { title: "悬疑犯罪", value: "80,9648" },
+      { title: "青春校园", value: "18,10751" },
+      { title: "武侠动作", value: "28,12" },
+      { title: "家庭情感", value: "18,10751" },
+      { title: "喜剧", value: "35" },
+      { title: "科幻奇幻", value: "14,878" }
+    ]},
+    { name: "air_status", title: "上映状态", type: "enumeration", description: "默认已上映", value: "released", enumOptions: [
+      { title: "已上映", value: "released" },
+      { title: "未上映", value: "upcoming" },
+      { title: "全部", value: "" }
+    ]},
+    { name: "sort_by", title: "🔢 排序方式", type: "enumeration", description: "选择内容排序方式,默认上映时间↓", value: "first_air_date.desc", enumOptions: [
+      { title: "上映时间↓", value: "first_air_date.desc" },
+      { title: "上映时间↑", value: "first_air_date.asc" },
+      { title: "人气最高", value: "popularity.desc" },
+      { title: "评分最高", value: "vote_average.desc" },
+      { title: "最多投票", value: "vote_count.desc" }
+    ]},
+    { name: "page", title: "页码", type: "page" },
+    { name: "language", title: "语言", type: "language", value: "zh-CN" }
+  ]
+},
+{
+  title: "日本剧集",
+  description: "日本制作的电视剧、动漫剧集内容",
+  requiresWebView: false,
+  functionName: "tmdbJapaneseTV",
+  cacheDuration: 3600,
+  params: [
+    { name: "with_genres", title: "🎭内容类型", type: "enumeration", description: "选择要筛选的内容类型", value: "", enumOptions: [
+      { title: "全部类型", value: "" },
+      { title: "动画", value: "16" },
+      { title: "日剧", value: "18" },
+      { title: "悬疑推理", value: "9648,80" },
+      { title: "校园青春", value: "18,10751" },
+      { title: "职场社会", value: "18" },
+      { title: "家庭伦理", value: "18,10751" },
+      { title: "医疗律政", value: "18" },
+      { title: "科幻奇幻", value: "10765" }
+    ]},
+    { name: "air_status", title: "上映状态", type: "enumeration", description: "默认已上映", value: "released", enumOptions: [
+      { title: "已上映", value: "released" },
+      { title: "未上映", value: "upcoming" },
+      { title: "全部", value: "" }
+    ]},
+    { name: "sort_by", title: "🔢 排序方式", type: "enumeration", description: "选择内容排序方式,默认上映时间↓", value: "first_air_date.desc", enumOptions: [
+      { title: "上映时间↓", value: "first_air_date.desc" },
+      { title: "上映时间↑", value: "first_air_date.asc" },
+      { title: "人气最高", value: "popularity.desc" },
+      { title: "评分最高", value: "vote_average.desc" },
+      { title: "最多投票", value: "vote_count.desc" }
+    ]},
+    { name: "page", title: "页码", type: "page" },
+    { name: "language", title: "语言", type: "language", value: "zh-CN" }
+  ]
+},
+{
+  title: "韩国剧集",
+  description: "韩国制作的电视剧内容",
+  requiresWebView: false,
+  functionName: "tmdbKoreanTV",
+  cacheDuration: 3600,
+  params: [
+    { name: "with_genres", title: "🎭内容类型", type: "enumeration", description: "选择要筛选的内容类型", value: "", enumOptions: [
+      { title: "全部类型", value: "" },
+      { title: "浪漫爱情", value: "10749,18" },
+      { title: "悬疑惊悚", value: "9648,53" },
+      { title: "家庭伦理", value: "18,10751" },
+      { title: "职场社会", value: "18" },
+      { title: "历史古装", value: "36" },
+      { title: "青春校园", value: "18,10751" },
+      { title: "喜剧", value: "35" },
+      { title: "奇幻", value: "14" }
+    ]},
+    { name: "air_status", title: "上映状态", type: "enumeration", description: "默认已上映", value: "released", enumOptions: [
+      { title: "已上映", value: "released" },
+      { title: "未上映", value: "upcoming" },
+      { title: "全部", value: "" }
+    ]},
+    { name: "sort_by", title: "🔢 排序方式", type: "enumeration", description: "选择内容排序方式,默认上映时间↓", value: "first_air_date.desc", enumOptions: [
+      { title: "上映时间↓", value: "first_air_date.desc" },
+      { title: "上映时间↑", value: "first_air_date.asc" },
+      { title: "人气最高", value: "popularity.desc" },
+      { title: "评分最高", value: "vote_average.desc" },
+      { title: "最多投票", value: "vote_count.desc" }
+    ]},
+    { name: "page", title: "页码", type: "page" },
+    { name: "language", title: "语言", type: "language", value: "zh-CN" }
+  ]
+},
+{
+  title: "美国剧集",
+  description: "美国制作的电视剧内容",
+  requiresWebView: false,
+  functionName: "tmdbAmericanTV",
+  cacheDuration: 3600,
+  params: [
+    { name: "with_genres", title: "🎭内容类型", type: "enumeration", description: "选择要筛选的内容类型", value: "", enumOptions: [
+      { title: "全部类型", value: "" },
+      { title: "剧情", value: "18" },
+      { title: "喜剧", value: "35" },
+      { title: "动作冒险", value: "10759" },
+      { title: "科幻奇幻", value: "10765" },
+      { title: "犯罪悬疑", value: "80,9648" },
+      { title: "恐怖惊悚", value: "27,53" },
+      { title: "超级英雄", value: "10765,28" },
+      { title: "医务法律", value: "18" }
+    ]},
+    { name: "air_status", title: "上映状态", type: "enumeration", description: "默认已上映", value: "released", enumOptions: [
+      { title: "已上映", value: "released" },
+      { title: "未上映", value: "upcoming" },
+      { title: "全部", value: "" }
+    ]},
+    { name: "sort_by", title: "🔢 排序方式", type: "enumeration", description: "选择内容排序方式,默认上映时间↓", value: "first_air_date.desc", enumOptions: [
+      { title: "上映时间↓", value: "first_air_date.desc" },
+      { title: "上映时间↑", value: "first_air_date.asc" },
+      { title: "人气最高", value: "popularity.desc" },
+      { title: "评分最高", value: "vote_average.desc" },
+      { title: "最多投票", value: "vote_count.desc" }
+    ]},
+    { name: "page", title: "页码", type: "page" },
+    { name: "language", title: "语言", type: "language", value: "zh-CN" }
+  ]
+},
+{
+  title: "欧洲剧集",
+  description: "英国、法国、德国、西班牙等欧洲国家制作的剧集内容",
+  requiresWebView: false,
+  functionName: "tmdbEuropeanTV",
+  cacheDuration: 3600,
+  params: [
+    { name: "with_genres", title: "🎭内容类型", type: "enumeration", description: "选择要筛选的内容类型", value: "", enumOptions: [
+      { title: "全部类型", value: "" },
+      { title: "犯罪悬疑", value: "80,9648" },
+      { title: "历史古装", value: "36" },
+      { title: "社会现实", value: "18" },
+      { title: "喜剧", value: "35" },
+      { title: "科幻奇幻", value: "10765" },
+      { title: "政治惊悚", value: "10768,53" },
+      { title: "家庭伦理", value: "18,10751" },
+      { title: "传记", value: "99,36" }
+    ]},
+    { name: "air_status", title: "上映状态", type: "enumeration", description: "默认已上映", value: "released", enumOptions: [
+      { title: "已上映", value: "released" },
+      { title: "未上映", value: "upcoming" },
+      { title: "全部", value: "" }
+    ]},
+    { name: "sort_by", title: "🔢 排序方式", type: "enumeration", description: "选择内容排序方式,默认上映时间↓", value: "first_air_date.desc", enumOptions: [
+      { title: "上映时间↓", value: "first_air_date.desc" },
+      { title: "上映时间↑", value: "first_air_date.asc" },
+      { title: "人气最高", value: "popularity.desc" },
+      { title: "评分最高", value: "vote_average.desc" },
+      { title: "最多投票", value: "vote_count.desc" }
+    ]},
+    { name: "page", title: "页码", type: "page" },
+    { name: "language", title: "语言", type: "language", value: "zh-CN" }
       ]
     }
   ]
@@ -507,4 +676,120 @@ async function tmdbCompanies(params = {}) {
     }
 
     return await fetchTmdbData(api, cleanParams);
+}
+
+// ================地区剧集功能函数===============
+async function tmdbChineseTV(params = {}) {
+    const api = "discover/tv";
+    const beijingDate = getBeijingDate();
+    const discoverParams = {
+        language: params.language || 'zh-CN',
+        page: params.page || 1,
+        sort_by: params.sort_by || "first_air_date.desc",
+        'origin_country': 'CN,HK,TW,MO'
+    };
+    
+    if (params.air_status === 'released') {
+        discoverParams['first_air_date.lte'] = beijingDate;
+    } else if (params.air_status === 'upcoming') {
+        discoverParams['first_air_date.gte'] = beijingDate;
+    }
+    
+    if (params.with_genres) {
+        discoverParams.with_genres = params.with_genres;
+    }
+    
+    return await fetchTmdbData(api, discoverParams);
+}
+
+async function tmdbJapaneseTV(params = {}) {
+    const api = "discover/tv";
+    const beijingDate = getBeijingDate();
+    const discoverParams = {
+        language: params.language || 'zh-CN',
+        page: params.page || 1,
+        sort_by: params.sort_by || "first_air_date.desc",
+        'origin_country': 'JP'
+    };
+    
+    if (params.air_status === 'released') {
+        discoverParams['first_air_date.lte'] = beijingDate;
+    } else if (params.air_status === 'upcoming') {
+        discoverParams['first_air_date.gte'] = beijingDate;
+    }
+    
+    if (params.with_genres) {
+        discoverParams.with_genres = params.with_genres;
+    }
+    
+    return await fetchTmdbData(api, discoverParams);
+}
+
+async function tmdbKoreanTV(params = {}) {
+    const api = "discover/tv";
+    const beijingDate = getBeijingDate();
+    const discoverParams = {
+        language: params.language || 'zh-CN',
+        page: params.page || 1,
+        sort_by: params.sort_by || "first_air_date.desc",
+        'origin_country': 'KR'
+    };
+    
+    if (params.air_status === 'released') {
+        discoverParams['first_air_date.lte'] = beijingDate;
+    } else if (params.air_status === 'upcoming') {
+        discoverParams['first_air_date.gte'] = beijingDate;
+    }
+    
+    if (params.with_genres) {
+        discoverParams.with_genres = params.with_genres;
+    }
+    
+    return await fetchTmdbData(api, discoverParams);
+}
+
+async function tmdbAmericanTV(params = {}) {
+    const api = "discover/tv";
+    const beijingDate = getBeijingDate();
+    const discoverParams = {
+        language: params.language || 'zh-CN',
+        page: params.page || 1,
+        sort_by: params.sort_by || "first_air_date.desc",
+        'origin_country': 'US'
+    };
+    
+    if (params.air_status === 'released') {
+        discoverParams['first_air_date.lte'] = beijingDate;
+    } else if (params.air_status === 'upcoming') {
+        discoverParams['first_air_date.gte'] = beijingDate;
+    }
+    
+    if (params.with_genres) {
+        discoverParams.with_genres = params.with_genres;
+    }
+    
+    return await fetchTmdbData(api, discoverParams);
+}
+
+async function tmdbEuropeanTV(params = {}) {
+    const api = "discover/tv";
+    const beijingDate = getBeijingDate();
+    const discoverParams = {
+        language: params.language || 'zh-CN',
+        page: params.page || 1,
+        sort_by: params.sort_by || "first_air_date.desc",
+        'origin_country': 'GB,FR,DE,ES,IT,SE,DK,NO,NL,BE'
+    };
+    
+    if (params.air_status === 'released') {
+        discoverParams['first_air_date.lte'] = beijingDate;
+    } else if (params.air_status === 'upcoming') {
+        discoverParams['first_air_date.gte'] = beijingDate;
+    }
+    
+    if (params.with_genres) {
+        discoverParams.with_genres = params.with_genres;
+    }
+    
+    return await fetchTmdbData(api, discoverParams);
 }
