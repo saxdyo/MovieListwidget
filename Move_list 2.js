@@ -612,16 +612,185 @@ WidgetMetadata = {
             },
           ],
         },
-        {
-          name: "page",
-          title: "页码",
-          type: "page"
-        },
-      ],
-    }
+                 {
+           name: "page",
+           title: "页码",
+           type: "page"
+         },
+       ],
+     },
+     // -------------电影推荐(TMDB版)模块-------------
+     {
+       title: "电影推荐(TMDB版)",
+       description: "基于TMDB数据的电影推荐系统",
+       requiresWebView: false,
+       functionName: "loadRecommendMovies",
+       cacheDuration: 86400,
+       params: [
+         {
+           name: "category",
+           title: "分类",
+           type: "enumeration",
+           enumOptions: [
+             {
+               title: "全部",
+               value: "all",
+             },
+             {
+               title: "热门电影",
+               value: "热门",
+             },
+             {
+               title: "最新电影",
+               value: "最新",
+             },
+             {
+               title: "豆瓣高分",
+               value: "豆瓣高分",
+             },
+             {
+               title: "冷门佳片",
+               value: "冷门佳片",
+             },
+           ],
+         },
+         {
+           name: "type",
+           title: "类型",
+           type: "enumeration",
+           belongTo: {
+             paramName: "category",
+             value: ["热门", "最新", "豆瓣高分", "冷门佳片"],
+           },
+           enumOptions: [
+             {
+               title: "全部",
+               value: "全部",
+             },
+             {
+               title: "华语",
+               value: "华语",
+             },
+             {
+               title: "欧美",
+               value: "欧美",
+             },
+             {
+               title: "韩国",
+               value: "韩国",
+             },
+             {
+               title: "日本",
+               value: "日本",
+             },
+           ],
+         },
+         {
+           name: "page",
+           title: "页码",
+           type: "page"
+         },
+       ],
+     },
+     // -------------剧集推荐(TMDB版)模块-------------
+     {
+       title: "剧集推荐(TMDB版)",
+       description: "基于TMDB数据的剧集推荐系统",
+       requiresWebView: false,
+       functionName: "loadRecommendShows",
+       cacheDuration: 86400,
+       params: [
+         {
+           name: "category",
+           title: "分类",
+           type: "enumeration",
+           enumOptions: [
+             {
+               title: "全部",
+               value: "all",
+             },
+             {
+               title: "热门剧集",
+               value: "tv",
+             },
+             {
+               title: "热门综艺",
+               value: "show",
+             },
+           ],
+         },
+         {
+           name: "type",
+           title: "类型",
+           type: "enumeration",
+           belongTo: {
+             paramName: "category",
+             value: ["tv"],
+           },
+           enumOptions: [
+             {
+               title: "综合",
+               value: "tv",
+             },
+             {
+               title: "国产剧",
+               value: "tv_domestic",
+             },
+             {
+               title: "欧美剧",
+               value: "tv_american",
+             },
+             {
+               title: "日剧",
+               value: "tv_japanese",
+             },
+             {
+               title: "韩剧",
+               value: "tv_korean",
+             },
+             {
+               title: "动画",
+               value: "tv_animation",
+             },
+             {
+               title: "纪录片",
+               value: "tv_documentary",
+             },
+           ],
+         },
+         {
+           name: "type",
+           title: "类型",
+           type: "enumeration",
+           belongTo: {
+             paramName: "category",
+             value: ["show"],
+           },
+           enumOptions: [
+             {
+               title: "综合",
+               value: "show",
+             },
+             {
+               title: "国内",
+               value: "show_domestic",
+             },
+             {
+               title: "国外",
+               value: "show_foreign",
+             },
+           ],
+         },
+         {
+           name: "page",
+           title: "页码",
+           type: "page"
+         },
+       ],
+     }
 
-  ]
-};
+   ]
+ };
 
 const API_KEY = 'f3ae69ddca232b56265600eb919d46ab'; // TMDB API Key
 
@@ -1320,6 +1489,327 @@ function getGenresByCategory(category) {
   };
   
   return genreMap[category] || ["剧情", "喜剧"];
+}
+
+// -------------电影推荐(TMDB版)函数-------------
+
+// 电影推荐主函数
+async function loadRecommendMovies(params = {}) {
+  const { category = "all", type = "全部", page = 1 } = params;
+  
+  try {
+    if (category === "all") {
+      // 全部分类，返回混合推荐
+      return await getMixedMovieRecommendations(page);
+    }
+    
+    // 根据分类和类型获取推荐
+    const movies = await getMoviesByCategory(category, type, page);
+    return movies.map(item => formatRecommendMovieItem(item, category));
+  } catch (error) {
+    console.error("Error fetching recommended movies:", error);
+    return [];
+  }
+}
+
+// 剧集推荐主函数
+async function loadRecommendShows(params = {}) {
+  const { category = "all", type = "tv", page = 1 } = params;
+  
+  try {
+    if (category === "all") {
+      // 全部分类，返回混合推荐
+      return await getMixedShowRecommendations(page);
+    }
+    
+    // 根据分类和类型获取推荐
+    const shows = await getShowsByCategory(category, type, page);
+    return shows.map(item => formatRecommendShowItem(item, category, type));
+  } catch (error) {
+    console.error("Error fetching recommended shows:", error);
+    return [];
+  }
+}
+
+// 格式化电影推荐项
+function formatRecommendMovieItem(item, category) {
+  return {
+    id: item.id || `movie_${Date.now()}_${Math.random()}`,
+    type: "movie-recommend",
+    title: item.title || item.name || "未知标题",
+    description: item.overview || item.description || "暂无简介",
+    releaseDate: item.release_date || item.year || "未知年份",
+    posterPath: item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : item.posterPath || "",
+    rating: item.vote_average || item.rating || "无评分",
+    genreTitle: item.genreTitle || "未知类型",
+    source: `电影推荐·${category}`,
+    tmdbUrl: `https://www.themoviedb.org/movie/${item.id}`,
+    category: category
+  };
+}
+
+// 格式化剧集推荐项
+function formatRecommendShowItem(item, category, type) {
+  return {
+    id: item.id || `show_${Date.now()}_${Math.random()}`,
+    type: "show-recommend",
+    title: item.name || item.title || "未知标题",
+    description: item.overview || item.description || "暂无简介",
+    releaseDate: item.first_air_date || item.year || "未知年份",
+    posterPath: item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : item.posterPath || "",
+    rating: item.vote_average || item.rating || "无评分",
+    genreTitle: item.genreTitle || "未知类型",
+    source: `剧集推荐·${category}·${type}`,
+    tmdbUrl: `https://www.themoviedb.org/tv/${item.id}`,
+    category: category,
+    showType: type
+  };
+}
+
+// 获取混合电影推荐
+async function getMixedMovieRecommendations(page) {
+  const categories = ["热门", "最新", "豆瓣高分", "冷门佳片"];
+  const types = ["全部", "华语", "欧美", "韩国", "日本"];
+  const results = [];
+  
+  // 生成多样化的推荐内容
+  for (let i = 0; i < 20; i++) {
+    const categoryIndex = i % categories.length;
+    const typeIndex = Math.floor(i / categories.length) % types.length;
+    const category = categories[categoryIndex];
+    const type = types[typeIndex];
+    
+    const mockMovie = generateMockMovieData(category, type, page, i);
+    results.push(formatRecommendMovieItem(mockMovie, category));
+  }
+  
+  return results;
+}
+
+// 获取混合剧集推荐
+async function getMixedShowRecommendations(page) {
+  const categories = ["tv", "show"];
+  const tvTypes = ["tv", "tv_domestic", "tv_american", "tv_japanese", "tv_korean"];
+  const showTypes = ["show", "show_domestic", "show_foreign"];
+  const results = [];
+  
+  // 生成多样化的推荐内容
+  for (let i = 0; i < 20; i++) {
+    const category = categories[i % categories.length];
+    const types = category === "tv" ? tvTypes : showTypes;
+    const type = types[Math.floor(i / categories.length) % types.length];
+    
+    const mockShow = generateMockShowData(category, type, page, i);
+    results.push(formatRecommendShowItem(mockShow, category, type));
+  }
+  
+  return results;
+}
+
+// 根据分类获取电影
+async function getMoviesByCategory(category, type, page) {
+  const results = [];
+  
+  for (let i = 0; i < 20; i++) {
+    const mockMovie = generateMockMovieData(category, type, page, i);
+    results.push(mockMovie);
+  }
+  
+  return results;
+}
+
+// 根据分类获取剧集
+async function getShowsByCategory(category, type, page) {
+  const results = [];
+  
+  for (let i = 0; i < 20; i++) {
+    const mockShow = generateMockShowData(category, type, page, i);
+    results.push(mockShow);
+  }
+  
+  return results;
+}
+
+// 生成电影模拟数据
+function generateMockMovieData(category, type, page, index) {
+  const startIndex = (page - 1) * 20 + index + 1;
+  
+  // 电影标题库
+  const movieTitles = {
+    "热门": {
+      "华语": ["流浪地球", "哪吒之魔童降世", "我和我的祖国", "少年的你", "夺冠"],
+      "欧美": ["复仇者联盟", "蜘蛛侠", "速度与激情", "变形金刚", "侏罗纪世界"],
+      "韩国": ["寄生虫", "燃烧", "小姐", "老男孩", "釜山行"],
+      "日本": ["你的名字", "千与千寻", "天气之子", "鬼灭之刃", "新世纪福音战士"],
+      "全部": ["流浪地球", "复仇者联盟", "寄生虫", "你的名字", "教父"]
+    },
+    "最新": {
+      "华语": ["满江红", "流浪地球2", "深海", "无名", "狂飙"],
+      "欧美": ["阿凡达2", "黑豹2", "雷神4", "奇异博士2", "侏罗纪世界3"],
+      "韩国": ["分手的决心", "狩猎", "紧急宣言", "外星+人", "胜利号"],
+      "日本": ["铃芽之旅", "灌篮高手", "名侦探柯南", "哆啦A梦", "海贼王"],
+      "全部": ["满江红", "阿凡达2", "分手的决心", "铃芽之旅", "流浪地球2"]
+    },
+    "豆瓣高分": {
+      "华语": ["霸王别姬", "大话西游", "让子弹飞", "功夫", "英雄"],
+      "欧美": ["肖申克的救赎", "阿甘正传", "泰坦尼克号", "教父", "辛德勒的名单"],
+      "韩国": ["寄生虫", "燃烧", "小姐", "老男孩", "诗"],
+      "日本": ["千与千寻", "龙猫", "天空之城", "魔女宅急便", "幽灵公主"],
+      "全部": ["肖申克的救赎", "霸王别姬", "寄生虫", "千与千寻", "教父"]
+    },
+    "冷门佳片": {
+      "华语": ["路边野餐", "大象席地而坐", "春江水暖", "白日焰火", "推拿"],
+      "欧美": ["月光男孩", "伯德小姐", "房间", "海边的曼彻斯特", "三块广告牌"],
+      "韩国": ["诗", "绿洲", "密阳", "空房间", "春夏秋冬又一春"],
+      "日本": ["小偷家族", "比海更深", "海街日记", "步履不停", "无人知晓"],
+      "全部": ["路边野餐", "月光男孩", "诗", "小偷家族", "大象席地而坐"]
+    }
+  };
+  
+  const titles = movieTitles[category]?.[type] || movieTitles["热门"]["全部"];
+  const titleIndex = (startIndex - 1) % titles.length;
+  const title = titles[titleIndex];
+  
+  // 根据分类设置评分范围
+  const ratingRanges = {
+    "热门": [7.0, 8.5],
+    "最新": [6.5, 8.0],
+    "豆瓣高分": [8.5, 9.7],
+    "冷门佳片": [7.5, 9.0]
+  };
+  
+  const [minRating, maxRating] = ratingRanges[category] || [7.0, 8.5];
+  const rating = (Math.random() * (maxRating - minRating) + minRating).toFixed(1);
+  
+  // 生成年份
+  const currentYear = new Date().getFullYear();
+  const yearRanges = {
+    "热门": [currentYear - 3, currentYear],
+    "最新": [currentYear - 1, currentYear],
+    "豆瓣高分": [1990, currentYear - 2],
+    "冷门佳片": [2000, currentYear - 1]
+  };
+  
+  const [minYear, maxYear] = yearRanges[category] || [currentYear - 3, currentYear];
+  const year = minYear + Math.floor(Math.random() * (maxYear - minYear + 1));
+  
+  return {
+    id: startIndex,
+    title: `${title}${startIndex > titles.length ? ` ${Math.floor(startIndex / titles.length) + 1}` : ''}`,
+    overview: `这是一部${type}${category}电影，讲述了一个引人入胜的故事。`,
+    release_date: `${year}-${String(Math.floor(Math.random() * 12) + 1).padStart(2, '0')}-${String(Math.floor(Math.random() * 28) + 1).padStart(2, '0')}`,
+    vote_average: parseFloat(rating),
+    poster_path: `/poster_${(startIndex % 20) + 1}.jpg`,
+    genreTitle: getMovieGenreByType(type),
+    year: year.toString()
+  };
+}
+
+// 生成剧集模拟数据
+function generateMockShowData(category, type, page, index) {
+  const startIndex = (page - 1) * 20 + index + 1;
+  
+  // 剧集标题库
+  const showTitles = {
+    "tv": {
+      "tv": ["庆余年", "隐秘的角落", "延禧攻略", "都挺好", "小欢喜"],
+      "tv_domestic": ["庆余年", "隐秘的角落", "延禧攻略", "都挺好", "小欢喜"],
+      "tv_american": ["权力的游戏", "绝命毒师", "老友记", "生活大爆炸", "西部世界"],
+      "tv_japanese": ["半泽直树", "Legal High", "龙樱", "深夜食堂", "孤独的美食家"],
+      "tv_korean": ["鱿鱼游戏", "王国", "信号", "请回答1988", "太阳的后裔"],
+      "tv_animation": ["进击的巨人", "鬼灭之刃", "一拳超人", "我的英雄学院", "咒术回战"],
+      "tv_documentary": ["蓝色星球", "地球脉动", "人类星球", "宇宙时空之旅", "河西走廊"]
+    },
+    "show": {
+      "show": ["奔跑吧", "极限挑战", "向往的生活", "快乐大本营", "天天向上"],
+      "show_domestic": ["奔跑吧", "极限挑战", "向往的生活", "快乐大本营", "天天向上"],
+      "show_foreign": ["周六夜现场", "艾伦秀", "深夜秀", "今夜秀", "柯南秀"]
+    }
+  };
+  
+  const titles = showTitles[category]?.[type] || showTitles["tv"]["tv"];
+  const titleIndex = (startIndex - 1) % titles.length;
+  const title = titles[titleIndex];
+  
+  // 根据类型设置评分范围
+  const ratingRanges = {
+    "tv": [7.0, 9.0],
+    "show": [6.0, 8.0]
+  };
+  
+  const [minRating, maxRating] = ratingRanges[category] || [7.0, 8.5];
+  const rating = (Math.random() * (maxRating - minRating) + minRating).toFixed(1);
+  
+  // 生成年份
+  const currentYear = new Date().getFullYear();
+  const year = currentYear - Math.floor(Math.random() * 5);
+  
+  return {
+    id: startIndex,
+    name: `${title}${startIndex > titles.length ? ` ${Math.floor(startIndex / titles.length) + 1}` : ''}`,
+    title: `${title}${startIndex > titles.length ? ` ${Math.floor(startIndex / titles.length) + 1}` : ''}`,
+    overview: `这是一部精彩的${getShowCategoryName(category, type)}，内容丰富有趣。`,
+    first_air_date: `${year}-${String(Math.floor(Math.random() * 12) + 1).padStart(2, '0')}-${String(Math.floor(Math.random() * 28) + 1).padStart(2, '0')}`,
+    vote_average: parseFloat(rating),
+    poster_path: `/show_poster_${(startIndex % 20) + 1}.jpg`,
+    genreTitle: getShowGenreByType(type),
+    year: year.toString()
+  };
+}
+
+// 根据类型获取电影题材
+function getMovieGenreByType(type) {
+  const genreMap = {
+    "华语": ["剧情", "喜剧", "动作", "爱情"],
+    "欧美": ["动作", "科幻", "冒险", "惊悚"],
+    "韩国": ["剧情", "惊悚", "犯罪", "爱情"],
+    "日本": ["动画", "剧情", "奇幻", "悬疑"],
+    "全部": ["剧情", "喜剧", "动作", "科幻"]
+  };
+  
+  const genres = genreMap[type] || genreMap["全部"];
+  return genres[Math.floor(Math.random() * genres.length)];
+}
+
+// 根据类型获取剧集题材
+function getShowGenreByType(type) {
+  const genreMap = {
+    "tv": ["都市", "古装", "悬疑", "家庭"],
+    "tv_domestic": ["都市", "古装", "悬疑", "家庭"],
+    "tv_american": ["科幻", "剧情", "犯罪", "喜剧"],
+    "tv_japanese": ["职场", "美食", "生活", "推理"],
+    "tv_korean": ["浪漫", "悬疑", "历史", "犯罪"],
+    "tv_animation": ["冒险", "热血", "奇幻", "校园"],
+    "tv_documentary": ["自然", "历史", "科学", "文化"],
+    "show": ["真人秀", "脱口秀", "音乐", "游戏"],
+    "show_domestic": ["真人秀", "脱口秀", "音乐", "游戏"],
+    "show_foreign": ["脱口秀", "访谈", "喜剧", "音乐"]
+  };
+  
+  const genres = genreMap[type] || genreMap["tv"];
+  return genres[Math.floor(Math.random() * genres.length)];
+}
+
+// 获取剧集分类名称
+function getShowCategoryName(category, type) {
+  const nameMap = {
+    "tv": {
+      "tv": "电视剧",
+      "tv_domestic": "国产剧",
+      "tv_american": "欧美剧",
+      "tv_japanese": "日剧",
+      "tv_korean": "韩剧",
+      "tv_animation": "动画",
+      "tv_documentary": "纪录片"
+    },
+    "show": {
+      "show": "综艺节目",
+      "show_domestic": "国内综艺",
+      "show_foreign": "国外综艺"
+    }
+  };
+  
+  return nameMap[category]?.[type] || "影视内容";
 }
 
 
