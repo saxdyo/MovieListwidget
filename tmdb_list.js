@@ -1575,9 +1575,162 @@ function getTimePeriodName(time_period) {
 
 // ===============Trakt功能函数===============
 
-// Trakt API配置
-const TRAKT_CLIENT_ID = 'your_trakt_client_id'; // 需要替换为实际的Trakt Client ID
-const TRAKT_CLIENT_SECRET = 'your_trakt_client_secret'; // 需要替换为实际的Trakt Client Secret
+// Trakt Cookie配置
+const TRAKT_COOKIE = 'Cc1XqM53DGwMdzN25etZLHn8YaUipfoV7qvtJpYjIL8Vc9ofD8t6Zi4ePLuAQpckSedHxvNCTZ8Rn9N4%2ByG773wTXtsrqUoLmtaFel0ioXLAP%2Br%2BEsIzXq2UGcYbwF5VrgmePHu%2FQwv0YY0TI98td%2FVbpZC6jO5p9ft7VXBXp2zZKMALNvB%2BdW3GER%2FSlNWn6Eo4KLi4iHIzFNuHn1aL7sBNbhfSTbSjOmB7AN7gTasOimdqhDQKOp1PECznFd3mskDKfjpM2BkKo%2BUBAVEQ%2F8AX1%2F%2Flj1yM%2B3iQh%2BGZ4odhQ67s%2FnNojBU2MWgIbGAVXFHXI56d%2FBqhrDznPmeUjQ9cBfxP3%2F3itBu58fWwcy2J6zNQIKf0%2Fm2HpOfbCMesFZXWMeQj7HCUmFuddw%3D%3D--08I2YGWyZrBmkgY8--ckrn%2F%2BJTxouBG3pYl5NZFg%3D%3D';
+
+// 解析Trakt电影HTML页面
+function parseTraktMoviesFromHTML(html) {
+  try {
+    const movies = [];
+    const doc = Widget.dom.parse(html);
+    
+    // 查找电影卡片
+    const movieCards = Widget.dom.select(doc, '.movie-card, .poster-card');
+    
+    for (const card of movieCards) {
+      try {
+        // 提取标题
+        const titleElement = Widget.dom.select(card, '.title, .movie-title, h3 a, .poster-title');
+        const title = titleElement.length > 0 ? Widget.dom.text(titleElement[0]).trim() : '';
+        
+        // 提取年份
+        const yearElement = Widget.dom.select(card, '.year, .movie-year, .poster-year');
+        const year = yearElement.length > 0 ? Widget.dom.text(yearElement[0]).trim() : '';
+        
+        // 提取评分
+        const ratingElement = Widget.dom.select(card, '.rating, .movie-rating, .poster-rating');
+        const rating = ratingElement.length > 0 ? Widget.dom.text(ratingElement[0]).trim() : '';
+        
+        // 提取观看数
+        const watchersElement = Widget.dom.select(card, '.watchers, .movie-watchers, .poster-watchers');
+        const watchers = watchersElement.length > 0 ? Widget.dom.text(watchersElement[0]).trim() : '';
+        
+        // 提取链接
+        const linkElement = Widget.dom.select(card, 'a[href*="/movies/"]');
+        const link = linkElement.length > 0 ? Widget.dom.attr(linkElement[0], 'href') : '';
+        
+        // 提取TMDB ID
+        const tmdbId = extractTmdbIdFromLink(link);
+        
+        if (title) {
+          movies.push({
+            movie: {
+              title: title,
+              year: year,
+              ids: {
+                tmdb: tmdbId,
+                trakt: extractTraktIdFromLink(link),
+                slug: extractSlugFromLink(link)
+              }
+            },
+            rating: rating,
+            watchers: watchers
+          });
+        }
+      } catch (error) {
+        console.error("Error parsing movie card:", error);
+        continue;
+      }
+    }
+    
+    return movies;
+  } catch (error) {
+    console.error("Error parsing Trakt movies HTML:", error);
+    return [];
+  }
+}
+
+// 解析Trakt剧集HTML页面
+function parseTraktShowsFromHTML(html) {
+  try {
+    const shows = [];
+    const doc = Widget.dom.parse(html);
+    
+    // 查找剧集卡片
+    const showCards = Widget.dom.select(doc, '.show-card, .poster-card');
+    
+    for (const card of showCards) {
+      try {
+        // 提取标题
+        const titleElement = Widget.dom.select(card, '.title, .show-title, h3 a, .poster-title');
+        const title = titleElement.length > 0 ? Widget.dom.text(titleElement[0]).trim() : '';
+        
+        // 提取年份
+        const yearElement = Widget.dom.select(card, '.year, .show-year, .poster-year');
+        const year = yearElement.length > 0 ? Widget.dom.text(yearElement[0]).trim() : '';
+        
+        // 提取评分
+        const ratingElement = Widget.dom.select(card, '.rating, .show-rating, .poster-rating');
+        const rating = ratingElement.length > 0 ? Widget.dom.text(ratingElement[0]).trim() : '';
+        
+        // 提取观看数
+        const watchersElement = Widget.dom.select(card, '.watchers, .show-watchers, .poster-watchers');
+        const watchers = watchersElement.length > 0 ? Widget.dom.text(watchersElement[0]).trim() : '';
+        
+        // 提取链接
+        const linkElement = Widget.dom.select(card, 'a[href*="/shows/"]');
+        const link = linkElement.length > 0 ? Widget.dom.attr(linkElement[0], 'href') : '';
+        
+        // 提取TMDB ID
+        const tmdbId = extractTmdbIdFromLink(link);
+        
+        if (title) {
+          shows.push({
+            show: {
+              title: title,
+              year: year,
+              ids: {
+                tmdb: tmdbId,
+                trakt: extractTraktIdFromLink(link),
+                slug: extractSlugFromLink(link)
+              }
+            },
+            rating: rating,
+            watchers: watchers
+          });
+        }
+      } catch (error) {
+        console.error("Error parsing show card:", error);
+        continue;
+      }
+    }
+    
+    return shows;
+  } catch (error) {
+    console.error("Error parsing Trakt shows HTML:", error);
+    return [];
+  }
+}
+
+// 从链接中提取TMDB ID
+function extractTmdbIdFromLink(link) {
+  if (!link) return null;
+  
+  // 尝试从链接中提取TMDB ID
+  const tmdbMatch = link.match(/tmdb_id=(\d+)/);
+  if (tmdbMatch) {
+    return tmdbMatch[1];
+  }
+  
+  // 如果没有找到，返回null，后续会通过TMDB搜索获取
+  return null;
+}
+
+// 从链接中提取Trakt ID
+function extractTraktIdFromLink(link) {
+  if (!link) return null;
+  
+  const traktMatch = link.match(/\/movies\/(\d+)/) || link.match(/\/shows\/(\d+)/);
+  return traktMatch ? traktMatch[1] : null;
+}
+
+// 从链接中提取Slug
+function extractSlugFromLink(link) {
+  if (!link) return null;
+  
+  const slugMatch = link.match(/\/movies\/([^\/\?]+)/) || link.match(/\/shows\/([^\/\?]+)/);
+  return slugMatch ? slugMatch[1] : null;
+}
 
 // 格式化Trakt项目
 function formatTraktItem(item, type = "movie") {
@@ -1611,11 +1764,15 @@ async function loadTraktPopularMovies(params = {}) {
   const { page = 1, limit = 20 } = params;
   
   try {
-    const response = await Widget.http.get("https://api.trakt.tv/movies/popular", {
+    const response = await Widget.http.get("https://trakt.tv/movies/popular", {
       headers: {
-        "Content-Type": "application/json",
-        "trakt-api-version": "2",
-        "trakt-api-key": TRAKT_CLIENT_ID
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+        "Cookie": TRAKT_COOKIE,
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.5",
+        "Accept-Encoding": "gzip, deflate, br",
+        "Connection": "keep-alive",
+        "Upgrade-Insecure-Requests": "1"
       },
       params: {
         page: page,
@@ -1623,9 +1780,9 @@ async function loadTraktPopularMovies(params = {}) {
       }
     });
     
-    return response.data
-      .map(item => formatTraktItem(item, "movie"))
-      .filter(item => item !== null);
+    // 解析HTML页面获取电影数据
+    const movies = parseTraktMoviesFromHTML(response.data);
+    return movies.map(item => formatTraktItem(item, "movie")).filter(item => item !== null);
   } catch (error) {
     console.error("Error fetching Trakt popular movies:", error);
     return [];
@@ -1637,11 +1794,15 @@ async function loadTraktPopularShows(params = {}) {
   const { page = 1, limit = 20 } = params;
   
   try {
-    const response = await Widget.http.get("https://api.trakt.tv/shows/popular", {
+    const response = await Widget.http.get("https://trakt.tv/shows/popular", {
       headers: {
-        "Content-Type": "application/json",
-        "trakt-api-version": "2",
-        "trakt-api-key": TRAKT_CLIENT_ID
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+        "Cookie": TRAKT_COOKIE,
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.5",
+        "Accept-Encoding": "gzip, deflate, br",
+        "Connection": "keep-alive",
+        "Upgrade-Insecure-Requests": "1"
       },
       params: {
         page: page,
@@ -1649,9 +1810,9 @@ async function loadTraktPopularShows(params = {}) {
       }
     });
     
-    return response.data
-      .map(item => formatTraktItem(item, "tv"))
-      .filter(item => item !== null);
+    // 解析HTML页面获取剧集数据
+    const shows = parseTraktShowsFromHTML(response.data);
+    return shows.map(item => formatTraktItem(item, "tv")).filter(item => item !== null);
   } catch (error) {
     console.error("Error fetching Trakt popular shows:", error);
     return [];
@@ -1663,11 +1824,15 @@ async function loadTraktTrendingMovies(params = {}) {
   const { page = 1, limit = 20 } = params;
   
   try {
-    const response = await Widget.http.get("https://api.trakt.tv/movies/trending", {
+    const response = await Widget.http.get("https://trakt.tv/movies/trending", {
       headers: {
-        "Content-Type": "application/json",
-        "trakt-api-version": "2",
-        "trakt-api-key": TRAKT_CLIENT_ID
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+        "Cookie": TRAKT_COOKIE,
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.5",
+        "Accept-Encoding": "gzip, deflate, br",
+        "Connection": "keep-alive",
+        "Upgrade-Insecure-Requests": "1"
       },
       params: {
         page: page,
@@ -1675,9 +1840,9 @@ async function loadTraktTrendingMovies(params = {}) {
       }
     });
     
-    return response.data
-      .map(item => formatTraktItem(item, "movie"))
-      .filter(item => item !== null);
+    // 解析HTML页面获取趋势电影数据
+    const movies = parseTraktMoviesFromHTML(response.data);
+    return movies.map(item => formatTraktItem(item, "movie")).filter(item => item !== null);
   } catch (error) {
     console.error("Error fetching Trakt trending movies:", error);
     return [];
@@ -1689,11 +1854,15 @@ async function loadTraktTrendingShows(params = {}) {
   const { page = 1, limit = 20 } = params;
   
   try {
-    const response = await Widget.http.get("https://api.trakt.tv/shows/trending", {
+    const response = await Widget.http.get("https://trakt.tv/shows/trending", {
       headers: {
-        "Content-Type": "application/json",
-        "trakt-api-version": "2",
-        "trakt-api-key": TRAKT_CLIENT_ID
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+        "Cookie": TRAKT_COOKIE,
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.5",
+        "Accept-Encoding": "gzip, deflate, br",
+        "Connection": "keep-alive",
+        "Upgrade-Insecure-Requests": "1"
       },
       params: {
         page: page,
@@ -1701,9 +1870,9 @@ async function loadTraktTrendingShows(params = {}) {
       }
     });
     
-    return response.data
-      .map(item => formatTraktItem(item, "tv"))
-      .filter(item => item !== null);
+    // 解析HTML页面获取趋势剧集数据
+    const shows = parseTraktShowsFromHTML(response.data);
+    return shows.map(item => formatTraktItem(item, "tv")).filter(item => item !== null);
   } catch (error) {
     console.error("Error fetching Trakt trending shows:", error);
     return [];
