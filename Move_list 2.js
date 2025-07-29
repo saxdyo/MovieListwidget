@@ -246,10 +246,10 @@ WidgetMetadata = {
           title: "🔢 排序方式",
           type: "enumeration",
           description: "选择内容排序方式,默认上映时间↓",
-          value: "primary_release_date.desc",
+          value: "release_date.desc",
           enumOptions: [
-            { title: "上映时间↓", value: "primary_release_date.desc" },
-            { title: "上映时间↑", value: "primary_release_date.asc" },
+            { title: "上映时间↓", value: "release_date.desc" },
+            { title: "上映时间↑", value: "release_date.asc" },
             { title: "人气最高", value: "popularity.desc" },
             { title: "评分最高", value: "vote_average.desc" },
             { title: "最多投票", value: "vote_count.desc" }
@@ -489,9 +489,15 @@ function calculatePagination(params) {
 
 function getBeijingDate() {
     const now = new Date();
-    const beijingTime = now.getTime() + (8 * 60 * 60 * 1000);
-    const beijingDate = new Date(beijingTime);
-    return `${beijingDate.getUTCFullYear()}-${String(beijingDate.getUTCMonth() + 1).padStart(2, '0')}-${String(beijingDate.getUTCDate()).padStart(2, '0')}`;
+    // 获取当前UTC时间，然后加上8小时得到北京时间
+    const beijingTime = new Date(now.getTime() + (8 * 60 * 60 * 1000));
+    
+    // 使用本地时间方法获取年、月、日，因为我们已经调整了时区
+    const year = beijingTime.getFullYear();
+    const month = String(beijingTime.getMonth() + 1).padStart(2, '0');
+    const day = String(beijingTime.getDate()).padStart(2, '0');
+    
+    return `${year}-${month}-${day}`;
 }
 
 function parseDoubanAppDispatchUrl(url) {
@@ -671,7 +677,7 @@ async function tmdbCompanies(params = {}) {
     const cleanParams = {
         page: params.page || 1,
         language: params.language || "zh-CN",
-        sort_by: params.sort_by || "primary_release_date.desc",
+        sort_by: params.sort_by || "release_date.desc",
         include_adult: false,
         include_video: false
     };
@@ -681,9 +687,9 @@ async function tmdbCompanies(params = {}) {
     }
 
     if (params.air_status === 'released') {
-        cleanParams['primary_release_date.lte'] = beijingDate;
+        cleanParams['release_date.lte'] = beijingDate;
     } else if (params.air_status === 'upcoming') {
-        cleanParams['primary_release_date.gte'] = beijingDate;
+        cleanParams['release_date.gte'] = beijingDate;
     }
 
     if (params.with_genres) {
