@@ -667,6 +667,29 @@ WidgetMetadata = {
         { name: "page", title: "页码", type: "page" },
         { name: "language", title: "语言", type: "language", value: "zh-CN" }
       ]
+    },
+    // -------------豆瓣模块-------------
+    {
+      title: "豆瓣自定义片单",
+      description: "支持格式:桌面/移动端豆列、官方榜单、App dispatch",
+      requiresWebView: false,
+      functionName: "loadEnhancedDoubanList",
+      cacheDuration: 3600,
+      params: [
+        { name: "url", title: "🔗 片单地址", type: "input", description: "支持格式:桌面/移动端豆列、官方榜单、App dispatch" },
+        { name: "page", title: "页码", type: "page" }
+      ]
+    },
+    {
+      title: "豆瓣电影实时热榜",
+      description: "来自豆瓣的当前热门电影榜单",
+      requiresWebView: false,
+      functionName: "loadDoubanHotListWithTmdb",
+      cacheDuration: 3600,
+      params: [
+        { name: "url", title: "🔗 列表地址", type: "constant", value: "https://www.douban.com/doubanapp/dispatch?uri=/subject_collection/movie_real_time_hotest/&dt_dapp=1" },
+        { name: "type", title: "🎭 类型", type: "constant", value: "movie" }
+      ]
     }
   ]
 };
