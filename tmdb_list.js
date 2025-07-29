@@ -4,7 +4,7 @@ WidgetMetadata = {
   description: "影视动画榜单",
   author: "saxdyo",
   site: "https://github.com/saxdyo/MovieListwidget",
-  version: "1.0.0",
+  version: "1.1.0",
   requiredVersion: "0.0.1",
   detailCacheDuration: 60,
   modules: [
@@ -16,7 +16,8 @@ WidgetMetadata = {
       functionName: "loadTodayGlobalMedia",
       cacheDuration: 60,
       params: [
-        { name: "language", title: "语言", type: "language", value: "zh-CN" }
+        { name: "language", title: "语言", type: "language", value: "zh-CN" },
+        { name: "include_adult", title: "成人内容", type: "boolean", value: false }
       ]
     },
     {
@@ -26,7 +27,8 @@ WidgetMetadata = {
       functionName: "loadWeekGlobalMovies",
       cacheDuration: 60,
       params: [
-        { name: "language", title: "语言", type: "language", value: "zh-CN" }
+        { name: "language", title: "语言", type: "language", value: "zh-CN" },
+        { name: "include_adult", title: "成人内容", type: "boolean", value: false }
       ]
     },
     {
@@ -53,20 +55,13 @@ WidgetMetadata = {
             { title: "收入↑", value: "revenue.asc" }
           ]
         },
-        {
-          name: "air_status",
-          title: "上映状态",
-          type: "enumeration",
-          description: "选择上映状态筛选",
-          value: "released",
-          enumOptions: [
-            { title: "已上映", value: "released" },
-            { title: "未上映", value: "upcoming" },
-            { title: "全部", value: "" }
-          ]
-        },
         { name: "language", title: "语言", type: "language", value: "zh-CN" },
-        { name: "page", title: "页码", type: "page" }
+        { name: "page", title: "页码", type: "page" },
+        { name: "release_status", title: "上映状态", type: "enumeration", value: "all", enumOptions: [
+            { title: "全部", value: "all" },
+            { title: "已上映", value: "released" },
+            { title: "未上映", value: "unreleased" }
+        ]}
       ]
     },
     {
@@ -103,20 +98,13 @@ WidgetMetadata = {
             { title: "投票数↑", value: "vote_count.asc" }
           ]
         },
-        {
-          name: "air_status",
-          title: "上映状态",
-          type: "enumeration",
-          description: "选择上映状态筛选",
-          value: "released",
-          enumOptions: [
-            { title: "已上映", value: "released" },
-            { title: "未上映", value: "upcoming" },
-            { title: "全部", value: "" }
-          ]
-        },
         { name: "language", title: "语言", type: "language", value: "zh-CN" },
-        { name: "page", title: "页码", type: "page" }
+        { name: "page", title: "页码", type: "page" },
+        { name: "release_status", title: "上映状态", type: "enumeration", value: "all", enumOptions: [
+            { title: "全部", value: "all" },
+            { title: "已上映", value: "released" },
+            { title: "未上映", value: "unreleased" }
+        ]}
       ]
     },
     {
@@ -173,18 +161,6 @@ WidgetMetadata = {
             { title: "投票数↑", value: "vote_count.asc" }
           ]
         },
-        {
-          name: "air_status",
-          title: "上映状态",
-          type: "enumeration",
-          description: "选择上映状态筛选",
-          value: "released",
-          enumOptions: [
-            { title: "已上映", value: "released" },
-            { title: "未上映", value: "upcoming" },
-            { title: "全部", value: "" }
-          ]
-        },
         { name: "page", title: "页码", type: "page" },
         { name: "language", title: "语言", type: "language", value: "zh-CN" }
       ]
@@ -236,7 +212,7 @@ WidgetMetadata = {
           name: "with_genres",
           title: "🎬题材类型",
           type: "enumeration",
-          description: "选择要筛选的题材类型",
+          description: "选择要筛选的题材类型（可选）",
           value: "",
           enumOptions: [
             { title: "全部类型", value: "" },
@@ -281,20 +257,13 @@ WidgetMetadata = {
             { title: "收入↑", value: "revenue.asc" }
           ]
         },
-        {
-          name: "air_status",
-          title: "上映状态",
-          type: "enumeration",
-          description: "选择上映状态筛选",
-          value: "released",
-          enumOptions: [
-            { title: "已上映", value: "released" },
-            { title: "未上映", value: "upcoming" },
-            { title: "全部", value: "" }
-          ]
-        },
         { name: "page", title: "页码", type: "page" },
-        { name: "language", title: "语言", type: "language", value: "zh-CN" }
+        { name: "language", title: "语言", type: "language", value: "zh-CN" },
+        { name: "release_status", title: "上映状态", type: "enumeration", value: "all", enumOptions: [
+            { title: "全部", value: "all" },
+            { title: "已上映", value: "released" },
+            { title: "未上映", value: "unreleased" }
+        ]}
       ]
     },
     // -------------IMDB模块-------------
@@ -347,10 +316,11 @@ WidgetMetadata = {
         {
           name: "with_origin_country",
           title: "🌍地区筛选",
-          type: "multi_enumeration",
-          description: "按制片地区筛选内容（可多选）",
-          value: [],
+          type: "enumeration",
+          description: "按制片地区筛选内容",
+          value: "",
           enumOptions: [
+            { title: "全部地区", value: "" },
             { title: "美国", value: "US" },
             { title: "中国", value: "CN" },
             { title: "日本", value: "JP" },
@@ -401,20 +371,13 @@ WidgetMetadata = {
             { title: "9.0分以上", value: "9.0" }
           ]
         },
-        {
-          name: "air_status",
-          title: "上映状态",
-          type: "enumeration",
-          description: "选择上映状态筛选",
-          value: "released",
-          enumOptions: [
-            { title: "已上映", value: "released" },
-            { title: "未上映", value: "upcoming" },
-            { title: "全部", value: "" }
-          ]
-        },
         { name: "page", title: "页码", type: "page" },
-        { name: "language", title: "语言", type: "language", value: "zh-CN" }
+        { name: "language", title: "语言", type: "language", value: "zh-CN" },
+        { name: "release_status", title: "上映状态", type: "enumeration", value: "all", enumOptions: [
+            { title: "全部", value: "all" },
+            { title: "已上映", value: "released" },
+            { title: "未上映", value: "unreleased" }
+        ]}
       ]
     },
     // -------------TMDB剧集模块-------------
@@ -492,18 +455,6 @@ WidgetMetadata = {
             { title: "7.0分以上", value: "7.0" },
             { title: "8.0分以上", value: "8.0" },
             { title: "9.0分以上", value: "9.0" }
-          ]
-        },
-        {
-          name: "air_status",
-          title: "上映状态",
-          type: "enumeration",
-          description: "选择上映状态筛选",
-          value: "released",
-          enumOptions: [
-            { title: "已上映", value: "released" },
-            { title: "未上映", value: "upcoming" },
-            { title: "全部", value: "" }
           ]
         },
         { name: "page", title: "页码", type: "page" },
@@ -598,18 +549,6 @@ WidgetMetadata = {
             { title: "8.5分以上", value: "8.5" }
           ]
         },
-        {
-          name: "air_status",
-          title: "上映状态",
-          type: "enumeration",
-          description: "选择上映状态筛选",
-          value: "released",
-          enumOptions: [
-            { title: "已上映", value: "released" },
-            { title: "未上映", value: "upcoming" },
-            { title: "全部", value: "" }
-          ]
-        },
         { name: "page", title: "页码", type: "page" },
         { name: "language", title: "语言", type: "language", value: "zh-CN" }
       ]
@@ -622,7 +561,18 @@ WidgetMetadata = {
       functionName: "bangumiHotNewAnime",
       cacheDuration: 1800,
       params: [
-
+        {
+          name: "season_year",
+          title: "📅年份",
+          type: "enumeration",
+          description: "选择新番年份",
+          value: "2024",
+          enumOptions: [
+            { title: "2024年", value: "2024" },
+            { title: "2023年", value: "2023" },
+            { title: "2022年", value: "2022" }
+          ]
+        },
         {
           name: "with_origin_country",
           title: "🌸制作地区",
@@ -660,18 +610,6 @@ WidgetMetadata = {
             { title: "6.0分以上", value: "6.0" },
             { title: "7.0分以上", value: "7.0" },
             { title: "8.0分以上", value: "8.0" }
-          ]
-        },
-        {
-          name: "air_status",
-          title: "上映状态",
-          type: "enumeration",
-          description: "选择上映状态筛选",
-          value: "released",
-          enumOptions: [
-            { title: "已上映", value: "released" },
-            { title: "未上映", value: "upcoming" },
-            { title: "全部", value: "" }
           ]
         },
         { name: "page", title: "页码", type: "page" },
@@ -726,74 +664,37 @@ WidgetMetadata = {
             { title: "无要求", value: "0" }
           ]
         },
-        {
-          name: "air_status",
-          title: "上映状态",
-          type: "enumeration",
-          description: "选择上映状态筛选",
-          value: "released",
-          enumOptions: [
-            { title: "已上映", value: "released" },
-            { title: "未上映", value: "upcoming" },
-            { title: "全部", value: "" }
-          ]
-        },
         { name: "page", title: "页码", type: "page" },
         { name: "language", title: "语言", type: "language", value: "zh-CN" }
       ]
     },
     // -------------豆瓣模块-------------
     {
-      title: "豆瓣片单排行",
-      description: "豆瓣各种片单排行榜单（支持多选榜单类型）",
+      title: "豆瓣自定义片单",
+      description: "支持格式:桌面/移动端豆列、官方榜单、App dispatch",
       requiresWebView: false,
-      functionName: "loadDoubanList",
+      functionName: "loadEnhancedDoubanList",
       cacheDuration: 3600,
       params: [
-        {
-          name: "list_types",
-          title: "榜单类型",
-          type: "multi_enumeration",
-          description: "选择要查看的豆瓣榜单类型（可多选）",
-          value: ["movie_top250"],
-          enumOptions: [
-            { title: "电影Top250", value: "movie_top250" },
-            { title: "剧集Top250", value: "tv_top250" },
-            { title: "一周电影口碑榜", value: "movie_weekly_best" },
-            { title: "华语口碑剧集榜", value: "tv_chinese_best_weekly" },
-            { title: "全球口碑剧集榜", value: "tv_global_best_weekly" },
-            { title: "国内热播综艺", value: "show_domestic" },
-            { title: "国外热播综艺", value: "show_foreign" },
-            { title: "当地影院热映", value: "movie_showing" },
-            { title: "电影实时热榜", value: "movie_real_time_hotest" },
-            { title: "剧集实时热榜", value: "tv_real_time_hotest" },
-            { title: "书影音实时热榜", value: "subject_real_time_hotest" }
-          ]
-        },
+        { name: "url", title: "🔗 片单地址", type: "input", description: "支持格式:桌面/移动端豆列、官方榜单、App dispatch" },
         { name: "page", title: "页码", type: "page" }
+      ]
+    },
+    {
+      title: "豆瓣电影实时热榜",
+      description: "来自豆瓣的当前热门电影榜单",
+      requiresWebView: false,
+      functionName: "loadDoubanHotListWithTmdb",
+      cacheDuration: 3600,
+      params: [
+        { name: "url", title: "🔗 列表地址", type: "constant", value: "https://www.douban.com/doubanapp/dispatch?uri=/subject_collection/movie_real_time_hotest/&dt_dapp=1" },
+        { name: "type", title: "🎭 类型", type: "constant", value: "movie" }
       ]
     }
   ]
 };
 
 const API_KEY = 'f3ae69ddca232b56265600eb919d46ab'; // TMDB API Key
-
-// 豆瓣API基础URL
-const DOUBAN_API_BASE = 'https://m.douban.com/rexxar/api/v2';
-
-// 获取北京时间
-function getBeijingDate() {
-  const now = new Date();
-  // 获取当前UTC时间，然后加上8小时得到北京时间
-  const beijingTime = new Date(now.getTime() + (8 * 60 * 60 * 1000));
-  
-  // 使用本地时间方法获取年、月、日，因为我们已经调整了时区
-  const year = beijingTime.getFullYear();
-  const month = String(beijingTime.getMonth() + 1).padStart(2, '0');
-  const day = String(beijingTime.getDate()).padStart(2, '0');
-  
-  return `${year}-${month}-${day}`;
-}
 
 // 提取 TMDB 的种类信息
 async function fetchTmdbGenres() {
@@ -814,21 +715,19 @@ async function fetchTmdbGenres() {
 }
 
 // 格式化每个影视项目
-function formatTmdbItem(item, genreMap, options = {}) {
-  // 检查是否有海报或壁纸，如果没有则不显示
-  if (!item.poster_path && !item.backdrop_path) {
+function formatTmdbItem(item, genreMap) {
+  // 检查海报数据，如果没有海报则不加载
+  if (!item.poster_path) {
     return null;
   }
-  
-  const { showTitleOnPoster = false, isHotModule = false } = options;
-  
+
   return {
     id: item.id,
     type: "tmdb",
     title: item.title || item.name,
     description: item.overview || "暂无简介",
     releaseDate: item.release_date || item.first_air_date || "未知日期",
-    posterPath: item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : "",
+    posterPath: `https://image.tmdb.org/t/p/w500${item.poster_path}`,
     backdropPath: item.backdrop_path ? `https://image.tmdb.org/t/p/w1280${item.backdrop_path}` : "",
     rating: item.vote_average || "无评分",
     mediaType: item.media_type || (item.title ? "movie" : "tv"),
@@ -836,31 +735,26 @@ function formatTmdbItem(item, genreMap, options = {}) {
   };
 }
 
-// 格式化豆瓣项目
-function formatDoubanItem(item, source = "豆瓣") {
-  if (!item.title) {
-    return null;
+// 上映状态筛选辅助函数
+function filterByReleaseStatus(items, release_status) {
+  if (release_status === "all") {
+    return items;
   }
-  
-  // 检查是否有海报或壁纸，如果没有则不显示
-  if (!item.cover?.url) {
-    return null;
-  }
-  
-  return {
-    id: item.id || item.url || `douban_${Date.now()}_${Math.random()}`,
-    type: "douban",
-    title: item.title,
-    description: item.card_subtitle || item.description || item.abstract || "",
-    releaseDate: item.year || item.release_date || "未知年份",
-    posterPath: item.cover?.url || "",
-    backdropPath: item.cover?.url || "",
-    rating: item.rating?.value || "无评分",
-    mediaType: item.subtype || "movie",
-    genreTitle: item.genres?.join(" ") || "豆瓣热门",
-    source: source,
-    url: item.url || item.href || ""
-  };
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  return items.filter(item => {
+    const releaseDate = new Date(item.releaseDate);
+    
+    if (release_status === "released") {
+      return releaseDate <= today;
+    } else if (release_status === "unreleased") {
+      return releaseDate > today;
+    }
+    
+    return true;
+  });
 }
 
 // 获取当前热门电影与剧集
@@ -871,7 +765,9 @@ async function loadTodayGlobalMedia(params = {}) {
       params: { language, api_key: API_KEY }
     });
     const genreMap = await fetchTmdbGenres();
-    return res.results.map(item => formatTmdbItem(item, genreMap.movie, {})).filter(item => item !== null);
+    return res.results
+      .map(item => formatTmdbItem(item, genreMap.movie))
+      .filter(item => item !== null); // 过滤掉没有海报的项目
   } catch (error) {
     console.error("Error fetching trending media:", error);
     return [];
@@ -886,7 +782,9 @@ async function loadWeekGlobalMovies(params = {}) {
       params: { language, api_key: API_KEY }
     });
     const genreMap = await fetchTmdbGenres();
-    return res.results.map(item => formatTmdbItem(item, genreMap.movie, {})).filter(item => item !== null);
+    return res.results
+      .map(item => formatTmdbItem(item, genreMap.movie))
+      .filter(item => item !== null);
   } catch (error) {
     console.error("Error fetching weekly global movies:", error);
     return [];
@@ -895,53 +793,32 @@ async function loadWeekGlobalMovies(params = {}) {
 
 // 获取当前热门电影
 async function tmdbPopularMovies(params = {}) {
-  const { language = "zh-CN", page = 1, sort_by = "popularity.desc", air_status } = params;
+  const { language = "zh-CN", page = 1, sort_by = "popularity.desc", release_status = "all" } = params;
   try {
-    // 获取北京时间
-    const beijingDate = getBeijingDate();
-    
     // 如果选择的是热门度排序，使用popular端点；否则使用discover端点
     if (sort_by.startsWith("popularity")) {
       const res = await Widget.tmdb.get("/movie/popular", { 
         params: { language, page, api_key: API_KEY }
       });
       const genreMap = await fetchTmdbGenres();
-      let results = res.results.map(item => formatTmdbItem(item, genreMap.movie, {})).filter(item => item !== null);
-      
-      // 根据上映状态筛选
-      if (air_status === 'released') {
-        results = results.filter(item => {
-          const releaseDate = item.releaseDate;
-          return releaseDate && new Date(releaseDate) <= new Date(beijingDate);
-        });
-      } else if (air_status === 'upcoming') {
-        results = results.filter(item => {
-          const releaseDate = item.releaseDate;
-          return releaseDate && new Date(releaseDate) > new Date(beijingDate);
-        });
-      }
-      
-      return results;
+      const results = res.results
+        .map(item => formatTmdbItem(item, genreMap.movie))
+        .filter(item => item !== null);
+      return filterByReleaseStatus(results, release_status);
     } else {
-      const queryParams = { 
-        language, 
-        page, 
-        sort_by,
-        api_key: API_KEY 
-      };
-      
-      // 添加上映状态筛选
-      if (air_status === 'released') {
-        queryParams['release_date.lte'] = beijingDate;
-      } else if (air_status === 'upcoming') {
-        queryParams['release_date.gte'] = beijingDate;
-      }
-      
       const res = await Widget.tmdb.get("/discover/movie", {
-        params: queryParams
+        params: { 
+          language, 
+          page, 
+          sort_by,
+          api_key: API_KEY 
+        }
       });
       const genreMap = await fetchTmdbGenres();
-      return res.results.map(item => formatTmdbItem(item, genreMap.movie, {})).filter(item => item !== null);
+      const results = res.results
+        .map(item => formatTmdbItem(item, genreMap.movie))
+        .filter(item => item !== null);
+      return filterByReleaseStatus(results, release_status);
     }
   } catch (error) {
     console.error("Error fetching popular movies:", error);
@@ -951,11 +828,8 @@ async function tmdbPopularMovies(params = {}) {
 
 // 获取高评分电影或剧集
 async function tmdbTopRated(params = {}) {
-  const { language = "zh-CN", page = 1, type = "movie", sort_by = "vote_average.desc", air_status } = params;
+  const { language = "zh-CN", page = 1, type = "movie", sort_by = "vote_average.desc", release_status = "all" } = params;
   try {
-    // 获取北京时间
-    const beijingDate = getBeijingDate();
-    
     // 如果选择的是评分排序，使用top_rated端点；否则使用discover端点
     if (sort_by.startsWith("vote_average")) {
       const api = type === "movie" ? "/movie/top_rated" : "/tv/top_rated";
@@ -963,51 +837,25 @@ async function tmdbTopRated(params = {}) {
         params: { language, page, api_key: API_KEY }
       });
       const genreMap = await fetchTmdbGenres();
-      let results = res.results.map(item => formatTmdbItem(item, genreMap[type], {})).filter(item => item !== null);
-      
-      // 根据上映状态筛选
-      if (air_status === 'released') {
-        results = results.filter(item => {
-          const releaseDate = item.releaseDate;
-          return releaseDate && new Date(releaseDate) <= new Date(beijingDate);
-        });
-      } else if (air_status === 'upcoming') {
-        results = results.filter(item => {
-          const releaseDate = item.releaseDate;
-          return releaseDate && new Date(releaseDate) > new Date(beijingDate);
-        });
-      }
-      
-      return results;
+      const results = res.results
+        .map(item => formatTmdbItem(item, genreMap[type]))
+        .filter(item => item !== null);
+      return type === "movie" ? filterByReleaseStatus(results, release_status) : results;
     } else {
       const endpoint = type === "movie" ? "/discover/movie" : "/discover/tv";
-      const queryParams = { 
-        language, 
-        page, 
-        sort_by,
-        api_key: API_KEY 
-      };
-      
-      // 添加上映状态筛选
-      if (air_status === 'released') {
-        if (type === "movie") {
-          queryParams['release_date.lte'] = beijingDate;
-        } else {
-          queryParams['first_air_date.lte'] = beijingDate;
-        }
-      } else if (air_status === 'upcoming') {
-        if (type === "movie") {
-          queryParams['release_date.gte'] = beijingDate;
-        } else {
-          queryParams['first_air_date.gte'] = beijingDate;
-        }
-      }
-      
       const res = await Widget.tmdb.get(endpoint, {
-        params: queryParams
+        params: { 
+          language, 
+          page, 
+          sort_by,
+          api_key: API_KEY 
+        }
       });
       const genreMap = await fetchTmdbGenres();
-      return res.results.map(item => formatTmdbItem(item, genreMap[type], {})).filter(item => item !== null);
+      const results = res.results
+        .map(item => formatTmdbItem(item, genreMap[type]))
+        .filter(item => item !== null);
+      return type === "movie" ? filterByReleaseStatus(results, release_status) : results;
     }
   } catch (error) {
     console.error("Error fetching top rated:", error);
@@ -1017,34 +865,21 @@ async function tmdbTopRated(params = {}) {
 
 // 获取播出平台内容
 async function tmdbDiscoverByNetwork(params = {}) {
-  const { language = "zh-CN", page = 1, with_networks, sort_by = "popularity.desc", air_status } = params;
+  const { language = "zh-CN", page = 1, with_networks, sort_by = "popularity.desc" } = params;
   try {
-    // 获取北京时间
-    const beijingDate = getBeijingDate();
-    
-    const queryParams = { 
-      language, 
-      page, 
-      with_networks,
-      sort_by,
-      api_key: API_KEY 
-    };
-    
-    // 添加上映状态筛选
-    if (air_status === 'released') {
-      queryParams['first_air_date.lte'] = beijingDate;
-    }
-继续提供完整的脚本：
-
-    } else if (air_status === 'upcoming') {
-      queryParams['first_air_date.gte'] = beijingDate;
-    }
-    
     const res = await Widget.tmdb.get("/discover/tv", {
-      params: queryParams
+      params: { 
+        language, 
+        page, 
+        with_networks,
+        sort_by,
+        api_key: API_KEY 
+      }
     });
     const genreMap = await fetchTmdbGenres();
-    return res.results.map(item => formatTmdbItem(item, genreMap.tv, {})).filter(item => item !== null);
+    return res.results
+      .map(item => formatTmdbItem(item, genreMap.tv))
+      .filter(item => item !== null);
   } catch (error) {
     console.error("Error fetching discover by network:", error);
     return [];
@@ -1053,11 +888,17 @@ async function tmdbDiscoverByNetwork(params = {}) {
 
 // 获取出品公司内容
 async function tmdbDiscoverByCompany(params = {}) {
-  const { language = "zh-CN", page = 1, with_companies, type = "movie", with_genres, sort_by = "popularity.desc", air_status } = params;
+  const { 
+    language = "zh-CN", 
+    page = 1, 
+    with_companies, 
+    type = "movie", 
+    with_genres, 
+    sort_by = "popularity.desc",
+    release_status = "all"
+  } = params;
+  
   try {
-    // 获取北京时间
-    const beijingDate = getBeijingDate();
-    
     // 构建API端点
     const endpoint = type === "movie" ? "/discover/movie" : "/discover/tv";
     
@@ -1079,28 +920,17 @@ async function tmdbDiscoverByCompany(params = {}) {
       queryParams.with_genres = with_genres;
     }
     
-    // 添加上映状态筛选
-    if (air_status === 'released') {
-      if (type === "movie") {
-        queryParams['release_date.lte'] = beijingDate;
-      } else {
-        queryParams['first_air_date.lte'] = beijingDate;
-      }
-    } else if (air_status === 'upcoming') {
-      if (type === "movie") {
-        queryParams['release_date.gte'] = beijingDate;
-      } else {
-        queryParams['first_air_date.gte'] = beijingDate;
-      }
-    }
-    
     // 发起API请求
     const res = await Widget.tmdb.get(endpoint, {
       params: queryParams
     });
     
     const genreMap = await fetchTmdbGenres();
-    return res.results.map(item => formatTmdbItem(item, genreMap[type], {})).filter(item => item !== null);
+    const results = res.results
+      .map(item => formatTmdbItem(item, genreMap[type]))
+      .filter(item => item !== null);
+    
+    return type === "movie" ? filterByReleaseStatus(results, release_status) : results;
   } catch (error) {
     console.error("Error fetching discover by company:", error);
     return [];
@@ -1119,13 +949,10 @@ async function imdbPopularContent(params = {}) {
     with_origin_country,
     sort_by = "vote_average.desc",
     vote_average_gte = "7.0",
-    air_status
+    release_status = "all"
   } = params;
   
   try {
-    // 获取北京时间
-    const beijingDate = getBeijingDate();
-    
     // 构建API端点
     const endpoint = type === "movie" ? "/discover/movie" : "/discover/tv";
     
@@ -1155,37 +982,25 @@ async function imdbPopularContent(params = {}) {
       queryParams.with_origin_country = with_origin_country;
     }
     
-    // 添加上映状态筛选
-    if (air_status === 'released') {
-      if (type === "movie") {
-        queryParams['release_date.lte'] = beijingDate;
-      } else {
-        queryParams['first_air_date.lte'] = beijingDate;
-      }
-    } else if (air_status === 'upcoming') {
-      if (type === "movie") {
-        queryParams['release_date.gte'] = beijingDate;
-      } else {
-        queryParams['first_air_date.gte'] = beijingDate;
-      }
-    }
-    
     // 发起API请求
     const res = await Widget.tmdb.get(endpoint, {
       params: queryParams
     });
     
     const genreMap = await fetchTmdbGenres();
-    return res.results.map(item => {
-      const formattedItem = formatTmdbItem(item, genreMap[type], {});
-      if (formattedItem) {
-        // 添加IMDB特殊标识
-        formattedItem.type = "imdb";
-        formattedItem.source = "IMDB高分精选";
+    const results = res.results
+      .map(item => {
+        const formattedItem = formatTmdbItem(item, genreMap[type]);
+        if (formattedItem) {
+          // 添加IMDB特殊标识
+          formattedItem.type = "imdb";
+          formattedItem.source = "IMDB高分精选";
+        }
         return formattedItem;
-      }
-      return null;
-    }).filter(item => item !== null);
+      })
+      .filter(item => item !== null);
+    
+    return type === "movie" ? filterByReleaseStatus(results, release_status) : results;
   } catch (error) {
     console.error("Error fetching IMDB popular content:", error);
     return [];
@@ -1199,19 +1014,16 @@ async function bangumiHotNewAnime(params = {}) {
   const { 
     language = "zh-CN", 
     page = 1, 
+    season_year = "2024",
     with_origin_country = "JP",
     sort_by = "popularity.desc",
-    vote_average_gte = "6.0",
-    air_status
+    vote_average_gte = "6.0"
   } = params;
   
   try {
-    // 获取北京时间
-    const beijingDate = getBeijingDate();
-    
     const endpoint = "/discover/tv";
     
-    // 构建查询参数 - 专注新番动画
+    // 构建查询参数 - 专注指定年份的新番
     const queryParams = { 
       language, 
       page, 
@@ -1219,6 +1031,7 @@ async function bangumiHotNewAnime(params = {}) {
       api_key: API_KEY,
       // 新番动画筛选
       with_genres: "16", // 动画类型
+      first_air_date_year: season_year, // 指定年份新番
       vote_count_gte: 10  // 新番投票较少，降低门槛
     };
     
@@ -1232,30 +1045,25 @@ async function bangumiHotNewAnime(params = {}) {
       queryParams.vote_average_gte = vote_average_gte;
     }
     
-    // 添加上映状态筛选
-    if (air_status === 'released') {
-      queryParams['first_air_date.lte'] = beijingDate;
-    } else if (air_status === 'upcoming') {
-      queryParams['first_air_date.gte'] = beijingDate;
-    }
-    
     // 发起API请求
     const res = await Widget.tmdb.get(endpoint, {
       params: queryParams
     });
     
     const genreMap = await fetchTmdbGenres();
-    return res.results.map(item => {
-      const formattedItem = formatTmdbItem(item, genreMap.tv, {});
-      if (formattedItem) {
-        // 添加Bangumi新番标识
-        formattedItem.type = "bangumi-new";
-        formattedItem.source = "Bangumi热门新番";
-        formattedItem.isNewAnime = true;
+    return res.results
+      .map(item => {
+        const formattedItem = formatTmdbItem(item, genreMap.tv);
+        if (formattedItem) {
+          // 添加Bangumi新番标识
+          formattedItem.type = "bangumi-new";
+          formattedItem.source = `Bangumi ${season_year}年新番`;
+          formattedItem.seasonYear = season_year;
+          formattedItem.isNewAnime = true;
+        }
         return formattedItem;
-      }
-      return null;
-    }).filter(item => item !== null);
+      })
+      .filter(item => item !== null);
   } catch (error) {
     console.error("Error fetching Bangumi hot new anime:", error);
     return [];
@@ -1269,14 +1077,10 @@ async function bangumiRankingList(params = {}) {
     page = 1, 
     ranking_type = "top_rated",
     with_origin_country = "JP",
-    vote_average_gte = "7.0",
-    air_status
+    vote_average_gte = "7.0"
   } = params;
   
   try {
-    // 获取北京时间
-    const beijingDate = getBeijingDate();
-    
     const endpoint = "/discover/tv";
     
     // 根据排行榜类型配置不同参数
@@ -1325,45 +1129,28 @@ async function bangumiRankingList(params = {}) {
       queryParams.with_origin_country = with_origin_country;
     }
     
-    // 添加上映状态筛选
-    if (air_status === 'released') {
-      queryParams['first_air_date.lte'] = beijingDate;
-    } else if (air_status === 'upcoming') {
-      queryParams['first_air_date.gte'] = beijingDate;
-    }
-    
     // 发起API请求
     const res = await Widget.tmdb.get(endpoint, {
       params: queryParams
     });
     
     const genreMap = await fetchTmdbGenres();
-    return res.results.map(item => {
-      const formattedItem = formatTmdbItem(item, genreMap.tv, {});
-      if (formattedItem) {
-        // 添加排行榜标识
-        formattedItem.type = "bangumi-ranking";
-        formattedItem.source = `Bangumi${getRankingTypeName(ranking_type)}`;
-        formattedItem.rankingType = ranking_type;
+    return res.results
+      .map(item => {
+        const formattedItem = formatTmdbItem(item, genreMap.tv);
+        if (formattedItem) {
+          // 添加排行榜标识
+          formattedItem.type = "bangumi-ranking";
+          formattedItem.source = `Bangumi${getRankingTypeName(ranking_type)}`;
+          formattedItem.rankingType = ranking_type;
+        }
         return formattedItem;
-      }
-      return null;
-    }).filter(item => item !== null);
+      })
+      .filter(item => item !== null);
   } catch (error) {
     console.error("Error fetching Bangumi ranking list:", error);
     return [];
   }
-}
-
-// 获取排行榜类型中文名称
-function getRankingTypeName(ranking_type) {
-  const nameMap = {
-    top_rated: "评分排行榜",
-    popular: "热门排行榜",
-    recent: "新番排行榜",
-    classic: "经典排行榜"
-  };
-  return nameMap[ranking_type] || "排行榜";
 }
 
 // -------------TMDB剧集模块函数-------------
@@ -1376,14 +1163,10 @@ async function tmdbPopularTVShows(params = {}) {
     with_origin_country,
     with_genres,
     sort_by = "popularity.desc",
-    vote_average_gte = "0",
-    air_status
+    vote_average_gte = "0"
   } = params;
   
   try {
-    // 获取北京时间
-    const beijingDate = getBeijingDate();
-    
     const endpoint = "/discover/tv";
     
     // 构建查询参数
@@ -1411,30 +1194,24 @@ async function tmdbPopularTVShows(params = {}) {
       queryParams.vote_average_gte = vote_average_gte;
     }
     
-    // 添加上映状态筛选
-    if (air_status === 'released') {
-      queryParams['first_air_date.lte'] = beijingDate;
-    } else if (air_status === 'upcoming') {
-      queryParams['first_air_date.gte'] = beijingDate;
-    }
-    
     // 发起API请求
     const res = await Widget.tmdb.get(endpoint, {
       params: queryParams
     });
     
     const genreMap = await fetchTmdbGenres();
-    return res.results.map(item => {
-      const formattedItem = formatTmdbItem(item, genreMap.tv, {});
-      if (formattedItem) {
-        // 添加剧集特殊标识
-        formattedItem.type = "tmdb-tv";
-        formattedItem.source = "TMDB热门剧集";
-        formattedItem.contentType = "TV剧集";
+    return res.results
+      .map(item => {
+        const formattedItem = formatTmdbItem(item, genreMap.tv);
+        if (formattedItem) {
+          // 添加剧集特殊标识
+          formattedItem.type = "tmdb-tv";
+          formattedItem.source = "TMDB热门剧集";
+          formattedItem.contentType = "TV剧集";
+        }
         return formattedItem;
-      }
-      return null;
-    }).filter(item => item !== null);
+      })
+      .filter(item => item !== null);
   } catch (error) {
     console.error("Error fetching TMDB popular TV shows:", error);
     return [];
@@ -1450,14 +1227,10 @@ async function tmdbTVShowsByTime(params = {}) {
     with_origin_country,
     with_genres,
     sort_by = "first_air_date.desc",
-    vote_average_gte = "0",
-    air_status
+    vote_average_gte = "0"
   } = params;
   
   try {
-    // 获取北京时间
-    const beijingDate = getBeijingDate();
-    
     const endpoint = "/discover/tv";
     
     // 根据时间范围计算日期
@@ -1496,31 +1269,25 @@ async function tmdbTVShowsByTime(params = {}) {
       queryParams.vote_average_gte = vote_average_gte;
     }
     
-    // 添加上映状态筛选
-    if (air_status === 'released') {
-      queryParams['first_air_date.lte'] = beijingDate;
-    } else if (air_status === 'upcoming') {
-      queryParams['first_air_date.gte'] = beijingDate;
-    }
-    
     // 发起API请求
     const res = await Widget.tmdb.get(endpoint, {
       params: queryParams
     });
     
     const genreMap = await fetchTmdbGenres();
-    return res.results.map(item => {
-      const formattedItem = formatTmdbItem(item, genreMap.tv, {});
-      if (formattedItem) {
-        // 添加时间榜标识
-        formattedItem.type = "tmdb-tv-time";
-        formattedItem.source = `TMDB ${getTimePeriodName(time_period)}剧集`;
-        formattedItem.timePeriod = time_period;
-        formattedItem.contentType = "时间榜剧集";
+    return res.results
+      .map(item => {
+        const formattedItem = formatTmdbItem(item, genreMap.tv);
+        if (formattedItem) {
+          // 添加时间榜标识
+          formattedItem.type = "tmdb-tv-time";
+          formattedItem.source = `TMDB ${getTimePeriodName(time_period)}剧集`;
+          formattedItem.timePeriod = time_period;
+          formattedItem.contentType = "时间榜剧集";
+        }
         return formattedItem;
-      }
-      return null;
-    }).filter(item => item !== null);
+      })
+      .filter(item => item !== null);
   } catch (error) {
     console.error("Error fetching TMDB TV shows by time:", error);
     return [];
@@ -1563,124 +1330,13 @@ function getTimePeriodName(time_period) {
   return nameMap[time_period] || "全部时期";
 }
 
-// ===============豆瓣功能函数===============
-
-// 统一的豆瓣榜单获取函数
-async function loadDoubanList(params = {}) {
-  const { list_types = ["movie_top250"], page = 1 } = params;
-  
-  // 确保list_types是数组
-  const selectedTypes = Array.isArray(list_types) ? list_types : [list_types];
-  
-  // 获取榜单名称和正确的API端点
-  const listConfigs = {
-    "movie_top250": { name: "豆瓣电影Top250", endpoint: "movie_top250" },
-    "tv_top250": { name: "豆瓣剧集Top250", endpoint: "tv_top250" }, 
-    "movie_weekly_best": { name: "豆瓣一周电影口碑榜", endpoint: "movie_weekly_best" },
-    "tv_chinese_best_weekly": { name: "豆瓣华语口碑剧集榜", endpoint: "tv_chinese_best_weekly" },
-    "tv_global_best_weekly": { name: "豆瓣全球口碑剧集榜", endpoint: "tv_global_best_weekly" },
-    "show_domestic": { name: "豆瓣国内热播综艺", endpoint: "show_domestic" },
-    "show_foreign": { name: "豆瓣国外热播综艺", endpoint: "show_foreign" },
-    "movie_showing": { name: "豆瓣当地影院热映", endpoint: "movie_showing" },
-    "movie_real_time_hotest": { name: "豆瓣电影实时热榜", endpoint: "movie_real_time_hotest" },
-    "tv_real_time_hotest": { name: "豆瓣剧集实时热榜", endpoint: "tv_real_time_hotest" },
-    "subject_real_time_hotest": { name: "豆瓣书影音实时热榜", endpoint: "subject_real_time_hotest" }
+// 获取排行榜类型中文名称
+function getRankingTypeName(ranking_type) {
+  const nameMap = {
+    top_rated: "评分排行榜",
+    popular: "热门排行榜",
+    recent: "新番排行榜",
+    classic: "经典排行榜"
   };
-  
-  // 尝试不同的API端点格式
-  const tryEndpoints = (baseType) => {
-    const endpoints = [
-      baseType,
-      `${baseType}_items`,
-      `${baseType}/items`,
-      baseType.replace('_', '/'),
-      baseType.replace('top250', 'top_250'),
-      baseType.replace('tv_top250', 'tv_top_250'),
-      baseType.replace('movie_top250', 'movie_top_250')
-    ];
-    return endpoints;
-  };
-  
-  // 获取单个榜单数据
-  const fetchSingleList = async (listType) => {
-    const listConfig = listConfigs[listType] || { name: "豆瓣榜单", endpoint: listType };
-    const listName = listConfig.name;
-    const endpoint = listConfig.endpoint;
-    
-    try {
-      const start = (page - 1) * 20;
-      
-      // 尝试多个可能的端点
-      const endpoints = tryEndpoints(endpoint);
-      let response = null;
-      
-      for (const tryEndpoint of endpoints) {
-        try {
-          response = await Widget.http.get(`${DOUBAN_API_BASE}/subject_collection/${tryEndpoint}/items`, {
-            headers: {
-              "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Mobile/15E148 Safari/604.1",
-              "Referer": `https://m.douban.com/subject_collection/${tryEndpoint}/`,
-              "Accept": "application/json, text/plain, */*",
-              "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8",
-              "Accept-Encoding": "gzip, deflate, br",
-              "Connection": "keep-alive",
-              "X-Requested-With": "XMLHttpRequest",
-              "Cache-Control": "no-cache"
-            },
-            params: {
-              start: start,
-              count: 20,
-              updated_at: "",
-              items_only: 1,
-              for_mobile: 1
-            },
-            timeout: 10000
-          });
-          
-          if (response.data && response.data.subject_collection_items) {
-            break;
-          }
-        } catch (endpointError) {
-          continue;
-        }
-      }
-      
-      if (!response || !response.data || !response.data.subject_collection_items) {
-        console.error(`All endpoints failed for list_type: ${listType}`);
-        return [];
-      }
-      
-      return response.data.subject_collection_items
-        .map(item => formatDoubanItem(item, listName))
-        .filter(item => item !== null);
-    } catch (error) {
-      console.error(`Error fetching Douban list ${listType}:`, error);
-      return [];
-    }
-  };
-  
-  // 获取所有选中的榜单数据
-  const allResults = [];
-  
-  for (const listType of selectedTypes) {
-    const items = await fetchSingleList(listType);
-    allResults.push(...items);
-  }
-  
-  // 根据榜单类型设置不同的缓存时间
-  const hasRealTime = selectedTypes.some(type => type.includes("real_time") || type === "movie_showing");
-  const cacheDuration = hasRealTime ? 1800 : 3600;
-  
-  // 去重并返回结果
-  const uniqueResults = [];
-  const seenIds = new Set();
-  
-  for (const item of allResults) {
-    if (!seenIds.has(item.id)) {
-      seenIds.add(item.id);
-      uniqueResults.push(item);
-    }
-  }
-  
-  return uniqueResults;
+  return nameMap[ranking_type] || "排行榜";
 }
