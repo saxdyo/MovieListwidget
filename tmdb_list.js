@@ -53,6 +53,18 @@ WidgetMetadata = {
             { title: "收入↑", value: "revenue.asc" }
           ]
         },
+        {
+          name: "air_status",
+          title: "上映状态",
+          type: "enumeration",
+          description: "选择上映状态筛选",
+          value: "released",
+          enumOptions: [
+            { title: "已上映", value: "released" },
+            { title: "未上映", value: "upcoming" },
+            { title: "全部", value: "" }
+          ]
+        },
         { name: "language", title: "语言", type: "language", value: "zh-CN" },
         { name: "page", title: "页码", type: "page" }
       ]
@@ -89,6 +101,18 @@ WidgetMetadata = {
             { title: "上映日期↑", value: "release_date.asc" },
             { title: "投票数↓", value: "vote_count.desc" },
             { title: "投票数↑", value: "vote_count.asc" }
+          ]
+        },
+        {
+          name: "air_status",
+          title: "上映状态",
+          type: "enumeration",
+          description: "选择上映状态筛选",
+          value: "released",
+          enumOptions: [
+            { title: "已上映", value: "released" },
+            { title: "未上映", value: "upcoming" },
+            { title: "全部", value: "" }
           ]
         },
         { name: "language", title: "语言", type: "language", value: "zh-CN" },
@@ -147,6 +171,18 @@ WidgetMetadata = {
             { title: "首播日期↑", value: "first_air_date.asc" },
             { title: "投票数↓", value: "vote_count.desc" },
             { title: "投票数↑", value: "vote_count.asc" }
+          ]
+        },
+        {
+          name: "air_status",
+          title: "上映状态",
+          type: "enumeration",
+          description: "选择上映状态筛选",
+          value: "released",
+          enumOptions: [
+            { title: "已上映", value: "released" },
+            { title: "未上映", value: "upcoming" },
+            { title: "全部", value: "" }
           ]
         },
         { name: "page", title: "页码", type: "page" },
@@ -243,6 +279,18 @@ WidgetMetadata = {
             { title: "投票数↑", value: "vote_count.asc" },
             { title: "收入↓", value: "revenue.desc" },
             { title: "收入↑", value: "revenue.asc" }
+          ]
+        },
+        {
+          name: "air_status",
+          title: "上映状态",
+          type: "enumeration",
+          description: "选择上映状态筛选",
+          value: "released",
+          enumOptions: [
+            { title: "已上映", value: "released" },
+            { title: "未上映", value: "upcoming" },
+            { title: "全部", value: "" }
           ]
         },
         { name: "page", title: "页码", type: "page" },
@@ -354,6 +402,18 @@ WidgetMetadata = {
             { title: "9.0分以上", value: "9.0" }
           ]
         },
+        {
+          name: "air_status",
+          title: "上映状态",
+          type: "enumeration",
+          description: "选择上映状态筛选",
+          value: "released",
+          enumOptions: [
+            { title: "已上映", value: "released" },
+            { title: "未上映", value: "upcoming" },
+            { title: "全部", value: "" }
+          ]
+        },
         { name: "page", title: "页码", type: "page" },
         { name: "language", title: "语言", type: "language", value: "zh-CN" }
       ]
@@ -433,6 +493,18 @@ WidgetMetadata = {
             { title: "7.0分以上", value: "7.0" },
             { title: "8.0分以上", value: "8.0" },
             { title: "9.0分以上", value: "9.0" }
+          ]
+        },
+        {
+          name: "air_status",
+          title: "上映状态",
+          type: "enumeration",
+          description: "选择上映状态筛选",
+          value: "released",
+          enumOptions: [
+            { title: "已上映", value: "released" },
+            { title: "未上映", value: "upcoming" },
+            { title: "全部", value: "" }
           ]
         },
         { name: "page", title: "页码", type: "page" },
@@ -527,6 +599,18 @@ WidgetMetadata = {
             { title: "8.5分以上", value: "8.5" }
           ]
         },
+        {
+          name: "air_status",
+          title: "上映状态",
+          type: "enumeration",
+          description: "选择上映状态筛选",
+          value: "released",
+          enumOptions: [
+            { title: "已上映", value: "released" },
+            { title: "未上映", value: "upcoming" },
+            { title: "全部", value: "" }
+          ]
+        },
         { name: "page", title: "页码", type: "page" },
         { name: "language", title: "语言", type: "language", value: "zh-CN" }
       ]
@@ -548,7 +632,129 @@ WidgetMetadata = {
           enumOptions: [
             { title: "2024年", value: "2024" },
             { title: "2023年", value: "2023" },
-            { title: "2022年", value: "2022" }
+            { title: "2022年", value: "2022" },
+            { title: "2021年", value: "2021" },
+            { title: "2020年", value: "2020" },
+            { title: "2019年", value: "2019" },
+            { title: "2018年", value: "2018" },
+            { title: "2017年", value: "2017" },
+            { title: "2016年", value: "2016" },
+            { title: "2015年", value: "2015" },
+            { title: "2014年", value: "2014" },
+            { title: "2013年", value: "2013" },
+            { title: "2012年", value: "2012" },
+            { title: "2011年", value: "2011" },
+            { title: "2010年", value: "2010" },
+            { title: "2009年", value: "2009" },
+            { title: "2008年", value: "2008" },
+            { title: "2007年", value: "2007" },
+            { title: "2006年", value: "2006" },
+            { title: "2005年", value: "2005" },
+            { title: "2004年", value: "2004" },
+            { title: "2003年", value: "2003" },
+            { title: "2002年", value: "2002" },
+            { title: "2001年", value: "2001" },
+            { title: "2000年", value: "2000" },
+            { title: "1999年", value: "1999" },
+            { title: "1998年", value: "1998" },
+            { title: "1997年", value: "1997" },
+            { title: "1996年", value: "1996" },
+            { title: "1995年", value: "1995" },
+            { title: "1994年", value: "1994" },
+            { title: "1993年", value: "1993" },
+            { title: "1992年", value: "1992" },
+            { title: "1991年", value: "1991" },
+            { title: "1990年", value: "1990" },
+            { title: "1989年", value: "1989" },
+            { title: "1988年", value: "1988" },
+            { title: "1987年", value: "1987" },
+            { title: "1986年", value: "1986" },
+            { title: "1985年", value: "1985" },
+            { title: "1984年", value: "1984" },
+            { title: "1983年", value: "1983" },
+            { title: "1982年", value: "1982" },
+            { title: "1981年", value: "1981" },
+            { title: "1980年", value: "1980" },
+            { title: "1979年", value: "1979" },
+            { title: "1978年", value: "1978" },
+            { title: "1977年", value: "1977" },
+            { title: "1976年", value: "1976" },
+            { title: "1975年", value: "1975" },
+            { title: "1974年", value: "1974" },
+            { title: "1973年", value: "1973" },
+            { title: "1972年", value: "1972" },
+            { title: "1971年", value: "1971" },
+            { title: "1970年", value: "1970" },
+            { title: "1969年", value: "1969" },
+            { title: "1968年", value: "1968" },
+            { title: "1967年", value: "1967" },
+            { title: "1966年", value: "1966" },
+            { title: "1965年", value: "1965" },
+            { title: "1964年", value: "1964" },
+            { title: "1963年", value: "1963" },
+            { title: "1962年", value: "1962" },
+            { title: "1961年", value: "1961" },
+            { title: "1960年", value: "1960" },
+            { title: "1959年", value: "1959" },
+            { title: "1958年", value: "1958" },
+            { title: "1957年", value: "1957" },
+            { title: "1956年", value: "1956" },
+            { title: "1955年", value: "1955" },
+            { title: "1954年", value: "1954" },
+            { title: "1953年", value: "1953" },
+            { title: "1952年", value: "1952" },
+            { title: "1951年", value: "1951" },
+            { title: "1950年", value: "1950" },
+            { title: "1949年", value: "1949" },
+            { title: "1948年", value: "1948" },
+            { title: "1947年", value: "1947" },
+            { title: "1946年", value: "1946" },
+            { title: "1945年", value: "1945" },
+            { title: "1944年", value: "1944" },
+            { title: "1943年", value: "1943" },
+            { title: "1942年", value: "1942" },
+            { title: "1941年", value: "1941" },
+            { title: "1940年", value: "1940" },
+            { title: "1939年", value: "1939" },
+            { title: "1938年", value: "1938" },
+            { title: "1937年", value: "1937" },
+            { title: "1936年", value: "1936" },
+            { title: "1935年", value: "1935" },
+            { title: "1934年", value: "1934" },
+            { title: "1933年", value: "1933" },
+            { title: "1932年", value: "1932" },
+            { title: "1931年", value: "1931" },
+            { title: "1930年", value: "1930" },
+            { title: "1929年", value: "1929" },
+            { title: "1928年", value: "1928" },
+            { title: "1927年", value: "1927" },
+            { title: "1926年", value: "1926" },
+            { title: "1925年", value: "1925" },
+            { title: "1924年", value: "1924" },
+            { title: "1923年", value: "1923" },
+            { title: "1922年", value: "1922" },
+            { title: "1921年", value: "1921" },
+            { title: "1920年", value: "1920" },
+            { title: "1919年", value: "1919" },
+            { title: "1918年", value: "1918" },
+            { title: "1917年", value: "1917" },
+            { title: "1916年", value: "1916" },
+            { title: "1915年", value: "1915" },
+            { title: "1914年", value: "1914" },
+            { title: "1913年", value: "1913" },
+            { title: "1912年", value: "1912" },
+            { title: "1911年", value: "1911" },
+            { title: "1910年", value: "1910" },
+            { title: "1909年", value: "1909" },
+            { title: "1908年", value: "1908" },
+            { title: "1907年", value: "1907" },
+            { title: "1906年", value: "1906" },
+            { title: "1905年", value: "1905" },
+            { title: "1904年", value: "1904" },
+            { title: "1903年", value: "1903" },
+            { title: "1902年", value: "1902" },
+            { title: "1901年", value: "1901" },
+            { title: "1900年", value: "1900" }
           ]
         },
         {
@@ -588,6 +794,18 @@ WidgetMetadata = {
             { title: "6.0分以上", value: "6.0" },
             { title: "7.0分以上", value: "7.0" },
             { title: "8.0分以上", value: "8.0" }
+          ]
+        },
+        {
+          name: "air_status",
+          title: "上映状态",
+          type: "enumeration",
+          description: "选择上映状态筛选",
+          value: "released",
+          enumOptions: [
+            { title: "已上映", value: "released" },
+            { title: "未上映", value: "upcoming" },
+            { title: "全部", value: "" }
           ]
         },
         { name: "page", title: "页码", type: "page" },
@@ -642,6 +860,18 @@ WidgetMetadata = {
             { title: "无要求", value: "0" }
           ]
         },
+        {
+          name: "air_status",
+          title: "上映状态",
+          type: "enumeration",
+          description: "选择上映状态筛选",
+          value: "released",
+          enumOptions: [
+            { title: "已上映", value: "released" },
+            { title: "未上映", value: "upcoming" },
+            { title: "全部", value: "" }
+          ]
+        },
         { name: "page", title: "页码", type: "page" },
         { name: "language", title: "语言", type: "language", value: "zh-CN" }
       ]
@@ -673,6 +903,20 @@ WidgetMetadata = {
 };
 
 const API_KEY = 'f3ae69ddca232b56265600eb919d46ab'; // TMDB API Key
+
+// 获取北京时间
+function getBeijingDate() {
+  const now = new Date();
+  // 获取当前UTC时间，然后加上8小时得到北京时间
+  const beijingTime = new Date(now.getTime() + (8 * 60 * 60 * 1000));
+  
+  // 使用本地时间方法获取年、月、日，因为我们已经调整了时区
+  const year = beijingTime.getFullYear();
+  const month = String(beijingTime.getMonth() + 1).padStart(2, '0');
+  const day = String(beijingTime.getDate()).padStart(2, '0');
+  
+  return `${year}-${month}-${day}`;
+}
 
 // 提取 TMDB 的种类信息
 async function fetchTmdbGenres() {
@@ -740,23 +984,50 @@ async function loadWeekGlobalMovies(params = {}) {
 
 // 获取当前热门电影
 async function tmdbPopularMovies(params = {}) {
-  const { language = "zh-CN", page = 1, sort_by = "popularity.desc" } = params;
+  const { language = "zh-CN", page = 1, sort_by = "popularity.desc", air_status } = params;
   try {
+    // 获取北京时间
+    const beijingDate = getBeijingDate();
+    
     // 如果选择的是热门度排序，使用popular端点；否则使用discover端点
     if (sort_by.startsWith("popularity")) {
       const res = await Widget.tmdb.get("/movie/popular", { 
         params: { language, page, api_key: API_KEY }
       });
       const genreMap = await fetchTmdbGenres();
-      return res.results.map(item => formatTmdbItem(item, genreMap.movie));
+      let results = res.results.map(item => formatTmdbItem(item, genreMap.movie));
+      
+      // 根据上映状态筛选
+      if (air_status === 'released') {
+        results = results.filter(item => {
+          const releaseDate = item.releaseDate;
+          return releaseDate && new Date(releaseDate) <= new Date(beijingDate);
+        });
+      } else if (air_status === 'upcoming') {
+        results = results.filter(item => {
+          const releaseDate = item.releaseDate;
+          return releaseDate && new Date(releaseDate) > new Date(beijingDate);
+        });
+      }
+      
+      return results;
     } else {
+      const queryParams = { 
+        language, 
+        page, 
+        sort_by,
+        api_key: API_KEY 
+      };
+      
+      // 添加上映状态筛选
+      if (air_status === 'released') {
+        queryParams['release_date.lte'] = beijingDate;
+      } else if (air_status === 'upcoming') {
+        queryParams['release_date.gte'] = beijingDate;
+      }
+      
       const res = await Widget.tmdb.get("/discover/movie", {
-        params: { 
-          language, 
-          page, 
-          sort_by,
-          api_key: API_KEY 
-        }
+        params: queryParams
       });
       const genreMap = await fetchTmdbGenres();
       return res.results.map(item => formatTmdbItem(item, genreMap.movie));
@@ -769,8 +1040,11 @@ async function tmdbPopularMovies(params = {}) {
 
 // 获取高评分电影或剧集
 async function tmdbTopRated(params = {}) {
-  const { language = "zh-CN", page = 1, type = "movie", sort_by = "vote_average.desc" } = params;
+  const { language = "zh-CN", page = 1, type = "movie", sort_by = "vote_average.desc", air_status } = params;
   try {
+    // 获取北京时间
+    const beijingDate = getBeijingDate();
+    
     // 如果选择的是评分排序，使用top_rated端点；否则使用discover端点
     if (sort_by.startsWith("vote_average")) {
       const api = type === "movie" ? "/movie/top_rated" : "/tv/top_rated";
@@ -778,16 +1052,48 @@ async function tmdbTopRated(params = {}) {
         params: { language, page, api_key: API_KEY }
       });
       const genreMap = await fetchTmdbGenres();
-      return res.results.map(item => formatTmdbItem(item, genreMap[type]));
+      let results = res.results.map(item => formatTmdbItem(item, genreMap[type]));
+      
+      // 根据上映状态筛选
+      if (air_status === 'released') {
+        results = results.filter(item => {
+          const releaseDate = item.releaseDate;
+          return releaseDate && new Date(releaseDate) <= new Date(beijingDate);
+        });
+      } else if (air_status === 'upcoming') {
+        results = results.filter(item => {
+          const releaseDate = item.releaseDate;
+          return releaseDate && new Date(releaseDate) > new Date(beijingDate);
+        });
+      }
+      
+      return results;
     } else {
       const endpoint = type === "movie" ? "/discover/movie" : "/discover/tv";
-      const res = await Widget.tmdb.get(endpoint, {
-        params: { 
-          language, 
-          page, 
-          sort_by,
-          api_key: API_KEY 
+      const queryParams = { 
+        language, 
+        page, 
+        sort_by,
+        api_key: API_KEY 
+      };
+      
+      // 添加上映状态筛选
+      if (air_status === 'released') {
+        if (type === "movie") {
+          queryParams['release_date.lte'] = beijingDate;
+        } else {
+          queryParams['first_air_date.lte'] = beijingDate;
         }
+      } else if (air_status === 'upcoming') {
+        if (type === "movie") {
+          queryParams['release_date.gte'] = beijingDate;
+        } else {
+          queryParams['first_air_date.gte'] = beijingDate;
+        }
+      }
+      
+      const res = await Widget.tmdb.get(endpoint, {
+        params: queryParams
       });
       const genreMap = await fetchTmdbGenres();
       return res.results.map(item => formatTmdbItem(item, genreMap[type]));
@@ -800,16 +1106,28 @@ async function tmdbTopRated(params = {}) {
 
 // 获取播出平台内容
 async function tmdbDiscoverByNetwork(params = {}) {
-  const { language = "zh-CN", page = 1, with_networks, sort_by = "popularity.desc" } = params;
+  const { language = "zh-CN", page = 1, with_networks, sort_by = "popularity.desc", air_status } = params;
   try {
+    // 获取北京时间
+    const beijingDate = getBeijingDate();
+    
+    const queryParams = { 
+      language, 
+      page, 
+      with_networks,
+      sort_by,
+      api_key: API_KEY 
+    };
+    
+    // 添加上映状态筛选
+    if (air_status === 'released') {
+      queryParams['first_air_date.lte'] = beijingDate;
+    } else if (air_status === 'upcoming') {
+      queryParams['first_air_date.gte'] = beijingDate;
+    }
+    
     const res = await Widget.tmdb.get("/discover/tv", {
-      params: { 
-        language, 
-        page, 
-        with_networks,
-        sort_by,
-        api_key: API_KEY 
-      }
+      params: queryParams
     });
     const genreMap = await fetchTmdbGenres();
     return res.results.map(item => formatTmdbItem(item, genreMap.tv));
@@ -821,8 +1139,11 @@ async function tmdbDiscoverByNetwork(params = {}) {
 
 // 获取出品公司内容
 async function tmdbDiscoverByCompany(params = {}) {
-  const { language = "zh-CN", page = 1, with_companies, type = "movie", with_genres, sort_by = "popularity.desc" } = params;
+  const { language = "zh-CN", page = 1, with_companies, type = "movie", with_genres, sort_by = "popularity.desc", air_status } = params;
   try {
+    // 获取北京时间
+    const beijingDate = getBeijingDate();
+    
     // 构建API端点
     const endpoint = type === "movie" ? "/discover/movie" : "/discover/tv";
     
@@ -842,6 +1163,21 @@ async function tmdbDiscoverByCompany(params = {}) {
     // 添加题材类型过滤器
     if (with_genres) {
       queryParams.with_genres = with_genres;
+    }
+    
+    // 添加上映状态筛选
+    if (air_status === 'released') {
+      if (type === "movie") {
+        queryParams['release_date.lte'] = beijingDate;
+      } else {
+        queryParams['first_air_date.lte'] = beijingDate;
+      }
+    } else if (air_status === 'upcoming') {
+      if (type === "movie") {
+        queryParams['release_date.gte'] = beijingDate;
+      } else {
+        queryParams['first_air_date.gte'] = beijingDate;
+      }
     }
     
     // 发起API请求
@@ -868,10 +1204,14 @@ async function imdbPopularContent(params = {}) {
     with_genres, 
     with_origin_country,
     sort_by = "vote_average.desc",
-    vote_average_gte = "7.0"
+    vote_average_gte = "7.0",
+    air_status
   } = params;
   
   try {
+    // 获取北京时间
+    const beijingDate = getBeijingDate();
+    
     // 构建API端点
     const endpoint = type === "movie" ? "/discover/movie" : "/discover/tv";
     
@@ -899,6 +1239,21 @@ async function imdbPopularContent(params = {}) {
     // 添加地区过滤器
     if (with_origin_country) {
       queryParams.with_origin_country = with_origin_country;
+    }
+    
+    // 添加上映状态筛选
+    if (air_status === 'released') {
+      if (type === "movie") {
+        queryParams['release_date.lte'] = beijingDate;
+      } else {
+        queryParams['first_air_date.lte'] = beijingDate;
+      }
+    } else if (air_status === 'upcoming') {
+      if (type === "movie") {
+        queryParams['release_date.gte'] = beijingDate;
+      } else {
+        queryParams['first_air_date.gte'] = beijingDate;
+      }
     }
     
     // 发起API请求
@@ -930,10 +1285,14 @@ async function bangumiHotNewAnime(params = {}) {
     season_year = "2024",
     with_origin_country = "JP",
     sort_by = "popularity.desc",
-    vote_average_gte = "6.0"
+    vote_average_gte = "6.0",
+    air_status
   } = params;
   
   try {
+    // 获取北京时间
+    const beijingDate = getBeijingDate();
+    
     const endpoint = "/discover/tv";
     
     // 构建查询参数 - 专注指定年份的新番
@@ -956,6 +1315,13 @@ async function bangumiHotNewAnime(params = {}) {
     // 添加最低评分要求
     if (vote_average_gte && vote_average_gte !== "0") {
       queryParams.vote_average_gte = vote_average_gte;
+    }
+    
+    // 添加上映状态筛选
+    if (air_status === 'released') {
+      queryParams['first_air_date.lte'] = beijingDate;
+    } else if (air_status === 'upcoming') {
+      queryParams['first_air_date.gte'] = beijingDate;
     }
     
     // 发起API请求
@@ -986,10 +1352,14 @@ async function bangumiRankingList(params = {}) {
     page = 1, 
     ranking_type = "top_rated",
     with_origin_country = "JP",
-    vote_average_gte = "7.0"
+    vote_average_gte = "7.0",
+    air_status
   } = params;
   
   try {
+    // 获取北京时间
+    const beijingDate = getBeijingDate();
+    
     const endpoint = "/discover/tv";
     
     // 根据排行榜类型配置不同参数
@@ -1038,6 +1408,13 @@ async function bangumiRankingList(params = {}) {
       queryParams.with_origin_country = with_origin_country;
     }
     
+    // 添加上映状态筛选
+    if (air_status === 'released') {
+      queryParams['first_air_date.lte'] = beijingDate;
+    } else if (air_status === 'upcoming') {
+      queryParams['first_air_date.gte'] = beijingDate;
+    }
+    
     // 发起API请求
     const res = await Widget.tmdb.get(endpoint, {
       params: queryParams
@@ -1079,10 +1456,14 @@ async function tmdbPopularTVShows(params = {}) {
     with_origin_country,
     with_genres,
     sort_by = "popularity.desc",
-    vote_average_gte = "0"
+    vote_average_gte = "0",
+    air_status
   } = params;
   
   try {
+    // 获取北京时间
+    const beijingDate = getBeijingDate();
+    
     const endpoint = "/discover/tv";
     
     // 构建查询参数
@@ -1108,6 +1489,13 @@ async function tmdbPopularTVShows(params = {}) {
     // 添加最低评分要求
     if (vote_average_gte && vote_average_gte !== "0") {
       queryParams.vote_average_gte = vote_average_gte;
+    }
+    
+    // 添加上映状态筛选
+    if (air_status === 'released') {
+      queryParams['first_air_date.lte'] = beijingDate;
+    } else if (air_status === 'upcoming') {
+      queryParams['first_air_date.gte'] = beijingDate;
     }
     
     // 发起API请求
@@ -1139,10 +1527,14 @@ async function tmdbTVShowsByTime(params = {}) {
     with_origin_country,
     with_genres,
     sort_by = "first_air_date.desc",
-    vote_average_gte = "0"
+    vote_average_gte = "0",
+    air_status
   } = params;
   
   try {
+    // 获取北京时间
+    const beijingDate = getBeijingDate();
+    
     const endpoint = "/discover/tv";
     
     // 根据时间范围计算日期
@@ -1179,6 +1571,13 @@ async function tmdbTVShowsByTime(params = {}) {
     // 添加最低评分要求
     if (vote_average_gte && vote_average_gte !== "0") {
       queryParams.vote_average_gte = vote_average_gte;
+    }
+    
+    // 添加上映状态筛选
+    if (air_status === 'released') {
+      queryParams['first_air_date.lte'] = beijingDate;
+    } else if (air_status === 'upcoming') {
+      queryParams['first_air_date.gte'] = beijingDate;
     }
     
     // 发起API请求
