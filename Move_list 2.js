@@ -528,9 +528,10 @@ WidgetMetadata = {
           name: "type",
           title: "内容类型",
           type: "enumeration",
-          description: "选择电影或剧集",
+          description: "选择电影、剧集或全部",
           value: "movie",
           enumOptions: [
+            { title: "全部", value: "all" },
             { title: "电影", value: "movie" },
             { title: "剧集", value: "tv" }
           ]
@@ -1559,6 +1560,22 @@ async function loadCardItems(params = {}) {
 async function classifyByGenre(params = {}) {
   const { type = "movie", genre = "", page = 1, language = "zh-CN", with_origin_country = "", sort_by = "popularity.desc" } = params;
   try {
+    if (type === 'all') {
+      // 并发请求电影和剧集
+      const [movieRes, tvRes] = await Promise.all([
+        classifyByGenre({ ...params, type: 'movie' }),
+        classifyByGenre({ ...params, type: 'tv' })
+      ]);
+      // 合并去重（按id）
+      const all = [...movieRes, ...tvRes];
+      const seen = new Set();
+      const unique = all.filter(item => {
+        if (seen.has(item.id)) return false;
+        seen.add(item.id);
+        return true;
+      });
+      return unique;
+    }
     const endpoint = type === "movie" ? "/discover/movie" : "/discover/tv";
     const queryParams = {
       language,
