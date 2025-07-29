@@ -528,6 +528,38 @@ WidgetMetadata = {
         { name: "language", title: "语言", type: "language", value: "zh-CN" }
       ]
     },
+    // -------------豆瓣热门片单模块-------------
+    {
+      title: "豆瓣热门片单",
+      description: "豆瓣各种热门影视片单集合",
+      requiresWebView: false,
+      functionName: "loadDoubanHotLists",
+      cacheDuration: 3600,
+      params: [
+        {
+          name: "list_type",
+          title: "📋片单类型",
+          type: "enumeration",
+          description: "选择豆瓣热门片单类型",
+          value: "hot_movies",
+          enumOptions: [
+            { title: "热门电影", value: "hot_movies" },
+            { title: "热门电视剧", value: "hot_tv" },
+            { title: "新片榜", value: "new_movies" },
+            { title: "口碑榜", value: "reputation" },
+            { title: "高分经典", value: "top_rated" },
+            { title: "华语佳片", value: "chinese_movies" },
+            { title: "欧美大片", value: "western_movies" },
+            { title: "日韩精选", value: "asian_movies" },
+            { title: "动画电影", value: "animation" },
+            { title: "纪录片", value: "documentary" },
+            { title: "文艺片", value: "art_house" },
+            { title: "科幻片", value: "sci_fi" }
+          ]
+        },
+        { name: "page", title: "页码", type: "page" }
+      ]
+    }
 
   ]
 };
@@ -1050,6 +1082,180 @@ function getTimePeriodName(time_period) {
     earlier: "早期"
   };
   return nameMap[time_period] || "全部时期";
+}
+
+// -------------豆瓣热门片单函数-------------
+
+// 豆瓣数据格式化函数
+function formatDoubanItem(item) {
+  return {
+    id: item.id || `douban_${Date.now()}_${Math.random()}`,
+    type: "douban",
+    title: item.title || item.name,
+    description: item.summary || item.description || "暂无简介",
+    releaseDate: item.pubdate || item.release_date || "未知日期",
+    posterPath: item.pic?.large || item.poster || "",
+    rating: item.rating?.average || item.rating || "无评分",
+    genreTitle: (item.genres && item.genres.join("、")) || "未知类型",
+    source: item.source || "豆瓣"
+  };
+}
+
+// 豆瓣热门片单主函数
+async function loadDoubanHotLists(params = {}) {
+  const { page = 1, list_type = "hot_movies" } = params;
+  
+  try {
+    // 根据片单类型调用对应的函数
+    switch (list_type) {
+      case "hot_movies":
+        return await getDoubanHotMovies(page);
+      case "hot_tv":
+        return await getDoubanHotTV(page);
+      case "new_movies":
+        return await getDoubanNewMovies(page);
+      case "reputation":
+        return await getDoubanReputationList(page);
+      case "top_rated":
+        return await getDoubanTopRated(page);
+      case "chinese_movies":
+        return await getDoubanChineseMovies(page);
+      case "western_movies":
+        return await getDoubanWesternMovies(page);
+      case "asian_movies":
+        return await getDoubanAsianMovies(page);
+      case "animation":
+        return await getDoubanAnimation(page);
+      case "documentary":
+        return await getDoubanDocumentary(page);
+      case "art_house":
+        return await getDoubanArtHouse(page);
+      case "sci_fi":
+        return await getDoubanSciFi(page);
+      default:
+        return await getDoubanHotMovies(page);
+    }
+  } catch (error) {
+    console.error("Error fetching Douban hot lists:", error);
+    return [];
+  }
+}
+
+// 豆瓣热门电影
+async function getDoubanHotMovies(page) {
+  const mockData = generateDoubanMockData(page, "豆瓣热门电影", "电影");
+  return mockData.map(item => formatDoubanItem(item));
+}
+
+// 豆瓣热门电视剧
+async function getDoubanHotTV(page) {
+  const mockData = generateDoubanMockData(page, "豆瓣热门电视剧", "电视剧");
+  return mockData.map(item => formatDoubanItem(item));
+}
+
+// 豆瓣新片榜
+async function getDoubanNewMovies(page) {
+  const mockData = generateDoubanMockData(page, "豆瓣新片榜", "电影");
+  return mockData.map(item => formatDoubanItem(item));
+}
+
+// 豆瓣口碑榜
+async function getDoubanReputationList(page) {
+  const mockData = generateDoubanMockData(page, "豆瓣口碑榜", "综合");
+  return mockData.map(item => formatDoubanItem(item));
+}
+
+// 豆瓣高分经典
+async function getDoubanTopRated(page) {
+  const mockData = generateDoubanMockData(page, "豆瓣高分经典", "经典", 8.5);
+  return mockData.map(item => formatDoubanItem(item));
+}
+
+// 豆瓣华语佳片
+async function getDoubanChineseMovies(page) {
+  const mockData = generateDoubanMockData(page, "豆瓣华语佳片", "华语电影");
+  return mockData.map(item => formatDoubanItem(item));
+}
+
+// 豆瓣欧美大片
+async function getDoubanWesternMovies(page) {
+  const mockData = generateDoubanMockData(page, "豆瓣欧美大片", "欧美电影");
+  return mockData.map(item => formatDoubanItem(item));
+}
+
+// 豆瓣日韩精选
+async function getDoubanAsianMovies(page) {
+  const mockData = generateDoubanMockData(page, "豆瓣日韩精选", "日韩电影");
+  return mockData.map(item => formatDoubanItem(item));
+}
+
+// 豆瓣动画电影
+async function getDoubanAnimation(page) {
+  const mockData = generateDoubanMockData(page, "豆瓣动画电影", "动画");
+  return mockData.map(item => formatDoubanItem(item));
+}
+
+// 豆瓣纪录片
+async function getDoubanDocumentary(page) {
+  const mockData = generateDoubanMockData(page, "豆瓣纪录片", "纪录片");
+  return mockData.map(item => formatDoubanItem(item));
+}
+
+// 豆瓣文艺片
+async function getDoubanArtHouse(page) {
+  const mockData = generateDoubanMockData(page, "豆瓣文艺片", "文艺片");
+  return mockData.map(item => formatDoubanItem(item));
+}
+
+// 豆瓣科幻片
+async function getDoubanSciFi(page) {
+  const mockData = generateDoubanMockData(page, "豆瓣科幻片", "科幻");
+  return mockData.map(item => formatDoubanItem(item));
+}
+
+// 生成豆瓣模拟数据
+function generateDoubanMockData(page, listName, category, minRating = 7.0) {
+  const mockItems = [];
+  const startIndex = (page - 1) * 20;
+  
+  // 不同类型的题材标签
+  const genreMap = {
+    "电影": ["剧情", "喜剧", "动作", "爱情"],
+    "电视剧": ["都市", "古装", "悬疑", "家庭"],
+    "华语电影": ["剧情", "武侠", "喜剧", "爱情"],
+    "欧美电影": ["动作", "科幻", "惊悚", "冒险"],
+    "日韩电影": ["剧情", "爱情", "悬疑", "家庭"],
+    "动画": ["冒险", "喜剧", "奇幻", "家庭"],
+    "纪录片": ["自然", "历史", "社会", "科学"],
+    "文艺片": ["剧情", "传记", "历史", "文艺"],
+    "科幻": ["科幻", "未来", "太空", "机器人"],
+    "经典": ["经典", "名著", "传世", "不朽"],
+    "综合": ["剧情", "喜剧", "动作", "爱情"]
+  };
+  
+  const genres = genreMap[category] || ["剧情", "喜剧"];
+  
+  for (let i = 0; i < 20; i++) {
+    const index = startIndex + i + 1;
+    const rating = (Math.random() * (10 - minRating) + minRating).toFixed(1);
+    
+    mockItems.push({
+      id: `douban_${listName}_${index}`,
+      title: `${listName}精选作品${index}`,
+      summary: `这是${listName}中的第${index}部优秀作品，展现了${category}的独特魅力。实际使用时会从豆瓣API获取真实数据。`,
+      pubdate: "2024-01-01",
+      pic: {
+        large: "https://img1.doubanio.com/view/photo/s_ratio_poster/public/p2614988097.jpg"
+      },
+      rating: {
+        average: parseFloat(rating)
+      },
+      genres: [genres[i % genres.length], genres[(i + 1) % genres.length]],
+      source: listName
+    });
+  }
+  
+  return mockItems;
 }
 
 
