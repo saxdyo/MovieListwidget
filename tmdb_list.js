@@ -54,6 +54,57 @@ WidgetMetadata = {
           ]
         },
         {
+          name: "with_genres",
+          title: "🎬题材类型",
+          type: "multi_enumeration",
+          description: "选择要筛选的题材类型（可多选）",
+          value: [],
+          enumOptions: [
+            { title: "动作", value: "28" },
+            { title: "冒险", value: "12" },
+            { title: "动画", value: "16" },
+            { title: "喜剧", value: "35" },
+            { title: "犯罪", value: "80" },
+            { title: "纪录片", value: "99" },
+            { title: "剧情", value: "18" },
+            { title: "家庭", value: "10751" },
+            { title: "奇幻", value: "14" },
+            { title: "历史", value: "36" },
+            { title: "恐怖", value: "27" },
+            { title: "音乐", value: "10402" },
+            { title: "悬疑", value: "9648" },
+            { title: "爱情", value: "10749" },
+            { title: "科幻", value: "878" },
+            { title: "惊悚", value: "53" },
+            { title: "战争", value: "10752" },
+            { title: "西部", value: "37" }
+          ]
+        },
+        {
+          name: "with_origin_country",
+          title: "🌍地区筛选",
+          type: "multi_enumeration",
+          description: "按制片地区筛选内容（可多选）",
+          value: [],
+          enumOptions: [
+            { title: "美国", value: "US" },
+            { title: "中国", value: "CN" },
+            { title: "日本", value: "JP" },
+            { title: "韩国", value: "KR" },
+            { title: "英国", value: "GB" },
+            { title: "法国", value: "FR" },
+            { title: "德国", value: "DE" },
+            { title: "意大利", value: "IT" },
+            { title: "西班牙", value: "ES" },
+            { title: "俄罗斯", value: "RU" },
+            { title: "印度", value: "IN" },
+            { title: "泰国", value: "TH" },
+            { title: "加拿大", value: "CA" },
+            { title: "澳大利亚", value: "AU" },
+            { title: "墨西哥", value: "MX" }
+          ]
+        },
+        {
           name: "air_status",
           title: "上映状态",
           type: "enumeration",
@@ -101,6 +152,57 @@ WidgetMetadata = {
             { title: "上映日期↑", value: "release_date.asc" },
             { title: "投票数↓", value: "vote_count.desc" },
             { title: "投票数↑", value: "vote_count.asc" }
+          ]
+        },
+        {
+          name: "with_genres",
+          title: "🎬题材类型",
+          type: "multi_enumeration",
+          description: "选择要筛选的题材类型（可多选）",
+          value: [],
+          enumOptions: [
+            { title: "动作", value: "28" },
+            { title: "冒险", value: "12" },
+            { title: "动画", value: "16" },
+            { title: "喜剧", value: "35" },
+            { title: "犯罪", value: "80" },
+            { title: "纪录片", value: "99" },
+            { title: "剧情", value: "18" },
+            { title: "家庭", value: "10751" },
+            { title: "奇幻", value: "14" },
+            { title: "历史", value: "36" },
+            { title: "恐怖", value: "27" },
+            { title: "音乐", value: "10402" },
+            { title: "悬疑", value: "9648" },
+            { title: "爱情", value: "10749" },
+            { title: "科幻", value: "878" },
+            { title: "惊悚", value: "53" },
+            { title: "战争", value: "10752" },
+            { title: "西部", value: "37" }
+          ]
+        },
+        {
+          name: "with_origin_country",
+          title: "🌍地区筛选",
+          type: "multi_enumeration",
+          description: "按制片地区筛选内容（可多选）",
+          value: [],
+          enumOptions: [
+            { title: "美国", value: "US" },
+            { title: "中国", value: "CN" },
+            { title: "日本", value: "JP" },
+            { title: "韩国", value: "KR" },
+            { title: "英国", value: "GB" },
+            { title: "法国", value: "FR" },
+            { title: "德国", value: "DE" },
+            { title: "意大利", value: "IT" },
+            { title: "西班牙", value: "ES" },
+            { title: "俄罗斯", value: "RU" },
+            { title: "印度", value: "IN" },
+            { title: "泰国", value: "TH" },
+            { title: "加拿大", value: "CA" },
+            { title: "澳大利亚", value: "AU" },
+            { title: "墨西哥", value: "MX" }
           ]
         },
         {
