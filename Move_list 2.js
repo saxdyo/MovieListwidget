@@ -527,7 +527,7 @@ WidgetMetadata = {
         { name: "page", title: "页码", type: "page" },
         { name: "language", title: "语言", type: "language", value: "zh-CN" }
       ]
-                     },
+    },
      // -------------豆瓣模块-------------
      // --- 片单解析 ---
      {
