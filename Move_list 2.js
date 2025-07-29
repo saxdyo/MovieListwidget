@@ -919,7 +919,9 @@ async function loadTodayGlobalMedia(params = {}) {
       params: { language, api_key: API_KEY }
     });
     const genreMap = await fetchTmdbGenres();
-    return res.results.map(item => formatTmdbItem(item, genreMap.movie));
+    return res.results
+      .map(item => formatTmdbItem(item, genreMap.movie))
+      .filter(item => item.posterPath); // 新增过滤
   } catch (error) {
     console.error("Error fetching trending media:", error);
     return [];
@@ -934,7 +936,9 @@ async function loadWeekGlobalMovies(params = {}) {
       params: { language, api_key: API_KEY }
     });
     const genreMap = await fetchTmdbGenres();
-    return res.results.map(item => formatTmdbItem(item, genreMap.movie));
+    return res.results
+      .map(item => formatTmdbItem(item, genreMap.movie))
+      .filter(item => item.posterPath); // 新增过滤
   } catch (error) {
     console.error("Error fetching weekly global movies:", error);
     return [];
@@ -981,7 +985,9 @@ async function tmdbTopRated(params = {}) {
         params: { language, page, api_key: API_KEY }
       });
       const genreMap = await fetchTmdbGenres();
-      return res.results.map(item => formatTmdbItem(item, genreMap[type]));
+      return res.results
+        .map(item => formatTmdbItem(item, genreMap[type]))
+        .filter(item => item.posterPath); // 新增过滤
     } else {
       const endpoint = type === "movie" ? "/discover/movie" : "/discover/tv";
       const res = await Widget.tmdb.get(endpoint, {
@@ -993,7 +999,9 @@ async function tmdbTopRated(params = {}) {
         }
       });
       const genreMap = await fetchTmdbGenres();
-      return res.results.map(item => formatTmdbItem(item, genreMap[type]));
+      return res.results
+        .map(item => formatTmdbItem(item, genreMap[type]))
+        .filter(item => item.posterPath); // 新增过滤
     }
   } catch (error) {
     console.error("Error fetching top rated:", error);
@@ -1116,7 +1124,7 @@ async function imdbPopularContent(params = {}) {
       formattedItem.type = "imdb";
       formattedItem.source = "IMDB高分精选";
       return formattedItem;
-    });
+    }).filter(item => item.posterPath); // 新增过滤
   } catch (error) {
     console.error("Error fetching IMDB popular content:", error);
     return [];
@@ -1187,7 +1195,7 @@ async function imdbYearlySelection(params = {}) {
       formattedItem.source = `IMDB ${primary_release_year || '全年'}精选`;
       formattedItem.year = primary_release_year || new Date(item.release_date || item.first_air_date).getFullYear();
       return formattedItem;
-    });
+    }).filter(item => item.posterPath); // 新增过滤
   } catch (error) {
     console.error("Error fetching IMDB yearly selection:", error);
     return [];
@@ -1246,7 +1254,7 @@ async function bangumiHotNewAnime(params = {}) {
       formattedItem.seasonYear = season_year;
       formattedItem.isNewAnime = true;
       return formattedItem;
-    });
+    }).filter(item => item.posterPath); // 新增过滤
   } catch (error) {
     console.error("Error fetching Bangumi hot new anime:", error);
     return [];
@@ -1325,7 +1333,7 @@ async function bangumiRankingList(params = {}) {
       formattedItem.source = `Bangumi${getRankingTypeName(ranking_type)}`;
       formattedItem.rankingType = ranking_type;
       return formattedItem;
-    });
+    }).filter(item => item.posterPath); // 新增过滤
   } catch (error) {
     console.error("Error fetching Bangumi ranking list:", error);
     return [];
@@ -1397,7 +1405,7 @@ async function tmdbPopularTVShows(params = {}) {
       formattedItem.source = "TMDB热门剧集";
       formattedItem.contentType = "TV剧集";
       return formattedItem;
-    });
+    }).filter(item => item.posterPath); // 新增过滤
   } catch (error) {
     console.error("Error fetching TMDB popular TV shows:", error);
     return [];
@@ -1469,7 +1477,7 @@ async function tmdbTVShowsByTime(params = {}) {
       formattedItem.timePeriod = time_period;
       formattedItem.contentType = "时间榜剧集";
       return formattedItem;
-    });
+    }).filter(item => item.posterPath); // 新增过滤
   } catch (error) {
     console.error("Error fetching TMDB TV shows by time:", error);
     return [];

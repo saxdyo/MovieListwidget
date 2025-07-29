@@ -535,7 +535,8 @@ async function fetchTmdbData(api, params) {
                 mediaType: mediaType,
                 genreTitle: genreTitle
             };
-        });
+        })
+        .filter(item => item.posterPath); // 新增过滤
 }
 
 async function loadTmdbTrendingData() {
@@ -556,7 +557,7 @@ async function loadTodayGlobalMedia() {
         posterPath: item.poster_url,
         backdropPath: item.title_backdrop,
         mediaType: item.type,
-    }));
+    })).filter(item => item.posterPath); // 新增过滤
 }
 
 async function loadWeekGlobalMovies(params) {
@@ -572,7 +573,7 @@ async function loadWeekGlobalMovies(params) {
         posterPath: item.poster_url,
         backdropPath: item.title_backdrop,
         mediaType: item.type,
-    }));
+    })).filter(item => item.posterPath); // 新增过滤
 }
 
 async function tmdbPopularMovies(params) {
@@ -591,7 +592,7 @@ async function tmdbPopularMovies(params) {
         posterPath: item.poster_url,
         backdropPath: item.title_backdrop,
         mediaType: item.type
-            }));
+            })).filter(item => item.posterPath); // 新增过滤
     }
     
     const [data, genres] = await Promise.all([
@@ -616,7 +617,7 @@ async function tmdbPopularMovies(params) {
         rating: item.vote_average,
         mediaType: "movie",
         genreTitle: getTmdbGenreTitles(item.genre_ids, "movie")
-    }));
+    })).filter(item => item.posterPath); // 新增过滤
 }
 
 async function tmdbTopRated(params) {
