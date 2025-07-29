@@ -249,9 +249,6 @@ WidgetMetadata = {
         { name: "language", title: "语言", type: "language", value: "zh-CN" }
       ]
     },
-    // -------------IMDB模块-------------
-
-
     // -------------TMDB剧集模块-------------
     {
       title: "TMDB 热门剧集",
@@ -424,183 +421,7 @@ WidgetMetadata = {
         { name: "page", title: "页码", type: "page" },
         { name: "language", title: "语言", type: "language", value: "zh-CN" }
       ]
-    },
-    // -------------Bangumi模块-------------
-    {
-      title: "Bangumi 热门新番",
-      description: "最新热门新番动画",
-      requiresWebView: false,
-      functionName: "bangumiHotNewAnime",
-      cacheDuration: 1800,
-      params: [
-        {
-          name: "with_origin_country",
-          title: "🌸制作地区",
-          type: "enumeration",
-          description: "选择动画制作地区",
-          value: "JP",
-          enumOptions: [
-            { title: "日本动画", value: "JP" },
-            { title: "中国动画", value: "CN" },
-            { title: "韩国动画", value: "KR" },
-            { title: "全部地区", value: "" }
-          ]
-        },
-        {
-          name: "sort_by",
-          title: "📊排序方式",
-          type: "enumeration",
-          description: "选择排序方式",
-          value: "popularity.desc",
-          enumOptions: [
-            { title: "热门度↓", value: "popularity.desc" },
-            { title: "评分↓", value: "vote_average.desc" },
-            { title: "播出日期↓", value: "first_air_date.desc" },
-            { title: "投票数↓", value: "vote_count.desc" }
-          ]
-        },
-        {
-          name: "vote_average_gte",
-          title: "⭐最低评分",
-          type: "enumeration",
-          description: "设置最低评分要求",
-          value: "6.0",
-          enumOptions: [
-            { title: "无要求", value: "0" },
-            { title: "6.0分以上", value: "6.0" },
-            { title: "7.0分以上", value: "7.0" },
-            { title: "8.0分以上", value: "8.0" }
-          ]
-        },
-        { name: "page", title: "页码", type: "page" },
-        { name: "language", title: "语言", type: "language", value: "zh-CN" }
-      ]
-    },
-     // -------------豆瓣模块-------------
-     // --- 片单解析 ---
-     {
-       title: "豆瓣片单(TMDB版)",
-       description: "豆瓣片单地址",
-       requiresWebView: false,
-       functionName: "loadCardItems",
-       cacheDuration: 43200,
-       params: [
-         {
-           name: "url",
-           title: "列表地址",
-           type: "input",
-           description: "豆瓣片单地址",
-           placeholders: [
-             { title: "豆瓣热门电影", value: "https://m.douban.com/subject_collection/movie_hot_gaia" },
-             { title: "热播新剧", value: "https://m.douban.com/subject_collection/tv_hot" },
-             { title: "热播综艺", value: "https://m.douban.com/subject_collection/show_hot" },
-             { title: "热播动漫", value: "https://m.douban.com/subject_collection/tv_animation" },
-             { title: "影院热映", value: "https://m.douban.com/subject_collection/movie_showing" },
-             { title: "实时热门电影", value: "https://m.douban.com/subject_collection/movie_real_time_hotest" },
-             { title: "实时热门电视", value: "https://m.douban.com/subject_collection/tv_real_time_hotest" },
-             { title: "豆瓣 Top 250", value: "https://m.douban.com/subject_collection/movie_top250" },
-             { title: "一周电影口碑榜", value: "https://m.douban.com/subject_collection/movie_weekly_best" },
-             { title: "华语口碑剧集榜", value: "https://m.douban.com/subject_collection/tv_chinese_best_weekly" },
-             { title: "全球口碑剧集榜", value: "https://m.douban.com/subject_collection/tv_global_best_weekly" },
-             { title: "国内综艺口碑榜", value: "https://m.douban.com/subject_collection/show_chinese_best_weekly" },
-             { title: "全球综艺口碑榜", value: "https://m.douban.com/subject_collection/show_global_best_weekly" },
-             { title: "第97届奥斯卡", value: "https://m.douban.com/subject_collection/EC7I7ZDRA?type=rank" },
-             { title: "IMDB MOVIE TOP 250", value: "https://m.douban.com/doulist/1518184" },
-             { title: "IMDB TV TOP 250", value: "https://m.douban.com/doulist/41573512" },
-             { title: "意外结局电影", value: "https://m.douban.com/doulist/11324" }
-           ]
-         },
-         {
-           name: "page",
-           title: "页码",
-           type: "page"
-         }
-       ]
-     },
-     {
-      title: "影视主题分类",
-      description: "按类型/题材分类展示电影或剧集",
-      requiresWebView: false,
-      functionName: "classifyByGenre",
-      cacheDuration: 3600,
-      params: [
-        {
-          name: "type",
-          title: "内容类型",
-          type: "enumeration",
-          description: "选择电影、剧集或全部",
-          value: "movie",
-          enumOptions: [
-            { title: "全部", value: "all" },
-            { title: "电影", value: "movie" },
-            { title: "剧集", value: "tv" }
-          ]
-        },
-        {
-          name: "genre",
-          title: "主题类型",
-          type: "enumeration",
-          description: "选择主题类型",
-          value: "18",
-          enumOptions: [
-            { title: "剧情", value: "18" },
-            { title: "喜剧", value: "35" },
-            { title: "动作", value: "28" },
-            { title: "爱情", value: "10749" },
-            { title: "科幻", value: "878" },
-            { title: "动画", value: "16" },
-            { title: "犯罪", value: "80" },
-            { title: "悬疑", value: "9648" },
-            { title: "恐怖", value: "27" },
-            { title: "纪录片", value: "99" }
-          ]
-        },
-        {
-          name: "with_origin_country",
-          title: "地区",
-          type: "enumeration",
-          description: "选择制作地区",
-          value: "",
-          enumOptions: [
-            { title: "全部", value: "" },
-            { title: "中国", value: "CN" },
-            { title: "美国", value: "US" },
-            { title: "日本", value: "JP" },
-            { title: "韩国", value: "KR" },
-            { title: "欧洲", value: "GB,FR,DE,ES,IT" }
-          ]
-        },
-        {
-          name: "sort_by",
-          title: "排序方式",
-          type: "enumeration",
-          description: "选择排序方式",
-          value: "popularity.desc",
-          enumOptions: [
-            { title: "热门度↓", value: "popularity.desc" },
-            { title: "热门度↑", value: "popularity.asc" },
-            { title: "评分↓", value: "vote_average.desc" },
-            { title: "评分↑", value: "vote_average.asc" },
-            { title: "上映日期↓", value: "release_date.desc" },
-            { title: "上映日期↑", value: "release_date.asc" },
-            { title: "投票数↓", value: "vote_count.desc" },
-            { title: "投票数↑", value: "vote_count.asc" }
-          ]
-        },
-        {
-          name: "page",
-          title: "页码",
-          type: "page"
-        },
-        {
-          name: "language",
-          title: "语言",
-          type: "language",
-          value: "zh-CN"
-        }
-      ]
     }
-
    ]
  };
 
@@ -647,12 +468,17 @@ function formatTmdbItem(item, genreMap) {
   };
 }
 
+// 强制所有TMDB API请求language为zh-CN
+function forceZhCN(params) {
+  return { ...params, language: 'zh-CN' };
+}
+
 // 获取当前热门电影与剧集
 async function loadTodayGlobalMedia(params = {}) {
   const { language = "zh-CN" } = params;
   try {
     const res = await Widget.tmdb.get("/trending/all/day", { 
-      params: { language, api_key: API_KEY }
+      params: forceZhCN({ language, api_key: API_KEY })
     });
     const genreMap = await fetchTmdbGenres();
     return res.results
@@ -669,7 +495,7 @@ async function loadWeekGlobalMovies(params = {}) {
   const { language = "zh-CN" } = params;
   try {
     const res = await Widget.tmdb.get("/trending/all/week", { 
-      params: { language, api_key: API_KEY }
+      params: forceZhCN({ language, api_key: API_KEY })
     });
     const genreMap = await fetchTmdbGenres();
     return res.results
@@ -688,18 +514,18 @@ async function tmdbPopularMovies(params = {}) {
     // 如果选择的是热门度排序，使用popular端点；否则使用discover端点
     if (sort_by.startsWith("popularity")) {
       const res = await Widget.tmdb.get("/movie/popular", { 
-        params: { language, page, api_key: API_KEY }
+        params: forceZhCN({ language, page, api_key: API_KEY })
       });
       const genreMap = await fetchTmdbGenres();
       return res.results.map(item => formatTmdbItem(item, genreMap.movie));
     } else {
       const res = await Widget.tmdb.get("/discover/movie", {
-        params: { 
+        params: forceZhCN({ 
           language, 
           page, 
           sort_by,
           api_key: API_KEY 
-        }
+        })
       });
       const genreMap = await fetchTmdbGenres();
       return res.results.map(item => formatTmdbItem(item, genreMap.movie));
@@ -718,7 +544,7 @@ async function tmdbTopRated(params = {}) {
     if (sort_by.startsWith("vote_average")) {
       const api = type === "movie" ? "/movie/top_rated" : "/tv/top_rated";
       const res = await Widget.tmdb.get(api, { 
-        params: { language, page, api_key: API_KEY }
+        params: forceZhCN({ language, page, api_key: API_KEY })
       });
       const genreMap = await fetchTmdbGenres();
       return res.results
@@ -727,12 +553,12 @@ async function tmdbTopRated(params = {}) {
     } else {
       const endpoint = type === "movie" ? "/discover/movie" : "/discover/tv";
       const res = await Widget.tmdb.get(endpoint, {
-        params: { 
+        params: forceZhCN({ 
           language, 
           page, 
           sort_by,
           api_key: API_KEY 
-        }
+        })
       });
       const genreMap = await fetchTmdbGenres();
       return res.results
@@ -750,13 +576,13 @@ async function tmdbDiscoverByNetwork(params = {}) {
   const { language = "zh-CN", page = 1, with_networks, sort_by = "popularity.desc" } = params;
   try {
     const res = await Widget.tmdb.get("/discover/tv", {
-      params: { 
+      params: forceZhCN({ 
         language, 
         page, 
         with_networks,
         sort_by,
         api_key: API_KEY 
-      }
+      })
     });
     const genreMap = await fetchTmdbGenres();
     return res.results.map(item => formatTmdbItem(item, genreMap.tv));
@@ -793,7 +619,7 @@ async function tmdbDiscoverByCompany(params = {}) {
     
     // 发起API请求
     const res = await Widget.tmdb.get(endpoint, {
-      params: queryParams
+      params: forceZhCN(queryParams)
     });
     
     const genreMap = await fetchTmdbGenres();
@@ -802,66 +628,6 @@ async function tmdbDiscoverByCompany(params = {}) {
       .filter(item => item.posterPath); // 出品公司
   } catch (error) {
     console.error("Error fetching discover by company:", error);
-    return [];
-  }
-}
-
-
-
-// -------------Bangumi模块函数-------------
-
-// Bangumi热门新番 - 最新热门新番动画
-async function bangumiHotNewAnime(params = {}) {
-  const { 
-    language = "zh-CN", 
-    page = 1, 
-    with_origin_country = "JP",
-    sort_by = "popularity.desc",
-    vote_average_gte = "6.0"
-  } = params;
-  
-  try {
-    const endpoint = "/discover/tv";
-    
-    // 构建查询参数 - 专注热门新番
-    const queryParams = { 
-      language, 
-      page, 
-      sort_by,
-      api_key: API_KEY,
-      // 新番动画筛选
-      with_genres: "16", // 动画类型
-      vote_count_gte: 10  // 新番投票较少，降低门槛
-    };
-    
-    // 添加制作地区
-    if (with_origin_country) {
-      queryParams.with_origin_country = with_origin_country;
-    }
-    
-    // 添加最低评分要求
-    if (vote_average_gte && vote_average_gte !== "0") {
-      queryParams.vote_average_gte = vote_average_gte;
-    }
-    
-    // 发起API请求
-    const res = await Widget.tmdb.get(endpoint, {
-      params: queryParams
-    });
-    
-    const genreMap = await fetchTmdbGenres();
-    return res.results
-      .map(item => {
-        const formattedItem = formatTmdbItem(item, genreMap.tv);
-        // 添加Bangumi新番标识
-        formattedItem.type = "bangumi-new";
-        formattedItem.source = "Bangumi热门新番";
-        formattedItem.isNewAnime = true;
-        return formattedItem;
-      })
-      .filter(item => item.posterPath); // Bangumi新番
-  } catch (error) {
-    console.error("Error fetching Bangumi hot new anime:", error);
     return [];
   }
 }
@@ -907,7 +673,7 @@ async function tmdbPopularTVShows(params = {}) {
     
     // 发起API请求
     const res = await Widget.tmdb.get(endpoint, {
-      params: queryParams
+      params: forceZhCN(queryParams)
     });
     
     const genreMap = await fetchTmdbGenres();
@@ -996,7 +762,7 @@ async function tmdbTVShowsByTime(params = {}) {
     
     // 发起API请求
     const res = await Widget.tmdb.get(endpoint, {
-      params: queryParams
+      params: forceZhCN(queryParams)
     });
     
     const genreMap = await fetchTmdbGenres();
@@ -1596,7 +1362,7 @@ async function classifyByGenre(params = {}) {
     if (with_origin_country) {
       queryParams.with_origin_country = with_origin_country;
     }
-    const res = await Widget.tmdb.get(endpoint, { params: queryParams });
+    const res = await Widget.tmdb.get(endpoint, { params: forceZhCN(queryParams) });
     const genreMap = await fetchTmdbGenres();
     const genreDict = type === "movie" ? genreMap.movie : genreMap.tv;
     return res.results
