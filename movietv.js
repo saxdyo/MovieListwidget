@@ -1083,9 +1083,39 @@ async function loadTitlePosterWithBackdrops(items, maxItems = 30) {
             metadata: backdrop.metadata
         }));
     } else {
-        // 如果没有缓存的横版标题海报，使用普通数据
-        console.log(`[横版标题海报] 没有缓存的横版标题海报，使用普通数据`);
-        return items.map(item => createEnhancedWidgetItem(item));
+        // 如果没有缓存的横版标题海报，立即生成
+        console.log(`[横版标题海报] 立即生成横版标题海报...`);
+        const processedItems = await batchProcessBackdrops(items.slice(0, maxItems), {
+            enableTitleOverlay: true,
+            preferredSize: 'w1280',
+            includeMetadata: true,
+            forceRegenerate: true, // 强制重新生成
+            maxConcurrent: 5 // 增加并发数加快生成速度
+        });
+        
+        if (processedItems.length > 0) {
+            console.log(`[横版标题海报] 立即生成成功: ${processedItems.length}项`);
+            
+            // 缓存生成的结果
+            processedItems.forEach((item, index) => {
+                if (item && item.id) {
+                    cacheBackdrop(`backdrop_${item.id}`, item);
+                    console.log(`[横版标题海报] 缓存生成结果 ${index + 1}: ${item.title}`);
+                }
+            });
+            
+            return processedItems.map(item => ({
+                id: item.id,
+                title: item.title,
+                posterPath: item.backdropUrl,
+                titlePoster: item.titlePoster,
+                metadata: item.metadata
+            }));
+        } else {
+            // 如果生成失败，使用普通数据
+            console.log(`[横版标题海报] 生成失败，使用普通数据`);
+            return items.map(item => createEnhancedWidgetItem(item));
+        }
     }
 }
 
@@ -1110,18 +1140,27 @@ async function loadEnhancedTitlePosterWithBackdrops(items, maxItems = 30, conten
             metadata: backdrop.metadata
         }));
     } else {
-        // 如果没有缓存的横版标题海报，尝试实时生成
-        console.log(`[增强横版标题海报] 尝试实时生成横版标题海报...`);
+        // 如果没有缓存的横版标题海报，立即生成
+        console.log(`[增强横版标题海报] 立即生成横版标题海报...`);
         const processedItems = await batchProcessBackdrops(items.slice(0, maxItems), {
             enableTitleOverlay: true,
             preferredSize: 'w1280',
             includeMetadata: true,
-            forceRegenerate: false,
-            maxConcurrent: 3
+            forceRegenerate: true, // 强制重新生成
+            maxConcurrent: 5 // 增加并发数加快生成速度
         });
         
         if (processedItems.length > 0) {
-            console.log(`[增强横版标题海报] 实时生成成功: ${processedItems.length}项`);
+            console.log(`[增强横版标题海报] 立即生成成功: ${processedItems.length}项`);
+            
+            // 缓存生成的结果
+            processedItems.forEach((item, index) => {
+                if (item && item.id) {
+                    cacheBackdrop(`backdrop_${item.id}`, item);
+                    console.log(`[增强横版标题海报] 缓存生成结果 ${index + 1}: ${item.title}`);
+                }
+            });
+            
             return processedItems.map(item => ({
                 id: item.id,
                 title: item.title,
@@ -1130,8 +1169,8 @@ async function loadEnhancedTitlePosterWithBackdrops(items, maxItems = 30, conten
                 metadata: item.metadata
             }));
         } else {
-            // 如果实时生成失败，使用普通数据
-            console.log(`[增强横版标题海报] 实时生成失败，使用普通数据`);
+            // 如果生成失败，使用普通数据
+            console.log(`[增强横版标题海报] 生成失败，使用普通数据`);
             return items.map(item => createEnhancedWidgetItem(item));
         }
     }
@@ -4303,8 +4342,8 @@ setInterval(async () => {
           enableTitleOverlay: true,
           preferredSize: 'w1280',
           includeMetadata: true,
-          forceRegenerate: false,
-          maxConcurrent: 3
+          forceRegenerate: true, // 强制重新生成
+          maxConcurrent: 5 // 增加并发数加快生成速度
         });
         
         // 缓存处理后的横版封面
@@ -4802,8 +4841,8 @@ setInterval(async () => {
           enableTitleOverlay: true,
           preferredSize: 'w1280',
           includeMetadata: true,
-          forceRegenerate: false,
-          maxConcurrent: 3
+          forceRegenerate: true, // 强制重新生成
+          maxConcurrent: 5 // 增加并发数加快生成速度
         });
         
         // 缓存处理结果
