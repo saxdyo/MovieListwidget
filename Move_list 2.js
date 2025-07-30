@@ -3913,4 +3913,14 @@ if (typeof global !== 'undefined') {
     global.createSimpleWidgetItem = createSimpleWidgetItem;
 }
 
+// 获取TVB平台剧集
+async function tvbTVShows(params = {}) {
+  return await tmdbDiscoverByNetwork({
+    ...params,
+    with_networks: "3196"
+  });
+}
+
+global.tvbTVShows = tvbTVShows;
+
 
