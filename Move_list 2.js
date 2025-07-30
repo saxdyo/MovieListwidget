@@ -2581,7 +2581,7 @@ async function tmdbMediaRanking(params = {}) {
     // 根据媒体类型选择API端点
     const endpoint = media_type === "movie" ? "/discover/movie" : "/discover/tv";
     
-    // 构建查询参数
+    // 构建查询参数 - 确保使用纯TMDB API
     const queryParams = { 
       language, 
       page, 
@@ -2591,14 +2591,16 @@ async function tmdbMediaRanking(params = {}) {
       vote_count_gte: media_type === "movie" ? 100 : 50
     };
     
-    // 添加制作地区
-    if (with_origin_country) {
+    // 添加制作地区 - 这是关键参数
+    if (with_origin_country && with_origin_country !== "") {
       queryParams.with_origin_country = with_origin_country;
+      console.log(`[TMDB影视榜单] 地区筛选: ${with_origin_country}`);
     }
     
     // 添加内容类型
-    if (with_genres) {
+    if (with_genres && with_genres !== "") {
       queryParams.with_genres = with_genres;
+      console.log(`[TMDB影视榜单] 类型筛选: ${with_genres}`);
     }
     
     // 添加最低评分要求
@@ -2619,13 +2621,38 @@ async function tmdbMediaRanking(params = {}) {
       }
     }
     
-    // 发起API请求
+    console.log(`[TMDB影视榜单] API请求参数:`, queryParams);
+    
+    // 发起API请求 - 直接使用Widget.tmdb，不使用任何缓存
     const res = await Widget.tmdb.get(endpoint, {
       params: queryParams
     });
     
+    console.log(`[TMDB影视榜单] 返回数据数量: ${res.results.length}`);
+    
+    // 检查返回数据的地区分布
+    const countryStats = {};
+    res.results.forEach(item => {
+      if (item.origin_country && item.origin_country.length > 0) {
+        item.origin_country.forEach(country => {
+          countryStats[country] = (countryStats[country] || 0) + 1;
+        });
+      }
+    });
+    console.log(`[TMDB影视榜单] 地区分布:`, countryStats);
+    
+    // 验证地区筛选是否生效
+    if (with_origin_country && with_origin_country !== "") {
+      const hasTargetCountry = res.results.some(item => 
+        item.origin_country && item.origin_country.includes(with_origin_country)
+      );
+      if (!hasTargetCountry) {
+        console.warn(`[TMDB影视榜单] 警告: 未找到目标地区 ${with_origin_country} 的内容`);
+      }
+    }
+    
     const genreMap = await fetchTmdbGenres();
-    return res.results
+    const filteredResults = res.results
       .map(item => {
         const formattedItem = formatTmdbItem(item, genreMap);
         // 添加媒体类型标识
@@ -2651,7 +2678,11 @@ async function tmdbMediaRanking(params = {}) {
         const cat3Keywords = ['三级片','三級片','三級','3级片','3級片','3级','3級','R级','R級','限制级','限制級','成人片','情色片','无码','無碼','无码片','無碼片'];
         if (cat3Keywords.some(k => lowerTitle.includes(k) || lowerDesc.includes(k) || (item.genreTitle && item.genreTitle.includes(k)))) return false;
         return true;
-      }); // TMDB影视榜单
+      });
+    
+    console.log(`[TMDB影视榜单] 最终过滤后数量: ${filteredResults.length}`);
+    return filteredResults;
+    
   } catch (error) {
     console.error("Error fetching TMDB media ranking:", error);
     return [];
