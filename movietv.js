@@ -4277,7 +4277,7 @@ setInterval(async () => {
     // 预加载横版封面
     console.log("[定时任务] 开始预加载横版封面...");
     if (trendingData && trendingData.today_global) {
-      const items = trendingData.today_global.slice(0, 20); // 预加载前20项
+      const items = trendingData.today_global.slice(0, 30); // 预加载前30项（增加剧集数量）
       console.log(`[定时任务] 准备处理 ${items.length} 项横版封面...`);
       try {
         const processedBackdrops = await batchProcessBackdrops(items, {
@@ -4775,7 +4775,7 @@ setInterval(async () => {
     // 预加载横版封面
     console.log("[定时任务] 开始预加载横版封面...");
     if (trendingData && trendingData.today_global) {
-      const items = trendingData.today_global.slice(0, 20); // 预加载前20项
+      const items = trendingData.today_global.slice(0, 30); // 预加载前30项（增加剧集数量）
       console.log(`[定时任务] 准备处理 ${items.length} 项横版封面...`);
       
       try {
