@@ -873,12 +873,12 @@ async function fetchSimpleData() {
     }
 }
 
-// 简化的实时数据获取
+// 增强的实时数据获取 - 包含更多剧集数据
 async function fetchRealtimeData() {
     try {
         console.log("[实时API] 开始获取实时数据...");
         
-        const [todayRes, weekRes, popularRes] = await Promise.allSettled([
+        const [todayRes, weekRes, popularMoviesRes, popularTVRes, topRatedMoviesRes, topRatedTVRes] = await Promise.allSettled([
             Widget.tmdb.get("/trending/all/day", { 
                 params: { 
                     language: 'zh-CN',
@@ -899,6 +899,27 @@ async function fetchRealtimeData() {
                     region: 'CN', 
                     api_key: API_KEY 
                 } 
+            }),
+            Widget.tmdb.get("/tv/popular", { 
+                params: { 
+                    language: 'zh-CN',
+                    region: 'CN', 
+                    api_key: API_KEY 
+                } 
+            }),
+            Widget.tmdb.get("/movie/top_rated", { 
+                params: { 
+                    language: 'zh-CN',
+                    region: 'CN', 
+                    api_key: API_KEY 
+                } 
+            }),
+            Widget.tmdb.get("/tv/top_rated", { 
+                params: { 
+                    language: 'zh-CN',
+                    region: 'CN', 
+                    api_key: API_KEY 
+                } 
             })
         ]);
         
@@ -908,9 +929,9 @@ async function fetchRealtimeData() {
             popular_movies: []
         };
         
-        // 处理今日热门
+        // 处理今日热门 - 增加数量到50项
         if (todayRes.status === 'fulfilled' && todayRes.value.results) {
-            result.today_global = todayRes.value.results.slice(0, 20).map(item => ({
+            result.today_global = todayRes.value.results.slice(0, 50).map(item => ({
                 id: item.id,
                 title: item.title || item.name,
                 poster_url: item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : '',
@@ -921,9 +942,9 @@ async function fetchRealtimeData() {
             }));
         }
         
-        // 处理本周热门
+        // 处理本周热门 - 增加数量到50项
         if (weekRes.status === 'fulfilled' && weekRes.value.results) {
-            result.week_global_all = weekRes.value.results.slice(0, 20).map(item => ({
+            result.week_global_all = weekRes.value.results.slice(0, 50).map(item => ({
                 id: item.id,
                 title: item.title || item.name,
                 poster_url: item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : '',
@@ -934,9 +955,10 @@ async function fetchRealtimeData() {
             }));
         }
         
-        // 处理热门电影
-        if (popularRes.status === 'fulfilled' && popularRes.value.results) {
-            result.popular_movies = popularRes.value.results.slice(0, 20).map(item => ({
+        // 处理热门电影 - 合并电影和剧集数据
+        const allMovies = [];
+        if (popularMoviesRes.status === 'fulfilled' && popularMoviesRes.value.results) {
+            allMovies.push(...popularMoviesRes.value.results.slice(0, 25).map(item => ({
                 id: item.id,
                 title: item.title,
                 poster_url: item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : '',
@@ -944,8 +966,57 @@ async function fetchRealtimeData() {
                 vote_average: item.vote_average,
                 release_date: item.release_date,
                 media_type: 'movie'
-            }));
+            })));
         }
+        
+        // 添加热门剧集数据
+        if (popularTVRes.status === 'fulfilled' && popularTVRes.value.results) {
+            allMovies.push(...popularTVRes.value.results.slice(0, 25).map(item => ({
+                id: item.id,
+                title: item.name,
+                poster_url: item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : '',
+                backdrop_path: item.backdrop_path,
+                vote_average: item.vote_average,
+                release_date: item.first_air_date,
+                media_type: 'tv'
+            })));
+        }
+        
+        // 添加高分电影和剧集
+        if (topRatedMoviesRes.status === 'fulfilled' && topRatedMoviesRes.value.results) {
+            allMovies.push(...topRatedMoviesRes.value.results.slice(0, 15).map(item => ({
+                id: item.id,
+                title: item.title,
+                poster_url: item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : '',
+                backdrop_path: item.backdrop_path,
+                vote_average: item.vote_average,
+                release_date: item.release_date,
+                media_type: 'movie'
+            })));
+        }
+        
+        if (topRatedTVRes.status === 'fulfilled' && topRatedTVRes.value.results) {
+            allMovies.push(...topRatedTVRes.value.results.slice(0, 15).map(item => ({
+                id: item.id,
+                title: item.name,
+                poster_url: item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : '',
+                backdrop_path: item.backdrop_path,
+                vote_average: item.vote_average,
+                release_date: item.first_air_date,
+                media_type: 'tv'
+            })));
+        }
+        
+        // 去重并限制数量
+        const uniqueMovies = [];
+        const seenIds = new Set();
+        for (const item of allMovies) {
+            if (!seenIds.has(item.id) && item.poster_url) {
+                uniqueMovies.push(item);
+                seenIds.add(item.id);
+            }
+        }
+        result.popular_movies = uniqueMovies.slice(0, 50);
         
         console.log(`[实时API] 数据获取完成 - 今日热门: ${result.today_global.length}, 本周热门: ${result.week_global_all.length}, 热门电影: ${result.popular_movies.length}`);
         return result;
@@ -2440,22 +2511,30 @@ async function loadTmdbTrendingCombined(params = {}) {
         // 如果缓存数据不足，补充API数据
         if (results.length < max_items) {
           console.log(`[TMDB热门内容] 缓存数据不足，补充API数据...`);
-          const res = await Widget.tmdb.get("/trending/all/day", { 
-            params: { 
-              language: 'zh-CN',
-              region: 'CN',
-              api_key: API_KEY,
-              page: 1
-            }
-          });
-          const genreMap = await fetchTmdbGenres();
-          const apiResults = res.results
-            .map(item => formatTmdbItem(item, genreMap))
-            .filter(item => item.posterPath);
+          
+          // 获取多页数据以增加数量
+          const pages = [1, 2, 3];  // 获取前3页
+          const allApiResults = [];
+          
+          for (const pageNum of pages) {
+            const res = await Widget.tmdb.get("/trending/all/day", { 
+              params: { 
+                language: 'zh-CN',
+                region: 'CN',
+                api_key: API_KEY,
+                page: pageNum
+              }
+            });
+            const genreMap = await fetchTmdbGenres();
+            const pageResults = res.results
+              .map(item => formatTmdbItem(item, genreMap))
+              .filter(item => item.posterPath);
+            allApiResults.push(...pageResults);
+          }
           
           // 合并结果，去重
           const existingIds = new Set(results.map(item => item.id));
-          const newResults = apiResults.filter(item => !existingIds.has(item.id));
+          const newResults = allApiResults.filter(item => !existingIds.has(item.id));
           results = [...results, ...newResults];
           console.log(`[TMDB热门内容] 补充API数据: ${newResults.length}项`);
         }
@@ -2474,22 +2553,30 @@ async function loadTmdbTrendingCombined(params = {}) {
         // 如果缓存数据不足，补充API数据
         if (results.length < max_items) {
           console.log(`[TMDB热门内容] 缓存数据不足，补充API数据...`);
-          const res = await Widget.tmdb.get("/trending/all/week", { 
-            params: { 
-              language: 'zh-CN',
-              region: 'CN',
-              api_key: API_KEY,
-              page: 1
-            }
-          });
-          const genreMap = await fetchTmdbGenres();
-          const apiResults = res.results
-            .map(item => formatTmdbItem(item, genreMap))
-            .filter(item => item.posterPath);
+          
+          // 获取多页数据以增加数量
+          const pages = [1, 2, 3];  // 获取前3页
+          const allApiResults = [];
+          
+          for (const pageNum of pages) {
+            const res = await Widget.tmdb.get("/trending/all/week", { 
+              params: { 
+                language: 'zh-CN',
+                region: 'CN',
+                api_key: API_KEY,
+                page: pageNum
+              }
+            });
+            const genreMap = await fetchTmdbGenres();
+            const pageResults = res.results
+              .map(item => formatTmdbItem(item, genreMap))
+              .filter(item => item.posterPath);
+            allApiResults.push(...pageResults);
+          }
           
           // 合并结果，去重
           const existingIds = new Set(results.map(item => item.id));
-          const newResults = apiResults.filter(item => !existingIds.has(item.id));
+          const newResults = allApiResults.filter(item => !existingIds.has(item.id));
           results = [...results, ...newResults];
           console.log(`[TMDB热门内容] 补充API数据: ${newResults.length}项`);
         }
@@ -2510,28 +2597,44 @@ async function loadTmdbTrendingCombined(params = {}) {
           }
         }
         
-        // 如果缓存数据不足，补充API数据
+                // 如果缓存数据不足，补充API数据
         if (results.length < max_items) {
           console.log(`[TMDB热门内容] 缓存数据不足，补充API数据...`);
-          
-          // 获取多页数据
-          const pages = [1, 2];  // 获取前2页
+
+          // 获取多页电影和剧集数据
+          const pages = [1, 2, 3];  // 获取前3页
           const allApiResults = [];
-          
+
+          // 获取热门电影
           for (const pageNum of pages) {
-            const res = await Widget.tmdb.get("/movie/popular", { 
-              params: { 
+            const res = await Widget.tmdb.get("/movie/popular", {
+              params: {
                 language: 'zh-CN',
-                region: 'CN', 
-                page: pageNum, 
-                api_key: API_KEY 
+                region: 'CN',
+                page: pageNum,
+                api_key: API_KEY
               }
             });
             const genreMap = await fetchTmdbGenres();
             const pageResults = res.results.map(item => formatTmdbItem(item, genreMap));
             allApiResults.push(...pageResults);
           }
-          
+
+          // 获取热门剧集
+          for (const pageNum of pages) {
+            const res = await Widget.tmdb.get("/tv/popular", {
+              params: {
+                language: 'zh-CN',
+                region: 'CN',
+                page: pageNum,
+                api_key: API_KEY
+              }
+            });
+            const genreMap = await fetchTmdbGenres();
+            const pageResults = res.results.map(item => formatTmdbItem(item, genreMap));
+            allApiResults.push(...pageResults);
+          }
+
           // 合并结果，去重
           const existingIds = new Set(results.map(item => item.id));
           const newResults = allApiResults.filter(item => !existingIds.has(item.id) && item.posterPath);
