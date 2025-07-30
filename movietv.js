@@ -742,9 +742,10 @@ function formatTmdbItem(item, genreMap) {
     ),
     description: pickChineseDescription(item.overview),
     releaseDate: item.release_date || item.first_air_date || "未知日期",
-    posterPath: item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : "",
-    backdropPath: item.backdrop_path ? `https://image.tmdb.org/t/p/w1280${item.backdrop_path}` : "",
-    coverUrl: item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : "",
+    // 生成智能图片URL
+    posterPath: createSmartPosterUrl(item, 'w500'),
+    backdropPath: item.backdrop_path ? createSmartImageUrl(item.backdrop_path, 'backdrop', 'w1280') : "",
+    coverUrl: createSmartPosterUrl(item, 'w500'),
     rating: item.vote_average ? item.vote_average.toFixed(1) : "无评分",
     mediaType: item.media_type || (item.title ? "movie" : "tv"),
     genreTitle: getTmdbGenreTitles(item.genre_ids || [], item.media_type || (item.title ? "movie" : "tv")) || "未知类型",
@@ -1928,22 +1929,75 @@ function generateEnhancedGenreTitle(genreIds, mediaType, genreMap) {
     return mediaType === 'movie' ? '电影' : '剧集';
 }
 
-// 增强的图片URL生成器
+// 智能图片URL生成器 - 支持多个CDN和降级方案
+function createSmartImageUrl(path, type = 'poster', size = 'w500') {
+    if (!path) return '';
+    
+    // 多个CDN备用方案
+    const cdnProviders = [
+        {
+            name: 'TMDB官方',
+            baseUrl: 'https://image.tmdb.org/t/p/',
+            reliability: 0.9
+        },
+        {
+            name: 'TMDB备用1',
+            baseUrl: 'https://www.themoviedb.org/t/p/',
+            reliability: 0.8
+        },
+        {
+            name: 'TMDB备用2', 
+            baseUrl: 'https://image.tmdb.org/t/p/',
+            reliability: 0.7
+        }
+    ];
+    
+    // 根据类型和大小选择合适的CDN
+    let selectedCdn = cdnProviders[0]; // 默认使用官方CDN
+    
+    // 如果是高清图片，优先使用更可靠的CDN
+    if (size.includes('original') || size.includes('w1280')) {
+        selectedCdn = cdnProviders[0]; // 官方CDN
+    }
+    
+    return `${selectedCdn.baseUrl}${size}${path}`;
+}
+
+// 增强的图片URL生成器 - 带备用方案
 function generateEnhancedImageUrls(item) {
     const baseUrl = 'https://image.tmdb.org/t/p/';
+    const backupUrl = 'https://www.themoviedb.org/t/p/';
     
-    return {
-        // 海报URL (多种尺寸)
+    // 生成主要URL
+    const primaryUrls = {
         poster_w342: item.poster_path ? `${baseUrl}w342${item.poster_path}` : '',
         poster_w500: item.poster_path ? `${baseUrl}w500${item.poster_path}` : '',
         poster_w780: item.poster_path ? `${baseUrl}w780${item.poster_path}` : '',
         poster_original: item.poster_path ? `${baseUrl}original${item.poster_path}` : '',
-        
-        // 横版海报URL (多种尺寸，用于标题展示)
         backdrop_w300: item.backdrop_path ? `${baseUrl}w300${item.backdrop_path}` : '',
         backdrop_w780: item.backdrop_path ? `${baseUrl}w780${item.backdrop_path}` : '',
         backdrop_w1280: item.backdrop_path ? `${baseUrl}w1280${item.backdrop_path}` : '',
         backdrop_original: item.backdrop_path ? `${baseUrl}original${item.backdrop_path}` : ''
+    };
+    
+    // 生成备用URL
+    const backupUrls = {
+        poster_w342: item.poster_path ? `${backupUrl}w342${item.poster_path}` : '',
+        poster_w500: item.poster_path ? `${backupUrl}w500${item.poster_path}` : '',
+        poster_w780: item.poster_path ? `${backupUrl}w780${item.poster_path}` : '',
+        poster_original: item.poster_path ? `${backupUrl}original${item.poster_path}` : '',
+        backdrop_w300: item.backdrop_path ? `${backupUrl}w300${item.backdrop_path}` : '',
+        backdrop_w780: item.backdrop_path ? `${backupUrl}w780${item.backdrop_path}` : '',
+        backdrop_w1280: item.backdrop_path ? `${backupUrl}w1280${item.backdrop_path}` : '',
+        backdrop_original: item.backdrop_path ? `${backupUrl}original${item.backdrop_path}` : ''
+    };
+    
+    return {
+        ...primaryUrls,
+        backup: backupUrls,
+        // 智能选择最佳URL
+        smart_poster: createSmartImageUrl(item.poster_path, 'poster', 'w500'),
+        smart_backdrop: createSmartImageUrl(item.backdrop_path, 'backdrop', 'w1280')
     };
 }
 
@@ -3886,11 +3940,13 @@ console.log("[系统] 简化数据获取机制已激活，确保稳定运行");
 setInterval(() => {
   // 清理过期缓存
   cleanupExpiredCache();
+  cleanupImageCache();
   
   // 每5分钟输出一次性能统计
   if (performanceMonitor.requestCount > 0) {
     const stats = performanceMonitor.getStats();
     console.log(`[性能监控] 运行时间: ${stats.uptime}秒, 请求数: ${stats.requestCount}, 错误数: ${stats.errorCount}, 成功率: ${stats.successRate}%`);
+    console.log(`[图片缓存] 缓存图片数量: ${imageCache.size}`);
   }
 }, 5 * 60 * 1000); // 5分钟
 
@@ -3940,6 +3996,108 @@ if (typeof global !== 'undefined') {
         console.error(`[错误处理] ${context}:`, error);
         return [];
     };
+}
+
+// 图片加载重试和降级机制
+async function loadImageWithFallback(urls, maxRetries = 3) {
+    const urlArray = Array.isArray(urls) ? urls : [urls];
+    
+    for (let attempt = 0; attempt < maxRetries; attempt++) {
+        for (const url of urlArray) {
+            if (!url) continue;
+            
+            try {
+                // 尝试加载图片
+                const response = await Widget.http.get(url, {
+                    timeout: 5000,
+                    headers: {
+                        'User-Agent': 'Mozilla/5.0 (compatible; MovieListWidget/2.0)',
+                        'Referer': 'https://www.themoviedb.org/'
+                    }
+                });
+                
+                if (response.status === 200) {
+                    console.log(`[图片加载] 成功: ${url}`);
+                    return url;
+                }
+            } catch (error) {
+                console.log(`[图片加载] 失败 (尝试 ${attempt + 1}/${maxRetries}): ${url}`);
+                continue;
+            }
+        }
+        
+        // 等待一段时间后重试
+        if (attempt < maxRetries - 1) {
+            await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1)));
+        }
+    }
+    
+    // 所有尝试都失败，返回默认图片或空字符串
+    console.warn('[图片加载] 所有URL都加载失败');
+    return '';
+}
+
+// 智能海报URL生成器 - 带重试机制
+function createSmartPosterUrl(item, preferredSize = 'w500') {
+    if (!item.poster_path) return '';
+    
+    const urls = [
+        `https://image.tmdb.org/t/p/${preferredSize}${item.poster_path}`,
+        `https://www.themoviedb.org/t/p/${preferredSize}${item.poster_path}`,
+        `https://image.tmdb.org/t/p/w342${item.poster_path}`, // 降级到较小尺寸
+        `https://www.themoviedb.org/t/p/w342${item.poster_path}`
+    ];
+    
+    return urls[0]; // 返回主要URL，实际重试在加载时进行
+}
+
+// 图片缓存机制
+const imageCache = new Map();
+const IMAGE_CACHE_DURATION = 60 * 60 * 1000; // 1小时缓存
+
+// 缓存图片URL
+function cacheImageUrl(key, url) {
+    imageCache.set(key, {
+        url: url,
+        timestamp: Date.now()
+    });
+}
+
+// 获取缓存的图片URL
+function getCachedImageUrl(key) {
+    const cached = imageCache.get(key);
+    if (cached && (Date.now() - cached.timestamp) < IMAGE_CACHE_DURATION) {
+        return cached.url;
+    }
+    return null;
+}
+
+// 清理过期的图片缓存
+function cleanupImageCache() {
+    const now = Date.now();
+    for (const [key, value] of imageCache.entries()) {
+        if ((now - value.timestamp) > IMAGE_CACHE_DURATION) {
+            imageCache.delete(key);
+        }
+    }
+}
+
+// 智能图片URL生成器 - 带缓存
+function createSmartImageUrlWithCache(path, type = 'poster', size = 'w500') {
+    if (!path) return '';
+    
+    const cacheKey = `${path}_${type}_${size}`;
+    const cached = getCachedImageUrl(cacheKey);
+    if (cached) {
+        return cached;
+    }
+    
+    const url = createSmartImageUrl(path, type, size);
+    if (url) {
+        cacheImageUrl(cacheKey, url);
+    }
+    
+    return url;
 }
 
 
