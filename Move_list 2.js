@@ -765,6 +765,12 @@ function formatTmdbItem(item, genreMap) {
 
 // 增强的TMDB数据拉取和处理系统（支持带标题横版海报）
 async function loadTmdbTrendingData() {
+    // 优先使用增强的实时数据处理（带横版海报）
+    console.log("[数据源] 使用增强的实时TMDB API处理");
+    return await generateEnhancedTrendingData();
+    
+    // 以下代码保留作为备用（如果需要预处理数据源）
+    /*
     try {
         // 尝试从多个数据源获取预处理数据
         const dataSources = [
@@ -775,7 +781,7 @@ async function loadTmdbTrendingData() {
         for (const dataSource of dataSources) {
             try {
                 const response = await Widget.http.get(dataSource, {
-                    timeout: 8000,
+                    timeout: 5000,
                     headers: {
                         'Cache-Control': 'no-cache',
                         'User-Agent': 'MovieListWidget/2.0'
@@ -802,6 +808,7 @@ async function loadTmdbTrendingData() {
     
     // 使用增强的实时数据处理
     return await generateEnhancedTrendingData();
+    */
 }
 
 // 验证热门数据完整性
@@ -1180,7 +1187,7 @@ async function loadTodayGlobalMedia(params = {}) {
 
 // 增强的小组件项目创建器（支持高质量横版海报）
 function createEnhancedWidgetItem(item) {
-    return {
+    const result = {
         id: item.id.toString(),
         type: "tmdb",
         title: item.title,
@@ -1214,6 +1221,11 @@ function createEnhancedWidgetItem(item) {
         episode: 0,
         childItems: []
     };
+    
+    // 调试信息
+    console.log(`[增强项目] ${result.title} - 横版海报: ${result.backdropPath ? '✅' : '❌'}`);
+    
+    return result;
 }
 
 // 获取本周热门影视（增强版横版海报支持）
@@ -2260,6 +2272,13 @@ const TRENDING_CACHE_DURATION = 30 * 60 * 1000; // 30分钟缓存
 // 缓存清除器，用于绕过 GitHub CDN 缓存
 function getCacheBuster() {
     return Math.floor(Date.now() / (1000 * 60 * 30)); // 30 分钟更新一次
+}
+
+// 强制清除Widget缓存（调试用）
+if (typeof trendingDataCache !== 'undefined') {
+    trendingDataCache = null;
+    trendingCacheTime = 0;
+    console.log("[调试] 已清除缓存，将使用最新数据");
 }
 
 // 获取预先分页的数据
