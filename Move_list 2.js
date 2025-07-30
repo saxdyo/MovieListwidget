@@ -11,7 +11,7 @@ WidgetMetadata = {
     // -------------TMDB模块-------------
     {
       title: "TMDB 标题海报热门",
-      description: "今日热门、本周热门、热门电影 - 带标题海报效果",
+      description: "今日热门、本周热门、热门电影 - 带标题海报效果，内容类型跟随排序方式变化",
       requiresWebView: false,
       functionName: "loadTmdbTitlePosterTrending",
       cacheDuration: 60,
@@ -23,7 +23,8 @@ WidgetMetadata = {
           enumOptions: [
             { title: "今日热门", value: "today" },
             { title: "本周热门", value: "week" },
-            { title: "热门电影", value: "popular" }
+            { title: "热门电影", value: "popular" },
+            { title: "高分内容", value: "top_rated" }
           ], 
           value: "today" 
         },
@@ -37,6 +38,23 @@ WidgetMetadata = {
             { title: "剧集", value: "tv" }
           ], 
           value: "all" 
+        },
+        {
+          name: "sort_by",
+          title: "📊排序方式",
+          type: "enumeration",
+          description: "选择排序方式，内容类型会自动调整",
+          value: "popularity.desc",
+          enumOptions: [
+            { title: "热门度↓", value: "popularity.desc" },
+            { title: "热门度↑", value: "popularity.asc" },
+            { title: "评分↓", value: "vote_average.desc" },
+            { title: "评分↑", value: "vote_average.asc" },
+            { title: "上映日期↓", value: "release_date.desc" },
+            { title: "上映日期↑", value: "release_date.asc" },
+            { title: "收入↓", value: "revenue.desc" },
+            { title: "收入↑", value: "revenue.asc" }
+          ]
         },
         { name: "language", title: "语言", type: "language", value: "zh-CN" },
         { name: "page", title: "页码", type: "page" }
@@ -945,52 +963,66 @@ async function fetchRealtimeData() {
     }
 }
 
-// 简化的标题海报热门内容加载器
-async function loadTmdbTitlePosterTrending(params = {}) {
+// 简化的标题海报热门内容加载器（备用版本）
+async function loadTmdbTitlePosterTrendingSimple(params = {}) {
     const { 
         content_type = "today", 
         media_type = "all", 
         language = "zh-CN", 
-        page = 1
+        page = 1,
+        sort_by = "popularity.desc"
     } = params;
     
     try {
-        console.log(`[标题海报] 加载${content_type}内容...`);
+        // 根据排序方式调整内容类型
+        let adjustedContentType = content_type;
+        if (sort_by.startsWith("vote_average")) {
+            adjustedContentType = "top_rated";
+        } else if (sort_by.startsWith("popularity") && content_type === "today") {
+            adjustedContentType = "today";
+        }
+        
+        console.log(`[标题海报简化] 加载${adjustedContentType}内容 (排序: ${sort_by})...`);
         
         // 获取数据
         const trendingData = await loadTmdbTrendingData();
         
         if (!trendingData) {
-            console.log("[标题海报] 无法获取数据，返回空结果");
-            return [];
+            console.log("[标题海报简化] 无法获取数据，使用直接API");
+            return await loadTmdbContentWithSorting(params);
         }
         
         let results = [];
         
-        switch (content_type) {
+        switch (adjustedContentType) {
             case "today":
                 if (trendingData.today_global && trendingData.today_global.length > 0) {
                     results = trendingData.today_global.map(item => createSimpleWidgetItem(item));
-                    console.log(`[标题海报] 今日热门: ${results.length}个项目`);
+                    console.log(`[标题海报简化] 今日热门: ${results.length}个项目`);
                 }
                 break;
                 
             case "week":
                 if (trendingData.week_global_all && trendingData.week_global_all.length > 0) {
                     results = trendingData.week_global_all.map(item => createSimpleWidgetItem(item));
-                    console.log(`[标题海报] 本周热门: ${results.length}个项目`);
+                    console.log(`[标题海报简化] 本周热门: ${results.length}个项目`);
                 }
                 break;
                 
             case "popular":
                 if (trendingData.popular_movies && trendingData.popular_movies.length > 0) {
                     results = trendingData.popular_movies.map(item => createSimpleWidgetItem(item));
-                    console.log(`[标题海报] 热门电影: ${results.length}个项目`);
+                    console.log(`[标题海报简化] 热门电影: ${results.length}个项目`);
                 }
                 break;
                 
+            case "top_rated":
+                // 高分内容需要直接API调用
+                console.log("[标题海报简化] 高分内容使用直接API");
+                return await loadTmdbContentWithSorting(params);
+                
             default:
-                console.error("[标题海报] 未知内容类型:", content_type);
+                console.error("[标题海报简化] 未知内容类型:", adjustedContentType);
                 return [];
         }
         
@@ -1006,18 +1038,25 @@ async function loadTmdbTitlePosterTrending(params = {}) {
             });
         }
         
+        // 根据排序方式排序
+        if (results.length > 0) {
+            results = sortTmdbResults(results, sort_by);
+        }
+        
         // 添加标题海报标识
         results = results.map(item => ({
             ...item,
             hasTitlePoster: true,
-            titlePosterSource: "TMDB数据"
+            titlePosterSource: "TMDB数据",
+            sortMethod: sort_by,
+            contentTypeAdjusted: adjustedContentType !== content_type
         }));
         
-        console.log(`[标题海报] 最终结果: ${results.length}个项目`);
+        console.log(`[标题海报简化] 最终结果: ${results.length}个项目 (排序: ${sort_by})`);
         return results;
         
     } catch (error) {
-        console.error("[标题海报] 加载失败:", error);
+        console.error("[标题海报简化] 加载失败:", error);
         return [];
     }
 }
@@ -2404,72 +2443,108 @@ async function loadTmdbTitlePosterTrending(params = {}) {
     content_type = "today", 
     media_type = "all", 
     language = "zh-CN", 
-    page = 1
+    page = 1,
+    sort_by = "popularity.desc"
   } = params;
   
   try {
-    console.log(`[标题海报] 加载${content_type}内容...`);
+    // 根据排序方式动态调整内容类型
+    let adjustedContentType = content_type;
+    let useDirectAPI = false;
     
-    // 获取TMDB热门数据（包含标题海报）
-    let trendingData = await loadTmdbTrendingData();
-    
-    // 健康检查
-    const health = checkDataHealth(trendingData);
-    if (!health.healthy) {
-      console.log(`[标题海报] 数据健康检查失败: ${health.issues.join(', ')}`);
-      console.log("[标题海报] 尝试自动恢复...");
-      
-      // 尝试自动恢复
-      const recoveredData = await autoRecoverData();
-      if (recoveredData) {
-        trendingData = recoveredData;
-        console.log("[标题海报] 数据自动恢复成功");
+    // 根据排序方式智能调整内容获取策略
+    if (sort_by.startsWith("popularity")) {
+      // 热门度排序 - 优先使用热门内容
+      if (content_type === "today" || content_type === "week") {
+        adjustedContentType = content_type;
       } else {
-        console.log("[标题海报] 数据自动恢复失败，使用备用方案");
+        adjustedContentType = "popular";
       }
-    } else {
-      console.log(`[标题海报] 数据健康检查通过 - 今日热门: ${health.stats.today_global || 0}, 本周热门: ${health.stats.week_global_all || 0}, 热门电影: ${health.stats.popular_movies || 0}`);
+    } else if (sort_by.startsWith("vote_average")) {
+      // 评分排序 - 使用高分内容或直接API调用
+      adjustedContentType = "top_rated";
+      useDirectAPI = true;
+    } else if (sort_by.startsWith("release_date") || sort_by.startsWith("revenue")) {
+      // 日期或收入排序 - 需要直接API调用
+      useDirectAPI = true;
     }
+    
+    console.log(`[标题海报] 加载${adjustedContentType}内容 (排序: ${sort_by}, 直接API: ${useDirectAPI})...`);
     
     let results = [];
     
-    switch (content_type) {
-      case "today":
-        // 今日热门
-        if (trendingData && trendingData.today_global && trendingData.today_global.length > 0) {
-          results = trendingData.today_global.map(item => createEnhancedWidgetItem(item));
-          console.log(`[标题海报] 今日热门: ${results.length}个项目`);
-        } else {
-          console.log("[标题海报] 今日热门数据不可用，使用备用方案");
-          results = await loadTodayGlobalMedia(params);
-        }
-        break;
+    if (useDirectAPI) {
+      // 使用直接API调用以支持自定义排序
+      results = await loadTmdbContentWithSorting(params);
+    } else {
+      // 使用预缓存数据
+      let trendingData = await loadTmdbTrendingData();
+      
+      // 健康检查
+      const health = checkDataHealth(trendingData);
+      if (!health.healthy) {
+        console.log(`[标题海报] 数据健康检查失败: ${health.issues.join(', ')}`);
+        console.log("[标题海报] 尝试自动恢复...");
         
-      case "week":
-        // 本周热门
-        if (trendingData && trendingData.week_global_all && trendingData.week_global_all.length > 0) {
-          results = trendingData.week_global_all.map(item => createEnhancedWidgetItem(item));
-          console.log(`[标题海报] 本周热门: ${results.length}个项目`);
+        // 尝试自动恢复
+        const recoveredData = await autoRecoverData();
+        if (recoveredData) {
+          trendingData = recoveredData;
+          console.log("[标题海报] 数据自动恢复成功");
         } else {
-          console.log("[标题海报] 本周热门数据不可用，使用备用方案");
-          results = await loadWeekGlobalMovies(params);
+          console.log("[标题海报] 数据自动恢复失败，使用直接API方案");
+          results = await loadTmdbContentWithSorting(params);
         }
-        break;
-        
-      case "popular":
-        // 热门电影
-        if (trendingData && trendingData.popular_movies && trendingData.popular_movies.length > 0) {
-          results = trendingData.popular_movies.map(item => createEnhancedWidgetItem(item));
-          console.log(`[标题海报] 热门电影: ${results.length}个项目`);
-        } else {
-          console.log("[标题海报] 热门电影数据不可用，使用备用方案");
-          results = await tmdbPopularMovies(params);
+      } else {
+        console.log(`[标题海报] 数据健康检查通过 - 今日热门: ${health.stats.today_global || 0}, 本周热门: ${health.stats.week_global_all || 0}, 热门电影: ${health.stats.popular_movies || 0}`);
+      }
+      
+      if (results.length === 0 && trendingData) {
+        switch (adjustedContentType) {
+          case "today":
+            // 今日热门
+            if (trendingData.today_global && trendingData.today_global.length > 0) {
+              results = trendingData.today_global.map(item => createEnhancedWidgetItem(item));
+              console.log(`[标题海报] 今日热门: ${results.length}个项目`);
+            } else {
+              console.log("[标题海报] 今日热门数据不可用，使用备用方案");
+              results = await loadTodayGlobalMedia(params);
+            }
+            break;
+            
+          case "week":
+            // 本周热门
+            if (trendingData.week_global_all && trendingData.week_global_all.length > 0) {
+              results = trendingData.week_global_all.map(item => createEnhancedWidgetItem(item));
+              console.log(`[标题海报] 本周热门: ${results.length}个项目`);
+            } else {
+              console.log("[标题海报] 本周热门数据不可用，使用备用方案");
+              results = await loadWeekGlobalMovies(params);
+            }
+            break;
+            
+          case "popular":
+            // 热门电影
+            if (trendingData.popular_movies && trendingData.popular_movies.length > 0) {
+              results = trendingData.popular_movies.map(item => createEnhancedWidgetItem(item));
+              console.log(`[标题海报] 热门电影: ${results.length}个项目`);
+            } else {
+              console.log("[标题海报] 热门电影数据不可用，使用备用方案");
+              results = await tmdbPopularMovies(params);
+            }
+            break;
+            
+          case "top_rated":
+            // 高分内容
+            console.log("[标题海报] 加载高分内容");
+            results = await loadTmdbContentWithSorting(params);
+            break;
+            
+          default:
+            console.error("[标题海报] 未知内容类型:", adjustedContentType);
+            return [];
         }
-        break;
-        
-      default:
-        console.error("[标题海报] 未知内容类型:", content_type);
-        return [];
+      }
     }
     
     // 根据媒体类型过滤结果
@@ -2484,21 +2559,153 @@ async function loadTmdbTitlePosterTrending(params = {}) {
       });
     }
     
+    // 根据排序方式对结果进行排序
+    if (results.length > 0) {
+      results = sortTmdbResults(results, sort_by);
+    }
+    
     // 添加标题海报标识和数据源信息
     results = results.map(item => ({
       ...item,
       hasTitlePoster: true,
-      titlePosterSource: trendingData ? "TMDB数据包" : "实时API",
-      dataHealth: health.healthy ? "healthy" : "recovered"
+      titlePosterSource: useDirectAPI ? "直接API" : "TMDB数据包",
+      sortMethod: sort_by,
+      contentTypeAdjusted: adjustedContentType !== content_type
     }));
     
-    console.log(`[标题海报] 最终结果: ${results.length}个项目 (数据源: ${trendingData ? "TMDB数据包" : "实时API"})`);
+    console.log(`[标题海报] 最终结果: ${results.length}个项目 (排序: ${sort_by}, 数据源: ${useDirectAPI ? "直接API" : "TMDB数据包"}, 内容调整: ${adjustedContentType !== content_type})`);
     return results;
     
   } catch (error) {
     console.error("[标题海报] 加载标题海报热门内容时出错:", error);
     return [];
   }
+}
+
+// 根据排序方式直接从TMDB API加载内容
+async function loadTmdbContentWithSorting(params = {}) {
+  const { 
+    media_type = "all", 
+    language = "zh-CN", 
+    page = 1,
+    sort_by = "popularity.desc"
+  } = params;
+  
+  try {
+    console.log(`[直接API] 使用排序方式 ${sort_by} 加载内容...`);
+    
+    let results = [];
+    
+    // 根据媒体类型决定API端点
+    if (media_type === "movie" || media_type === "all") {
+      // 获取电影数据
+      const movieEndpoint = sort_by.startsWith("vote_average") ? "/movie/top_rated" : "/discover/movie";
+      const movieParams = {
+        language,
+        page,
+        sort_by,
+        api_key: API_KEY
+      };
+      
+      if (sort_by.startsWith("vote_average")) {
+        movieParams.vote_count_gte = 100; // 确保有足够投票数的高分电影
+      }
+      
+      try {
+        const movieRes = await Widget.tmdb.get(movieEndpoint, { params: movieParams });
+        if (movieRes.results) {
+          const movieResults = movieRes.results.map(item => ({
+            ...item,
+            media_type: "movie"
+          }));
+          results = results.concat(movieResults);
+        }
+      } catch (error) {
+        console.error("[直接API] 电影数据获取失败:", error);
+      }
+    }
+    
+    if (media_type === "tv" || media_type === "all") {
+      // 获取剧集数据
+      const tvEndpoint = sort_by.startsWith("vote_average") ? "/tv/top_rated" : "/discover/tv";
+      const tvParams = {
+        language,
+        page,
+        sort_by: sort_by.replace("release_date", "first_air_date"), // 剧集使用首播日期
+        api_key: API_KEY
+      };
+      
+      if (sort_by.startsWith("vote_average")) {
+        tvParams.vote_count_gte = 50; // 剧集投票数要求稍低
+      }
+      
+      try {
+        const tvRes = await Widget.tmdb.get(tvEndpoint, { params: tvParams });
+        if (tvRes.results) {
+          const tvResults = tvRes.results.map(item => ({
+            ...item,
+            media_type: "tv",
+            title: item.name, // 统一使用title字段
+            release_date: item.first_air_date // 统一使用release_date字段
+          }));
+          results = results.concat(tvResults);
+        }
+      } catch (error) {
+        console.error("[直接API] 剧集数据获取失败:", error);
+      }
+    }
+    
+    // 格式化结果
+    const genreMap = await fetchTmdbGenres();
+    const formattedResults = results.map(item => {
+      const formattedItem = formatTmdbItem(item, genreMap);
+      formattedItem.directAPI = true;
+      formattedItem.sortedBy = sort_by;
+      return formattedItem;
+    }).filter(item => item.posterPath); // 过滤掉没有海报的项目
+    
+    console.log(`[直接API] 获取到 ${formattedResults.length} 个项目`);
+    return formattedResults;
+    
+  } catch (error) {
+    console.error("[直接API] 加载内容失败:", error);
+    return [];
+  }
+}
+
+// 对TMDB结果进行排序
+function sortTmdbResults(results, sort_by) {
+  if (!results || results.length === 0) {
+    return results;
+  }
+  
+  console.log(`[排序] 使用 ${sort_by} 对 ${results.length} 个项目进行排序`);
+  
+  const sortedResults = [...results].sort((a, b) => {
+    switch (sort_by) {
+      case "popularity.desc":
+        return (b.popularity || 0) - (a.popularity || 0);
+      case "popularity.asc":
+        return (a.popularity || 0) - (b.popularity || 0);
+      case "vote_average.desc":
+        return (b.rating || 0) - (a.rating || 0);
+      case "vote_average.asc":
+        return (a.rating || 0) - (b.rating || 0);
+      case "release_date.desc":
+        return new Date(b.releaseDate || 0) - new Date(a.releaseDate || 0);
+      case "release_date.asc":
+        return new Date(a.releaseDate || 0) - new Date(b.releaseDate || 0);
+      case "revenue.desc":
+        return (b.revenue || 0) - (a.revenue || 0);
+      case "revenue.asc":
+        return (a.revenue || 0) - (b.revenue || 0);
+      default:
+        return 0;
+    }
+  });
+  
+  console.log(`[排序] 排序完成，前3个项目: ${sortedResults.slice(0, 3).map(item => `${item.title}(${sort_by.includes('popularity') ? item.popularity : sort_by.includes('vote') ? item.rating : item.releaseDate})`).join(', ')}`);
+  return sortedResults;
 }
 
 
