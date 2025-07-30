@@ -1,0 +1,28 @@
+name: 自动更新 TMDB 数据
+
+on:
+  schedule:
+    # 每6小时运行一次
+    - cron: '0 */6 * * *'
+  workflow_dispatch: # 允许手动触发
+
+jobs:
+  update-data:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 检出代码
+      uses: actions/checkout@v4
+      
+    - name: 设置 Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+        
+    - name: 运行更新脚本
+      env:
+        TMDB_API_KEY: ${{ secrets.TMDB_API_KEY }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GIST_ID: ${{ secrets.GIST_ID }}
+      run: |
+        python3 simple_upload.py
