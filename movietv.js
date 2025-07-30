@@ -953,8 +953,8 @@ async function fetchRealtimeData() {
             }
           });
           
-          // 优先剧集，然后补充电影，总共20项
-          result.today_global = [...tvShows.slice(0, 12), ...movies.slice(0, 8)];
+          // 优先剧集，然后补充电影，总共30项（增加剧集数量）
+          result.today_global = [...tvShows.slice(0, 20), ...movies.slice(0, 10)];
         }
         
                 // 处理本周热门 - 调整为20项，优先剧集
@@ -981,8 +981,8 @@ async function fetchRealtimeData() {
             }
           });
           
-          // 优先剧集，然后补充电影，总共20项
-          result.week_global_all = [...tvShows.slice(0, 12), ...movies.slice(0, 8)];
+          // 优先剧集，然后补充电影，总共30项（增加剧集数量）
+          result.week_global_all = [...tvShows.slice(0, 20), ...movies.slice(0, 10)];
         }
         
         // 处理热门电影 - 合并电影和剧集数据
@@ -1063,7 +1063,7 @@ async function fetchRealtimeData() {
 }
 
 // 横版标题海报加载器
-async function loadTitlePosterWithBackdrops(items, maxItems = 20) {
+async function loadTitlePosterWithBackdrops(items, maxItems = 30) {
     // 尝试获取缓存的横版标题海报
     const cachedBackdrops = [];
     for (const item of items.slice(0, maxItems)) {
@@ -1090,7 +1090,7 @@ async function loadTitlePosterWithBackdrops(items, maxItems = 20) {
 }
 
 // 增强的横版标题海报加载器（支持更多数据源）
-async function loadEnhancedTitlePosterWithBackdrops(items, maxItems = 20, contentType = "today") {
+async function loadEnhancedTitlePosterWithBackdrops(items, maxItems = 30, contentType = "today") {
     // 尝试获取缓存的横版标题海报
     const cachedBackdrops = [];
     for (const item of items.slice(0, maxItems)) {
@@ -2394,7 +2394,7 @@ async function loadTmdbTrendingCombined(params = {}) {
     language = "zh-CN", 
     page = 1, 
     content_type = "popularity.desc",  // 现在content_type包含排序方式
-    max_items = 20  // 调整为20项
+    max_items = 30  // 调整为30项（增加剧集数量）
   } = params;
   
   try {
@@ -2656,7 +2656,7 @@ async function loadTmdbTitlePosterTrending(params = {}) {
     sort_by = "today", 
     language = "zh-CN", 
     page = 1,
-    max_items = 20  // 调整为20项
+    max_items = 30  // 调整为30项（增加剧集数量）
   } = params;
 
   // 如果sort_by有值，直接用sort_by作为内容类型
