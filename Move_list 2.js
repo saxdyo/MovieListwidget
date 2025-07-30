@@ -209,7 +209,6 @@ WidgetMetadata = {
             { title: "动画", value: "16" },
             { title: "喜剧", value: "35" },
             { title: "犯罪", value: "80" },
-            { title: "纪录片", value: "99" },
             { title: "剧情", value: "18" },
             { title: "家庭", value: "10751" },
             { title: "奇幻", value: "14" },
@@ -291,11 +290,7 @@ WidgetMetadata = {
             { title: "悬疑", value: "9648" },
             { title: "惊悚", value: "53" },
             { title: "爱情", value: "10749" },
-            { title: "家庭", value: "10751" },
-            { title: "纪录片", value: "99" },
-            { title: "真人秀", value: "10764" },
-            { title: "脱口秀", value: "10767" },
-            { title: "新闻", value: "10763" }
+            { title: "家庭", value: "10751" }
           ]
         },
         {
@@ -387,8 +382,7 @@ WidgetMetadata = {
             { title: "科幻奇幻", value: "10765" },
             { title: "悬疑惊悚", value: "9648,53" },
             { title: "爱情", value: "10749" },
-            { title: "家庭", value: "10751" },
-            { title: "纪录片", value: "99" }
+            { title: "家庭", value: "10751" }
           ]
         },
         {
@@ -551,8 +545,7 @@ WidgetMetadata = {
             { title: "动画", value: "16" },
             { title: "犯罪", value: "80" },
             { title: "悬疑", value: "9648" },
-            { title: "恐怖", value: "27" },
-            { title: "纪录片", value: "99" }
+            { title: "恐怖", value: "27" }
           ]
         },
         {
@@ -1284,12 +1277,12 @@ async function tmdbPopularTVShows(params = {}) {
       .filter(item => {
         // 过滤掉无海报
         if (!item.posterPath) return false;
-        // 过滤掉综艺（真人秀、脱口秀、访谈、节目等）
-        const varietyGenreIds = [10767]; // 只保留脱口秀过滤
+        // 过滤掉综艺（真人秀、脱口秀、访谈、节目等）和纪录片、新闻
+        const varietyGenreIds = [10764, 10767, 10763, 99]; // 真人秀、脱口秀、新闻、纪录片
         if (item.genre_ids && item.genre_ids.some(id => varietyGenreIds.includes(id))) return false;
         const lowerTitle = (item.title || '').toLowerCase();
         const lowerDesc = (item.description || '').toLowerCase();
-        const showKeywords = ['综艺', '真人秀', '脱口秀', '访谈', '节目'];
+        const showKeywords = ['综艺', '真人秀', '脱口秀', '访谈', '节目', '纪录片', '新闻'];
         if (showKeywords.some(k => lowerTitle.includes(k) || lowerDesc.includes(k))) return false;
         // 过滤短剧（标题或副标题包含"短剧"）
         if (lowerTitle.includes('短剧') || lowerDesc.includes('短剧')) return false;
@@ -1617,12 +1610,12 @@ async function fetchImdbItemsForDouban(scItems) {
     }
     
     let filteredItems = allItems.filter(item => {
-        // 过滤掉综艺（真人秀、脱口秀、访谈、节目等）
-        const varietyGenreIds = [10767]; // 只保留脱口秀过滤
+        // 过滤掉综艺（真人秀、脱口秀、访谈、节目等）和纪录片、新闻
+        const varietyGenreIds = [10764, 10767, 10763, 99]; // 真人秀、脱口秀、新闻、纪录片
         if (item.genre_ids && item.genre_ids.some(id => varietyGenreIds.includes(id))) return false;
         const lowerTitle = (item.title || '').toLowerCase();
         const lowerDesc = (item.description || '').toLowerCase();
-        const showKeywords = ['综艺', '真人秀', '脱口秀', '访谈', '节目'];
+        const showKeywords = ['综艺', '真人秀', '脱口秀', '访谈', '节目', '纪录片', '新闻'];
         if (showKeywords.some(k => lowerTitle.includes(k) || lowerDesc.includes(k))) return false;
         // 过滤短剧（标题或副标题包含"短剧"）
         if (lowerTitle.includes('短剧') || lowerDesc.includes('短剧')) return false;
@@ -1965,11 +1958,11 @@ async function classifyByGenre(params = {}) {
       .filter(item => {
         // 复用过滤逻辑
         if (!item.posterPath) return false;
-        const varietyGenreIds = [10767];
+        const varietyGenreIds = [10764, 10767, 10763, 99]; // 真人秀、脱口秀、新闻、纪录片
         if (item.genre_ids && item.genre_ids.some(id => varietyGenreIds.includes(id))) return false;
         const lowerTitle = (item.title || '').toLowerCase();
         const lowerDesc = (item.description || '').toLowerCase();
-        const showKeywords = ['综艺', '真人秀', '脱口秀', '访谈', '节目'];
+        const showKeywords = ['综艺', '真人秀', '脱口秀', '访谈', '节目', '纪录片', '新闻'];
         if (showKeywords.some(k => lowerTitle.includes(k) || lowerDesc.includes(k))) return false;
         if (lowerTitle.includes('短剧') || lowerDesc.includes('短剧')) return false;
         const adultKeywords = ['19禁', '성인', '成人', '情色', '色情', 'AV', '에로', '야동'];
