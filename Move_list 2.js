@@ -3979,4 +3979,35 @@ async function tvbTVShows(params = {}) {
 
 global.tvbTVShows = tvbTVShows;
 
+// 获取TVB剧集（豆瓣）
+async function tvbDoubanTVShows(params = {}) {
+  const page = params.page || 1;
+  const page_limit = params.page_limit || 20;
+  const page_start = (page - 1) * page_limit;
+  const url = `https://movie.douban.com/j/search_subjects?type=tv&tag=TVB&sort=recommend&page_limit=${page_limit}&page_start=${page_start}`;
+  try {
+    const res = await Widget.http.get(url, {
+      headers: {
+        'Referer': 'https://movie.douban.com/tv/',
+        'User-Agent': 'Mozilla/5.0'
+      }
+    });
+    if (res.data && res.data.subjects) {
+      return res.data.subjects.map(item => ({
+        id: item.id,
+        title: item.title,
+        cover: item.cover,
+        url: item.url,
+        rate: item.rate,
+        is_new: item.is_new
+      }));
+    }
+    return [];
+  } catch (error) {
+    console.error('Error fetching TVB shows from Douban:', error);
+    return [];
+  }
+}
+global.tvbDoubanTVShows = tvbDoubanTVShows;
+
 
