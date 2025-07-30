@@ -10,32 +10,35 @@ WidgetMetadata = {
   modules: [
     // -------------TMDB模块-------------
     {
-      title: "TMDB 今日热门",
-      description: "今日热门电影与剧集",
+      title: "TMDB 热门内容",
+      description: "今日热门、本周热门、热门电影、高分内容合并模块",
       requiresWebView: false,
-      functionName: "loadTodayGlobalMedia",
+      functionName: "loadTmdbTrendingCombined",
       cacheDuration: 60,
       params: [
-        { name: "language", title: "语言", type: "language", value: "zh-CN" }
-      ]
-    },
-    {
-      title: "TMDB 本周热门",
-      description: "本周热门电影与剧集",
-      requiresWebView: false,
-      functionName: "loadWeekGlobalMovies",
-      cacheDuration: 60,
-      params: [
-        { name: "language", title: "语言", type: "language", value: "zh-CN" }
-      ]
-    },
-    {
-      title: "TMDB 热门电影",
-      description: "当前热门电影",
-      requiresWebView: false,
-      functionName: "tmdbPopularMovies",
-      cacheDuration: 60,
-      params: [
+        { 
+          name: "content_type", 
+          title: "📺内容类型", 
+          type: "enumeration", 
+          enumOptions: [
+            { title: "今日热门", value: "today" },
+            { title: "本周热门", value: "week" },
+            { title: "热门电影", value: "popular" },
+            { title: "高分内容", value: "top_rated" }
+          ], 
+          value: "today" 
+        },
+        { 
+          name: "media_type", 
+          title: "🎭媒体类型", 
+          type: "enumeration", 
+          enumOptions: [
+            { title: "全部", value: "all" },
+            { title: "电影", value: "movie" },
+            { title: "剧集", value: "tv" }
+          ], 
+          value: "all" 
+        },
         {
           name: "sort_by",
           title: "📊排序方式",
@@ -50,43 +53,7 @@ WidgetMetadata = {
             { title: "上映日期↓", value: "release_date.desc" },
             { title: "上映日期↑", value: "release_date.asc" },
             { title: "收入↓", value: "revenue.desc" },
-            { title: "收入↑", value: "revenue.asc" }
-          ]
-        },
-        { name: "language", title: "语言", type: "language", value: "zh-CN" },
-        { name: "page", title: "页码", type: "page" }
-      ]
-    },
-    {
-      title: "TMDB 高分内容",
-      description: "高分电影或剧集 (按用户评分排序)",
-      requiresWebView: false,
-      functionName: "tmdbTopRated",
-      cacheDuration: 3600,
-      params: [
-        { 
-          name: "type", 
-          title: "🎭类型", 
-          type: "enumeration", 
-          enumOptions: [
-            { title: "电影", value: "movie" },
-            { title: "剧集", value: "tv" }
-          ], 
-          value: "movie" 
-        },
-        {
-          name: "sort_by",
-          title: "📊排序方式",
-          type: "enumeration",
-          description: "选择排序方式",
-          value: "vote_average.desc",
-          enumOptions: [
-            { title: "评分↓", value: "vote_average.desc" },
-            { title: "评分↑", value: "vote_average.asc" },
-            { title: "热门度↓", value: "popularity.desc" },
-            { title: "热门度↑", value: "popularity.asc" },
-            { title: "上映日期↓", value: "release_date.desc" },
-            { title: "上映日期↑", value: "release_date.asc" },
+            { title: "收入↑", value: "revenue.asc" },
             { title: "投票数↓", value: "vote_count.desc" },
             { title: "投票数↑", value: "vote_count.asc" }
           ]
@@ -1399,6 +1366,161 @@ async function tmdbDiscoverByCompany(params = {}) {
       .filter(item => item.posterPath); // 出品公司
   } catch (error) {
     console.error("Error fetching discover by company:", error);
+    return [];
+  }
+}
+
+// TMDB热门内容合并模块 - 整合今日热门、本周热门、热门电影、高分内容
+async function loadTmdbTrendingCombined(params = {}) {
+  const { 
+    content_type = "today", 
+    media_type = "all", 
+    language = "zh-CN", 
+    page = 1, 
+    sort_by = "popularity.desc" 
+  } = params;
+  
+  try {
+    let results = [];
+    
+    switch (content_type) {
+      case "today":
+        // 今日热门
+        const todayData = await loadTmdbTrendingData();
+        if (todayData && todayData.today_global && todayData.today_global.length > 0) {
+          results = todayData.today_global.map(item => createEnhancedWidgetItem(item));
+        } else {
+          // 备用方案
+          const res = await Widget.tmdb.get("/trending/all/day", { 
+            params: { 
+              language: 'zh-CN',
+              region: 'CN',
+              api_key: API_KEY 
+            }
+          });
+          const genreMap = await fetchTmdbGenres();
+          results = res.results
+            .map(item => formatTmdbItem(item, genreMap))
+            .filter(item => item.posterPath);
+        }
+        break;
+        
+      case "week":
+        // 本周热门
+        const weekData = await loadTmdbTrendingData();
+        if (weekData && weekData.week_global_all && weekData.week_global_all.length > 0) {
+          results = weekData.week_global_all.map(item => createEnhancedWidgetItem(item));
+        } else {
+          // 备用方案
+          const res = await Widget.tmdb.get("/trending/all/week", { 
+            params: { 
+              language: 'zh-CN',
+              region: 'CN',
+              api_key: API_KEY 
+            }
+          });
+          const genreMap = await fetchTmdbGenres();
+          results = res.results
+            .map(item => formatTmdbItem(item, genreMap))
+            .filter(item => item.posterPath);
+        }
+        break;
+        
+      case "popular":
+        // 热门电影
+        if ((parseInt(page) || 1) === 1 && sort_by.startsWith("popularity")) {
+          const popularData = await loadTmdbTrendingData();
+          if (popularData.popular_movies && popularData.popular_movies.length > 0) {
+            results = popularData.popular_movies
+              .slice(0, 15)
+              .map(item => createEnhancedWidgetItem(item));
+          }
+        }
+        
+        if (results.length === 0) {
+          // 标准API调用
+          if (sort_by.startsWith("popularity")) {
+            const res = await Widget.tmdb.get("/movie/popular", { 
+              params: { 
+                language: 'zh-CN',
+                region: 'CN', 
+                page, 
+                api_key: API_KEY 
+              }
+            });
+            const genreMap = await fetchTmdbGenres();
+            results = res.results.map(item => formatTmdbItem(item, genreMap));
+          } else {
+            const res = await Widget.tmdb.get("/discover/movie", {
+              params: { 
+                language: 'zh-CN',
+                region: 'CN', 
+                page, 
+                sort_by,
+                api_key: API_KEY 
+              }
+            });
+            const genreMap = await fetchTmdbGenres();
+            results = res.results.map(item => formatTmdbItem(item, genreMap));
+          }
+        }
+        break;
+        
+      case "top_rated":
+        // 高分内容
+        if (sort_by.startsWith("vote_average")) {
+          const api = media_type === "movie" ? "/movie/top_rated" : "/tv/top_rated";
+          const res = await Widget.tmdb.get(api, { 
+            params: { 
+              language: 'zh-CN', 
+              region: 'CN',
+              page, 
+              api_key: API_KEY 
+            }
+          });
+          const genreMap = await fetchTmdbGenres();
+          results = res.results
+            .map(item => formatTmdbItem(item, genreMap[media_type]))
+            .filter(item => item.posterPath);
+        } else {
+          const endpoint = media_type === "movie" ? "/discover/movie" : "/discover/tv";
+          const res = await Widget.tmdb.get(endpoint, {
+            params: { 
+              language: 'zh-CN',
+              region: 'CN', 
+              page, 
+              sort_by,
+              api_key: API_KEY 
+            }
+          });
+          const genreMap = await fetchTmdbGenres();
+          results = res.results
+            .map(item => formatTmdbItem(item, genreMap[media_type]))
+            .filter(item => item.posterPath);
+        }
+        break;
+        
+      default:
+        console.error("Unknown content type:", content_type);
+        return [];
+    }
+    
+    // 根据媒体类型过滤结果
+    if (media_type !== "all") {
+      results = results.filter(item => {
+        if (media_type === "movie") {
+          return item.mediaType === "movie";
+        } else if (media_type === "tv") {
+          return item.mediaType === "tv";
+        }
+        return true;
+      });
+    }
+    
+    return results;
+    
+  } catch (error) {
+    console.error("Error in loadTmdbTrendingCombined:", error);
     return [];
   }
 }
