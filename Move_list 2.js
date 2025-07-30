@@ -626,179 +626,30 @@ WidgetMetadata = {
 
 const API_KEY = 'f3ae69ddca232b56265600eb919d46ab'; // TMDB API Key
 
-// TMDB类型缓存
+// ===============辅助函数===============
 let tmdbGenresCache = null;
 
-// 提取 TMDB 的种类信息
+// 增强的TMDB数据处理系统
+let trendingDataCache = null;
+let trendingCacheTime = 0;
+const TRENDING_CACHE_DURATION = 30 * 60 * 1000; // 30分钟缓存
+
 async function fetchTmdbGenres() {
-  // 如果已有缓存，直接返回
-  if (tmdbGenresCache) {
-    return tmdbGenresCache;
-  }
-  
-  try {
+    if (tmdbGenresCache) return tmdbGenresCache;
+    
     const [movieGenres, tvGenres] = await Promise.all([
-      Widget.tmdb.get('/genre/movie/list', { params: { language: 'zh-CN', api_key: API_KEY } }),
-      Widget.tmdb.get('/genre/tv/list', { params: { language: 'zh-CN', api_key: API_KEY } })
+        Widget.tmdb.get('/genre/movie/list', { params: { language: 'zh-CN' } }),
+        Widget.tmdb.get('/genre/tv/list', { params: { language: 'zh-CN' } })
     ]);
-
-    const genreData = {
-      movie: movieGenres.genres.reduce((acc, g) => ({ ...acc, [g.id]: g.name }), {}),
-      tv: tvGenres.genres.reduce((acc, g) => ({ ...acc, [g.id]: g.name }), {})
+    
+    tmdbGenresCache = {
+        movie: movieGenres.genres.reduce((acc, g) => ({ ...acc, [g.id]: g.name }), {}),
+        tv: tvGenres.genres.reduce((acc, g) => ({ ...acc, [g.id]: g.name }), {})
     };
-    
-    // 缓存结果
-    tmdbGenresCache = genreData;
-    return genreData;
-  } catch (error) {
-    console.error("Error fetching genres:", error);
-    return { movie: {}, tv: {} };
-  }
+    return tmdbGenresCache;
 }
 
-// 获取TMDB类型标题（中文）
-function getTmdbGenreTitles(genreIds, mediaType) {
-  if (!Array.isArray(genreIds) || genreIds.length === 0) {
-    return '';
-  }
-  
-  // 如果没有缓存的类型数据，返回空字符串
-  if (!tmdbGenresCache) {
-    return '';
-  }
-  
-  const genres = tmdbGenresCache[mediaType] || {};
-  return genreIds
-    .slice(0, 3) // 最多显示3个类型
-    .map(id => genres[id])
-    .filter(Boolean)
-    .join('•');
-}
-
-// 格式化每个影视项目（优先中文）
-function formatTmdbItem(item, genreMap) {
-  // 优先选用中文标题（增强版）
-  function pickChineseTitle(...args) {
-    // 第一轮：寻找包含中文的标题
-    for (const str of args) {
-      if (str && typeof str === 'string' && /[\u4e00-\u9fa5]/.test(str.trim())) {
-        return str.trim();
-      }
-    }
-    // 第二轮：寻找非空标题
-    for (const str of args) {
-      if (str && typeof str === 'string' && str.trim().length > 0) {
-        return str.trim();
-      }
-    }
-    return '未知标题';
-  }
-  
-  // 优先使用中文简介
-  function pickChineseDescription(overview) {
-    if (!overview || typeof overview !== 'string') return "暂无简介";
-    const trimmed = overview.trim();
-    return trimmed.length > 0 ? trimmed : "暂无简介";
-  }
-  
-  return {
-    id: item.id,
-    type: "tmdb",
-    title: pickChineseTitle(
-      item.title_zh,          // 中文标题
-      item.name_zh,           // 中文剧集名
-      item.original_title_zh, // 中文原始标题
-      item.original_name_zh,  // 中文原始剧集名
-      item.title,             // 标题
-      item.name,              // 剧集名
-      item.original_title,    // 原始标题
-      item.original_name      // 原始剧集名
-    ),
-    description: pickChineseDescription(item.overview),
-    releaseDate: item.release_date || item.first_air_date || "未知日期",
-    posterPath: item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : "",
-    backdropPath: item.backdrop_path ? `https://image.tmdb.org/t/p/w1280${item.backdrop_path}` : "",
-    coverUrl: item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : "",
-    rating: item.vote_average ? item.vote_average.toFixed(1) : "无评分",
-    mediaType: item.media_type || (item.title ? "movie" : "tv"),
-    genreTitle: getTmdbGenreTitles(item.genre_ids || [], item.media_type || (item.title ? "movie" : "tv")) || "未知类型",
-    link: null,
-    duration: 0,
-    durationText: "",
-    episode: 0,
-    childItems: []
-  };
-}
-
-// 增强的TMDB数据拉取和处理系统（支持带标题横版海报）
-async function loadTmdbTrendingData() {
-    // 优先使用增强的实时数据处理（带横版海报）
-    console.log("[数据源] 使用增强的实时TMDB API处理");
-    return await generateEnhancedTrendingData();
-    
-    // 以下代码保留作为备用（如果需要预处理数据源）
-    /*
-    try {
-        // 尝试从多个数据源获取预处理数据
-        const dataSources = [
-            "https://raw.githubusercontent.com/saxdyo/MovieListwidget/main/data/TMDB_Trending.json",
-            "https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/data/TMDB_Trending.json"
-        ];
-        
-        for (const dataSource of dataSources) {
-            try {
-                const response = await Widget.http.get(dataSource, {
-                    timeout: 5000,
-                    headers: {
-                        'Cache-Control': 'no-cache',
-                        'User-Agent': 'MovieListWidget/2.0'
-                    }
-                });
-                
-                if (response.data && response.data.today_global && response.data.today_global.length > 0) {
-                    console.log(`[数据源] 成功获取预处理数据: ${dataSource}`);
-                    // 验证数据完整性
-                    if (validateTrendingData(response.data)) {
-                        return response.data;
-                    }
-                }
-            } catch (sourceError) {
-                console.log(`[数据源] ${dataSource} 不可用: ${sourceError.message}`);
-                continue;
-            }
-        }
-        
-        console.log("[数据源] 预处理数据不可用，使用实时TMDB API处理");
-    } catch (error) {
-        console.log("[数据源] 预处理数据获取失败，使用实时TMDB API处理");
-    }
-    
-    // 使用增强的实时数据处理
-    return await generateEnhancedTrendingData();
-    */
-}
-
-// 验证热门数据完整性
-function validateTrendingData(data) {
-    try {
-        const requiredFields = ['today_global', 'week_global_all', 'popular_movies'];
-        return requiredFields.every(field => 
-            data[field] && 
-            Array.isArray(data[field]) && 
-            data[field].length > 0 &&
-            data[field].every(item => 
-                item.id && 
-                item.title && 
-                item.poster_url && 
-                item.title_backdrop
-            )
-        );
-    } catch (error) {
-        return false;
-    }
-}
-
-// 增强的TMDB热门数据生成器（支持高质量横版海报和智能缓存）
+// 增强的TMDB热门数据生成器（支持高质量横版海报）
 async function generateEnhancedTrendingData() {
     // 智能缓存检查
     const now = Date.now();
@@ -810,9 +661,9 @@ async function generateEnhancedTrendingData() {
     try {
         console.log("[增强数据] 开始生成高质量热门数据...");
         
-        // 并行获取多个数据源（优先中文，增加更多数据源）
+        // 并行获取多个数据源（优先中文）
         const requests = [
-            // 今日热门 (多地区数据)
+            // 今日热门
             Widget.tmdb.get("/trending/all/day", { 
                 params: { 
                     language: 'zh-CN',
@@ -875,82 +726,18 @@ async function generateEnhancedTrendingData() {
         
     } catch (error) {
         console.error("[增强数据] 生成失败:", error);
-        
-        // 降级到基础数据生成
-        try {
-            console.log("[增强数据] 尝试降级到基础数据生成...");
-            return await generateBasicTrendingData();
-        } catch (fallbackError) {
-            console.error("[增强数据] 降级也失败:", fallbackError);
-            
-            // 如果有旧缓存，则返回旧缓存
-            if (trendingDataCache) {
-                console.log("[增强数据] 使用旧缓存数据");
-                return trendingDataCache;
-            }
-            
-            return { 
-                today_global: [], 
-                week_global_all: [], 
-                popular_movies: [],
-                popular_tv_shows: [],
-                generated_at: new Date().toISOString(),
-                data_quality: 'fallback'
-            };
-        }
+        return { 
+            today_global: [], 
+            week_global_all: [], 
+            popular_movies: [],
+            popular_tv_shows: [],
+            generated_at: new Date().toISOString(),
+            data_quality: 'fallback'
+        };
     }
 }
 
-// 降级基础数据生成器
-async function generateBasicTrendingData() {
-    console.log("[基础数据] 使用基础数据生成模式...");
-    
-    const [todayTrending, weekTrending, popularMovies, genreMap] = await Promise.all([
-        Widget.tmdb.get("/trending/all/day", { 
-            params: { 
-                language: 'zh-CN',
-                api_key: API_KEY 
-            } 
-        }),
-        Widget.tmdb.get("/trending/all/week", { 
-            params: { 
-                language: 'zh-CN',
-                api_key: API_KEY 
-            } 
-        }),
-        Widget.tmdb.get("/movie/popular", { 
-            params: { 
-                language: 'zh-CN',
-                api_key: API_KEY 
-            } 
-        }),
-        fetchTmdbGenres()
-    ]);
-    
-    const today_global = await processMediaItems(todayTrending.results.slice(0, 15), genreMap);
-    const week_global_all = await processMediaItems(weekTrending.results.slice(0, 15), genreMap);
-    const popular_movies = await processMediaItems(popularMovies.results.slice(0, 12), genreMap, 'movie');
-    
-    return {
-        today_global,
-        week_global_all,
-        popular_movies,
-        generated_at: new Date().toISOString(),
-        data_quality: 'basic'
-    };
-}
-
-// 优先选择中文内容的辅助函数
-function pickChineseContent(primaryCN, secondaryCN, primaryEN, secondaryEN, fallback = '') {
-    // 优先级：中文主要 > 中文次要 > 英文主要 > 英文次要 > 备用
-    if (primaryCN && /[\u4e00-\u9fa5]/.test(primaryCN)) return primaryCN;
-    if (secondaryCN && /[\u4e00-\u9fa5]/.test(secondaryCN)) return secondaryCN;
-    if (primaryEN && primaryEN.trim()) return primaryEN;
-    if (secondaryEN && secondaryEN.trim()) return secondaryEN;
-    return fallback;
-}
-
-// 增强的媒体项目处理器（支持多种尺寸横版海报和标题覆盖）
+// 增强的媒体项目处理器（支持横版海报）
 async function processEnhancedMediaItems(items, genreMap, forceType = null) {
     return items
         .filter(item => item.poster_path && item.backdrop_path && (item.title || item.name))
@@ -1082,6 +869,192 @@ function generateEnhancedImageUrls(item) {
     };
 }
 
+// 增强的小组件项目创建器（支持高质量横版海报）
+function createEnhancedWidgetItem(item) {
+    const result = {
+        id: item.id.toString(),
+        type: "tmdb",
+        title: item.title,
+        genreTitle: item.genreTitle,
+        rating: item.rating,
+        description: item.overview,
+        releaseDate: item.release_date,
+        
+        // 标准海报
+        posterPath: item.poster_url,
+        coverUrl: item.poster_url,
+        
+        // 增强的横版海报（带标题效果）
+        backdropPath: item.title_backdrop, // 主要横版海报
+        backdropHD: item.title_backdrop_hd, // 高清横版海报
+        backdrop780: item.backdrop_w780, // 中等尺寸横版海报
+        
+        // 高清海报
+        posterHD: item.poster_hd,
+        
+        // 媒体信息
+        mediaType: item.type,
+        popularity: item.popularity,
+        voteCount: item.vote_count,
+        originalLanguage: item.original_language,
+        
+        // 小组件标准字段
+        link: null,
+        duration: 0,
+        durationText: "",
+        episode: 0,
+        childItems: []
+    };
+    
+    // 调试信息
+    console.log(`[增强项目] ${result.title} - 横版海报: ${result.backdropPath ? '✅' : '❌'}`);
+    
+    return result;
+}
+
+// 优先选择中文内容的辅助函数
+function pickChineseContent(primaryCN, secondaryCN, primaryEN, secondaryEN, fallback = '') {
+    // 优先级：中文主要 > 中文次要 > 英文主要 > 英文次要 > 备用
+    if (primaryCN && /[\u4e00-\u9fa5]/.test(primaryCN)) return primaryCN;
+    if (secondaryCN && /[\u4e00-\u9fa5]/.test(secondaryCN)) return secondaryCN;
+    if (primaryEN && primaryEN.trim()) return primaryEN;
+    if (secondaryEN && secondaryEN.trim()) return secondaryEN;
+    return fallback;
+}
+
+// 格式化每个影视项目（优先中文）
+function formatTmdbItem(item, genreMap) {
+  // 优先选用中文标题（增强版）
+  function pickChineseTitle(...args) {
+    // 第一轮：寻找包含中文的标题
+    for (const str of args) {
+      if (str && typeof str === 'string' && /[\u4e00-\u9fa5]/.test(str.trim())) {
+        return str.trim();
+      }
+    }
+    // 第二轮：寻找非空标题
+    for (const str of args) {
+      if (str && typeof str === 'string' && str.trim().length > 0) {
+        return str.trim();
+      }
+    }
+    return '未知标题';
+  }
+  
+  // 优先使用中文简介
+  function pickChineseDescription(overview) {
+    if (!overview || typeof overview !== 'string') return "暂无简介";
+    const trimmed = overview.trim();
+    return trimmed.length > 0 ? trimmed : "暂无简介";
+  }
+  
+  return {
+    id: item.id,
+    type: "tmdb",
+    title: pickChineseTitle(
+      item.title_zh,          // 中文标题
+      item.name_zh,           // 中文剧集名
+      item.original_title_zh, // 中文原始标题
+      item.original_name_zh,  // 中文原始剧集名
+      item.title,             // 标题
+      item.name,              // 剧集名
+      item.original_title,    // 原始标题
+      item.original_name      // 原始剧集名
+    ),
+    description: pickChineseDescription(item.overview),
+    releaseDate: item.release_date || item.first_air_date || "未知日期",
+    posterPath: item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : "",
+    backdropPath: item.backdrop_path ? `https://image.tmdb.org/t/p/w1280${item.backdrop_path}` : "",
+    coverUrl: item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : "",
+    rating: item.vote_average ? item.vote_average.toFixed(1) : "无评分",
+    mediaType: item.media_type || (item.title ? "movie" : "tv"),
+    genreTitle: getTmdbGenreTitles(item.genre_ids || [], item.media_type || (item.title ? "movie" : "tv")) || "未知类型",
+    link: null,
+    duration: 0,
+    durationText: "",
+    episode: 0,
+    childItems: []
+  };
+}
+
+// 获取TMDB类型标题（中文）
+function getTmdbGenreTitles(genreIds, mediaType) {
+  if (!Array.isArray(genreIds) || genreIds.length === 0) {
+    return '';
+  }
+  
+  // 如果没有缓存的类型数据，返回空字符串
+  if (!tmdbGenresCache) {
+    return '';
+  }
+  
+  const genres = tmdbGenresCache[mediaType] || {};
+  return genreIds
+    .slice(0, 3) // 最多显示3个类型
+    .map(id => genres[id])
+    .filter(Boolean)
+    .join('•');
+}
+
+// 验证热门数据完整性
+function validateTrendingData(data) {
+    try {
+        const requiredFields = ['today_global', 'week_global_all', 'popular_movies'];
+        return requiredFields.every(field => 
+            data[field] && 
+            Array.isArray(data[field]) && 
+            data[field].length > 0 &&
+            data[field].every(item => 
+                item.id && 
+                item.title && 
+                item.poster_url && 
+                item.title_backdrop
+            )
+        );
+    } catch (error) {
+        return false;
+    }
+}
+
+// 降级基础数据生成器
+async function generateBasicTrendingData() {
+    console.log("[基础数据] 使用基础数据生成模式...");
+    
+    const [todayTrending, weekTrending, popularMovies, genreMap] = await Promise.all([
+        Widget.tmdb.get("/trending/all/day", { 
+            params: { 
+                language: 'zh-CN',
+                api_key: API_KEY 
+            } 
+        }),
+        Widget.tmdb.get("/trending/all/week", { 
+            params: { 
+                language: 'zh-CN',
+                api_key: API_KEY 
+            } 
+        }),
+        Widget.tmdb.get("/movie/popular", { 
+            params: { 
+                language: 'zh-CN',
+                api_key: API_KEY 
+            } 
+        }),
+        fetchTmdbGenres()
+    ]);
+    
+    const today_global = await processMediaItems(todayTrending.results.slice(0, 15), genreMap);
+    const week_global_all = await processMediaItems(weekTrending.results.slice(0, 15), genreMap);
+    const popular_movies = await processMediaItems(popularMovies.results.slice(0, 12), genreMap, 'movie');
+    
+    return {
+        today_global,
+        week_global_all,
+        popular_movies,
+        generated_at: new Date().toISOString(),
+        data_quality: 'basic'
+    };
+}
+
 // 处理媒体项目数据（优先中文）- 保留原函数作为降级选项
 async function processMediaItems(items, genreMap, forceType = null) {
     return items
@@ -1128,7 +1101,7 @@ async function processMediaItems(items, genreMap, forceType = null) {
 async function loadTodayGlobalMedia(params = {}) {
   const { language = "zh-CN" } = params;
   try {
-    const data = await loadTmdbTrendingData();
+    const data = await generateEnhancedTrendingData();
     if (data && data.today_global && data.today_global.length > 0) {
         return data.today_global.map(item => createEnhancedWidgetItem(item));
     } else {
@@ -1152,54 +1125,11 @@ async function loadTodayGlobalMedia(params = {}) {
   }
 }
 
-// 增强的小组件项目创建器（支持高质量横版海报）
-function createEnhancedWidgetItem(item) {
-    const result = {
-        id: item.id.toString(),
-        type: "tmdb",
-        title: item.title,
-        genreTitle: item.genreTitle,
-        rating: item.rating,
-        description: item.overview,
-        releaseDate: item.release_date,
-        
-        // 标准海报
-        posterPath: item.poster_url,
-        coverUrl: item.poster_url,
-        
-        // 增强的横版海报（带标题效果）
-        backdropPath: item.title_backdrop, // 主要横版海报
-        backdropHD: item.title_backdrop_hd, // 高清横版海报
-        backdrop780: item.backdrop_w780, // 中等尺寸横版海报
-        
-        // 高清海报
-        posterHD: item.poster_hd,
-        
-        // 媒体信息
-        mediaType: item.type,
-        popularity: item.popularity,
-        voteCount: item.vote_count,
-        originalLanguage: item.original_language,
-        
-        // 小组件标准字段
-        link: null,
-        duration: 0,
-        durationText: "",
-        episode: 0,
-        childItems: []
-    };
-    
-    // 调试信息
-    console.log(`[增强项目] ${result.title} - 横版海报: ${result.backdropPath ? '✅' : '❌'}`);
-    
-    return result;
-}
-
 // 获取本周热门影视（增强版横版海报支持）
 async function loadWeekGlobalMovies(params = {}) {
   const { language = "zh-CN" } = params;
   try {
-    const data = await loadTmdbTrendingData();
+    const data = await generateEnhancedTrendingData();
     if (data && data.week_global_all && data.week_global_all.length > 0) {
         return data.week_global_all.map(item => createEnhancedWidgetItem(item));
     } else {
@@ -1229,7 +1159,7 @@ async function tmdbPopularMovies(params = {}) {
   try {
     // 第一页且是热门度排序时，使用预处理数据（带标题横版海报）
     if ((parseInt(page) || 1) === 1 && sort_by.startsWith("popularity")) {
-        const data = await loadTmdbTrendingData();
+        const data = await generateEnhancedTrendingData();
         if (data.popular_movies && data.popular_movies.length > 0) {
             return data.popular_movies
                 .slice(0, 15)
@@ -1386,7 +1316,7 @@ async function loadTmdbTrendingCombined(params = {}) {
     switch (content_type) {
       case "today":
         // 今日热门
-        const todayData = await loadTmdbTrendingData();
+        const todayData = await generateEnhancedTrendingData();
         if (todayData && todayData.today_global && todayData.today_global.length > 0) {
           results = todayData.today_global.map(item => createEnhancedWidgetItem(item));
         } else {
@@ -1407,7 +1337,7 @@ async function loadTmdbTrendingCombined(params = {}) {
         
       case "week":
         // 本周热门
-        const weekData = await loadTmdbTrendingData();
+        const weekData = await generateEnhancedTrendingData();
         if (weekData && weekData.week_global_all && weekData.week_global_all.length > 0) {
           results = weekData.week_global_all.map(item => createEnhancedWidgetItem(item));
         } else {
@@ -1429,7 +1359,7 @@ async function loadTmdbTrendingCombined(params = {}) {
       case "popular":
         // 热门电影
         if ((parseInt(page) || 1) === 1 && sort_by.startsWith("popularity")) {
-          const popularData = await loadTmdbTrendingData();
+          const popularData = await generateEnhancedTrendingData();
           if (popularData.popular_movies && popularData.popular_movies.length > 0) {
             results = popularData.popular_movies
               .slice(0, 15)
@@ -2595,6 +2525,161 @@ async function listAnime(params) {
 // ===============TMDB横版海报工具集===============
 
 // 智能横版海报生成器 - 根据内容类型和设备自动选择最佳尺寸
+function createSmartBackdropUrl(item, preferredSize = 'auto') {
+    if (!item.backdrop_path) return '';
+    
+    const baseUrl = 'https://image.tmdb.org/t/p/';
+    const sizes = {
+        'small': 'w300',
+        'medium': 'w780', 
+        'large': 'w1280',
+        'original': 'original'
+    };
+    
+    // 自动选择最佳尺寸
+    if (preferredSize === 'auto') {
+        // 根据屏幕尺寸智能选择
+        const screenWidth = typeof window !== 'undefined' ? window.screen.width : 1920;
+        if (screenWidth <= 480) preferredSize = 'small';
+        else if (screenWidth <= 1024) preferredSize = 'medium';
+        else if (screenWidth <= 1920) preferredSize = 'large';
+        else preferredSize = 'original';
+    }
+    
+    return `${baseUrl}${sizes[preferredSize] || sizes.large}${item.backdrop_path}`;
+}
+
+// 横版海报标题叠加器 - 为横版海报添加标题叠加效果（CSS）
+function generateBackdropWithTitleOverlay(item, options = {}) {
+    const {
+        titlePosition = 'bottom-left',
+        titleColor = '#ffffff',
+        backgroundColor = 'rgba(0, 0, 0, 0.6)',
+        fontSize = '24px',
+        fontWeight = 'bold'
+    } = options;
+    
+    const backdropUrl = createSmartBackdropUrl(item, options.size);
+    
+    return {
+        backdropUrl,
+        titleOverlay: {
+            title: item.title || '未知标题',
+            position: titlePosition,
+            style: {
+                color: titleColor,
+                backgroundColor: backgroundColor,
+                fontSize: fontSize,
+                fontWeight: fontWeight,
+                padding: '12px 16px',
+                borderRadius: '8px',
+                textShadow: '2px 2px 4px rgba(0, 0, 0, 0.8)'
+            }
+        },
+        cssClasses: ['backdrop-with-title', `title-${titlePosition}`]
+    };
+}
+
+// 批量横版海报处理器
+async function batchProcessBackdrops(items, options = {}) {
+    const {
+        enableTitleOverlay = true,
+        preferredSize = 'auto',
+        includeMetadata = true
+    } = options;
+    
+    return items.map(item => {
+        const result = {
+            id: item.id,
+            backdropUrl: createSmartBackdropUrl(item, preferredSize)
+        };
+        
+        if (enableTitleOverlay) {
+            const overlay = generateBackdropWithTitleOverlay(item, options);
+            result.titleOverlay = overlay.titleOverlay;
+            result.cssClasses = overlay.cssClasses;
+        }
+        
+        if (includeMetadata) {
+            result.metadata = {
+                title: item.title,
+                year: item.year,
+                rating: item.rating,
+                mediaType: item.type
+            };
+        }
+        
+        return result;
+    });
+}
+
+// 横版海报缓存管理器
+const backdropCache = new Map();
+const BACKDROP_CACHE_SIZE = 100;
+
+function cacheBackdrop(key, data) {
+    if (backdropCache.size >= BACKDROP_CACHE_SIZE) {
+        // 删除最老的缓存项
+        const firstKey = backdropCache.keys().next().value;
+        backdropCache.delete(firstKey);
+    }
+    backdropCache.set(key, {
+        data,
+        timestamp: Date.now()
+    });
+}
+
+function getCachedBackdrop(key, maxAge = 30 * 60 * 1000) { // 30分钟
+    const cached = backdropCache.get(key);
+    if (cached && (Date.now() - cached.timestamp) < maxAge) {
+        return cached.data;
+    }
+    return null;
+}
+
+// 横版海报质量优化器
+function optimizeBackdropQuality(items) {
+    return items
+        .filter(item => item.backdrop_path) // 只保留有横版海报的项目
+        .sort((a, b) => {
+            // 按人气和评分排序，确保高质量内容优先
+            const scoreA = (a.popularity || 0) * 0.6 + (a.rating || 0) * 0.4;
+            const scoreB = (b.popularity || 0) * 0.6 + (b.rating || 0) * 0.4;
+            return scoreB - scoreA;
+        })
+        .map(item => ({
+            ...item,
+            backdropQuality: calculateBackdropQuality(item)
+        }));
+}
+
+// 横版海报质量评估器
+function calculateBackdropQuality(item) {
+    let score = 0;
+    
+    // 基础分数
+    if (item.backdrop_path) score += 30;
+    
+    // 内容质量
+    if (item.rating >= 7) score += 20;
+    else if (item.rating >= 6) score += 10;
+    
+    // 人气度
+    if (item.popularity >= 100) score += 20;
+    else if (item.popularity >= 50) score += 10;
+    
+    // 投票数
+    if (item.vote_count >= 1000) score += 15;
+    else if (item.vote_count >= 100) score += 8;
+    
+    // 标题质量
+    if (item.title && /[\u4e00-\u9fa5]/.test(item.title)) score += 10; // 中文标题
+    if (item.title && item.title.length > 0 && item.title.length <= 20) score += 5; // 合适长度
+    
+    return Math.min(score, 100); // 最高100分
+}
+
+// 横版海报智能URL生成器
 function createSmartBackdropUrl(item, preferredSize = 'auto') {
     if (!item.backdrop_path) return '';
     
