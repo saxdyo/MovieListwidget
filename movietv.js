@@ -814,21 +814,35 @@ async function fetchTmdbDataFromApi() {
     }
 }
 
-// 简化的TMDB数据获取函数 - 确保稳定运行
+// 优化的TMDB数据获取函数 - 优先使用定时更新的数据包
 async function loadTmdbTrendingData() {
     try {
         console.log("[数据源] 开始获取TMDB热门数据...");
         
-        // 直接尝试获取数据包
+        // 1. 优先使用定时更新的缓存数据
+        const cachedData = getCachedTrendingData();
+        if (cachedData && isDataFresh(cachedData)) {
+            console.log("[数据源] 使用定时更新的缓存数据");
+            return cachedData;
+        }
+        
+        // 2. 尝试获取最新数据包
         const data = await fetchSimpleData();
         if (data) {
             console.log("[数据源] 成功获取数据包");
+            // 缓存数据包
+            cacheTrendingData(data);
             return data;
         }
         
-        // 备用方案：使用实时API
+        // 3. 备用方案：使用实时API
         console.log("[数据源] 数据包不可用，使用实时API");
-        return await fetchRealtimeData();
+        const realtimeData = await fetchRealtimeData();
+        if (realtimeData) {
+            // 缓存实时数据
+            cacheTrendingData(realtimeData);
+        }
+        return realtimeData;
         
     } catch (error) {
         console.error("[数据源] 数据获取失败:", error);
