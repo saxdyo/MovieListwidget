@@ -1263,8 +1263,6 @@ async function loadTmdbTitlePosterTrending(params = {}) {
 
 // 横版标题海报加载器
 async function loadTitlePosterWithBackdrops(items, maxItems = 20) {
-    const results = [];
-    
     // 尝试获取缓存的横版标题海报
     const cachedBackdrops = [];
     for (const item of items.slice(0, maxItems)) {
@@ -1287,6 +1285,54 @@ async function loadTitlePosterWithBackdrops(items, maxItems = 20) {
         // 如果没有缓存的横版标题海报，使用普通数据
         console.log(`[横版标题海报] 没有缓存的横版标题海报，使用普通数据`);
         return items.map(item => createEnhancedWidgetItem(item));
+    }
+}
+
+// 增强的横版标题海报加载器（支持更多数据源）
+async function loadEnhancedTitlePosterWithBackdrops(items, maxItems = 20, contentType = "today") {
+    // 尝试获取缓存的横版标题海报
+    const cachedBackdrops = [];
+    for (const item of items.slice(0, maxItems)) {
+        const cachedBackdrop = getCachedBackdrop(`backdrop_${item.id}`);
+        if (cachedBackdrop && cachedBackdrop.titlePoster) {
+            cachedBackdrops.push(cachedBackdrop);
+        }
+    }
+    
+    if (cachedBackdrops.length > 0) {
+        console.log(`[增强横版标题海报] 使用缓存的横版标题海报: ${cachedBackdrops.length}项`);
+        return cachedBackdrops.map(backdrop => ({
+            id: backdrop.id,
+            title: backdrop.title,
+            posterPath: backdrop.backdropUrl,
+            titlePoster: backdrop.titlePoster,
+            metadata: backdrop.metadata
+        }));
+    } else {
+        // 如果没有缓存的横版标题海报，尝试实时生成
+        console.log(`[增强横版标题海报] 尝试实时生成横版标题海报...`);
+        const processedItems = await batchProcessBackdrops(items.slice(0, maxItems), {
+            enableTitleOverlay: true,
+            preferredSize: 'w1280',
+            includeMetadata: true,
+            forceRegenerate: false,
+            maxConcurrent: 3
+        });
+        
+        if (processedItems.length > 0) {
+            console.log(`[增强横版标题海报] 实时生成成功: ${processedItems.length}项`);
+            return processedItems.map(item => ({
+                id: item.id,
+                title: item.title,
+                posterPath: item.backdropUrl,
+                titlePoster: item.titlePoster,
+                metadata: item.metadata
+            }));
+        } else {
+            // 如果实时生成失败，使用普通数据
+            console.log(`[增强横版标题海报] 实时生成失败，使用普通数据`);
+            return items.map(item => createEnhancedWidgetItem(item));
+        }
     }
 }
 
