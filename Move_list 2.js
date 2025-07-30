@@ -801,8 +801,93 @@ async function loadTmdbTrendingData() {
         
     } catch (error) {
         console.error("[数据源] 所有数据获取方式失败:", error);
-        // 最后的备用方案
-        return await generateEnhancedTrendingData();
+        // 最后的备用方案：使用简化的实时API
+        console.log("[数据源] 使用简化备用方案");
+        return await generateSimpleTrendingData();
+    }
+}
+
+// 简化的趋势数据生成器（备用方案）
+async function generateSimpleTrendingData() {
+    try {
+        console.log("[简化备用] 开始生成简化趋势数据...");
+        
+        // 并行获取基本数据
+        const [todayResponse, weekResponse, popularResponse] = await Promise.allSettled([
+            Widget.tmdb.get("/trending/all/day", { 
+                params: { 
+                    language: 'zh-CN',
+                    region: 'CN', 
+                    api_key: API_KEY 
+                } 
+            }),
+            Widget.tmdb.get("/trending/all/week", { 
+                params: { 
+                    language: 'zh-CN',
+                    region: 'CN', 
+                    api_key: API_KEY 
+                } 
+            }),
+            Widget.tmdb.get("/movie/popular", { 
+                params: { 
+                    language: 'zh-CN',
+                    region: 'CN', 
+                    api_key: API_KEY 
+                } 
+            })
+        ]);
+        
+        const result = {
+            today_global: [],
+            week_global_all: [],
+            popular_movies: []
+        };
+        
+        // 处理今日热门
+        if (todayResponse.status === 'fulfilled' && todayResponse.value.results) {
+            result.today_global = todayResponse.value.results.slice(0, 20).map(item => ({
+                id: item.id,
+                title: item.title || item.name,
+                poster_url: item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : '',
+                backdrop_path: item.backdrop_path,
+                vote_average: item.vote_average,
+                release_date: item.release_date || item.first_air_date,
+                media_type: item.media_type
+            }));
+        }
+        
+        // 处理本周热门
+        if (weekResponse.status === 'fulfilled' && weekResponse.value.results) {
+            result.week_global_all = weekResponse.value.results.slice(0, 20).map(item => ({
+                id: item.id,
+                title: item.title || item.name,
+                poster_url: item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : '',
+                backdrop_path: item.backdrop_path,
+                vote_average: item.vote_average,
+                release_date: item.release_date || item.first_air_date,
+                media_type: item.media_type
+            }));
+        }
+        
+        // 处理热门电影
+        if (popularResponse.status === 'fulfilled' && popularResponse.value.results) {
+            result.popular_movies = popularResponse.value.results.slice(0, 20).map(item => ({
+                id: item.id,
+                title: item.title,
+                poster_url: item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : '',
+                backdrop_path: item.backdrop_path,
+                vote_average: item.vote_average,
+                release_date: item.release_date,
+                media_type: 'movie'
+            }));
+        }
+        
+        console.log(`[简化备用] 数据生成完成 - 今日热门: ${result.today_global.length}, 本周热门: ${result.week_global_all.length}, 热门电影: ${result.popular_movies.length}`);
+        return result;
+        
+    } catch (error) {
+        console.error("[简化备用] 生成简化趋势数据失败:", error);
+        return null;
     }
 }
 
@@ -819,21 +904,44 @@ async function fetchFromPrimarySource() {
             }
         });
         
-        if (response.data && response.data.today_global && response.data.today_global.length > 0) {
-            console.log("[主要数据源] 成功获取TMDB热门数据包");
+        console.log(`[主要数据源] HTTP响应状态: ${response.status || 'unknown'}`);
+        
+        if (!response.data) {
+            console.log("[主要数据源] 响应数据为空");
+            return null;
+        }
+        
+        console.log(`[主要数据源] 响应数据类型: ${typeof response.data}`);
+        console.log(`[主要数据源] 响应数据键: ${Object.keys(response.data).join(', ')}`);
+        
+        if (response.data.today_global && Array.isArray(response.data.today_global)) {
+            console.log(`[主要数据源] 今日热门数据项数量: ${response.data.today_global.length}`);
             
-            // 验证数据完整性和时效性
-            if (validateTrendingData(response.data) && isDataFresh(response.data)) {
-                const enhancedData = await enhanceDataWithTitlePosters(response.data);
-                return enhancedData;
+            if (response.data.today_global.length > 0) {
+                console.log("[主要数据源] 成功获取TMDB热门数据包");
+                
+                // 验证数据完整性和时效性
+                const isValid = validateTrendingData(response.data);
+                const isFresh = isDataFresh(response.data);
+                
+                console.log(`[主要数据源] 数据验证: ${isValid ? '通过' : '失败'}`);
+                console.log(`[主要数据源] 数据时效性: ${isFresh ? '新鲜' : '过期'}`);
+                
+                if (isValid && isFresh) {
+                    const enhancedData = await enhanceDataWithTitlePosters(response.data);
+                    return enhancedData;
+                } else {
+                    console.log("[主要数据源] 数据验证失败或数据过期");
+                }
             } else {
-                console.log("[主要数据源] 数据验证失败或数据过期");
+                console.log("[主要数据源] 今日热门数据为空");
             }
         } else {
-            console.log("[主要数据源] 数据包格式不正确");
+            console.log("[主要数据源] 数据包格式不正确 - 缺少today_global字段或不是数组");
         }
     } catch (error) {
         console.log(`[主要数据源] 获取失败: ${error.message}`);
+        console.log(`[主要数据源] 错误详情: ${error.stack || '无堆栈信息'}`);
     }
     
     return null;
@@ -1073,19 +1181,54 @@ async function autoRecoverData() {
 // 验证热门数据完整性
 function validateTrendingData(data) {
     try {
+        if (!data || typeof data !== 'object') {
+            console.log("[验证] 数据不是有效对象");
+            return false;
+        }
+        
         const requiredFields = ['today_global', 'week_global_all', 'popular_movies'];
-        return requiredFields.every(field => 
-            data[field] && 
-            Array.isArray(data[field]) && 
-            data[field].length > 0 &&
-            data[field].every(item => 
-                item.id && 
-                item.title && 
-                item.poster_url && 
-                item.title_backdrop
-            )
+        
+        // 检查基本字段是否存在
+        for (const field of requiredFields) {
+            if (!data[field]) {
+                console.log(`[验证] 缺少字段: ${field}`);
+                return false;
+            }
+            
+            if (!Array.isArray(data[field])) {
+                console.log(`[验证] 字段不是数组: ${field}`);
+                return false;
+            }
+            
+            if (data[field].length === 0) {
+                console.log(`[验证] 数组为空: ${field}`);
+                return false;
+            }
+        }
+        
+        // 检查数据项的基本完整性（不要求title_backdrop，因为这是我们要添加的）
+        const sampleItems = [
+            ...data.today_global.slice(0, 3),
+            ...data.week_global_all.slice(0, 3),
+            ...data.popular_movies.slice(0, 3)
+        ];
+        
+        const validItems = sampleItems.filter(item => 
+            item && 
+            item.id && 
+            (item.title || item.name) && 
+            (item.poster_url || item.poster_path)
         );
+        
+        if (validItems.length < sampleItems.length * 0.7) {
+            console.log(`[验证] 数据项质量不足: ${validItems.length}/${sampleItems.length}`);
+            return false;
+        }
+        
+        console.log(`[验证] 数据验证通过 - 今日热门: ${data.today_global.length}, 本周热门: ${data.week_global_all.length}, 热门电影: ${data.popular_movies.length}`);
+        return true;
     } catch (error) {
+        console.error("[验证] 数据验证出错:", error);
         return false;
     }
 }
@@ -3347,8 +3490,20 @@ async function testTitlePosterFunctionality() {
         console.log("[测试] 开始测试标题海报功能...");
         
         // 测试数据包获取
+        console.log("[测试] 测试主要数据源...");
+        const primaryData = await fetchFromPrimarySource();
+        console.log(`[测试] 主要数据源结果: ${primaryData ? "成功" : "失败"}`);
+        
+        if (!primaryData) {
+            console.log("[测试] 测试备用数据源...");
+            const backupData = await fetchFromBackupSources();
+            console.log(`[测试] 备用数据源结果: ${backupData ? "成功" : "失败"}`);
+        }
+        
+        // 测试完整的数据获取流程
+        console.log("[测试] 测试完整数据获取流程...");
         const trendingData = await loadTmdbTrendingData();
-        console.log("[测试] 数据包获取结果:", trendingData ? "成功" : "失败");
+        console.log("[测试] 完整数据获取结果:", trendingData ? "成功" : "失败");
         
         if (trendingData) {
             // 健康检查测试
@@ -3382,12 +3537,11 @@ async function testTitlePosterFunctionality() {
             console.log("[测试] 测试缓存功能...");
             const cachedData = getCachedTrendingData();
             console.log(`[测试] 缓存测试: ${cachedData ? "缓存有效" : "缓存无效"}`);
+        } else {
+            console.log("[测试] 测试简化备用方案...");
+            const simpleData = await generateSimpleTrendingData();
+            console.log(`[测试] 简化备用方案结果: ${simpleData ? "成功" : "失败"}`);
         }
-        
-        // 测试备用机制
-        console.log("[测试] 测试备用机制...");
-        const backupTest = await fetchFromBackupSources();
-        console.log(`[测试] 备用数据源测试: ${backupTest ? "可用" : "不可用"}`);
         
         console.log("[测试] 标题海报功能测试完成");
         return true;
@@ -3400,5 +3554,40 @@ async function testTitlePosterFunctionality() {
 // 脚本加载完成，初始化错误处理
 console.log("[系统] 影视榜单脚本加载完成，所有模块已就绪");
 console.log("[系统] 标题海报功能已就绪，可使用 'TMDB 标题海报热门' 模块");
+
+// 快速数据测试函数（可在控制台调用）
+async function quickDataTest() {
+    try {
+        console.log("=== 快速数据测试开始 ===");
+        
+        // 测试主要数据源
+        const primary = await fetchFromPrimarySource();
+        console.log(`主要数据源: ${primary ? '✅ 成功' : '❌ 失败'}`);
+        
+        if (!primary) {
+            // 测试备用数据源
+            const backup = await fetchFromBackupSources();
+            console.log(`备用数据源: ${backup ? '✅ 成功' : '❌ 失败'}`);
+            
+            if (!backup) {
+                // 测试简化备用方案
+                const simple = await generateSimpleTrendingData();
+                console.log(`简化备用方案: ${simple ? '✅ 成功' : '❌ 失败'}`);
+            }
+        }
+        
+        console.log("=== 快速数据测试完成 ===");
+        return true;
+    } catch (error) {
+        console.error("快速数据测试失败:", error);
+        return false;
+    }
+}
+
+// 导出测试函数到全局作用域（便于调试）
+if (typeof global !== 'undefined') {
+    global.quickDataTest = quickDataTest;
+    global.testTitlePosterFunctionality = testTitlePosterFunctionality;
+}
 
 
