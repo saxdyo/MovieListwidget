@@ -682,6 +682,62 @@ WidgetMetadata = {
         },
         { name: "page", title: "页码", type: "page", value: "1" }
       ]
+    },
+    {
+      title: "TVB剧集",
+      description: "TVB平台剧集内容",
+      requiresWebView: false,
+      functionName: "tvbTVShows",
+      cacheDuration: 3600,
+      params: [
+        {
+          name: "with_networks",
+          title: "播出平台",
+          type: "enumeration",
+          description: "仅TVB平台",
+          value: "3196",
+          enumOptions: [
+            { title: "TVB", value: "3196" }
+          ]
+        },
+        {
+          name: "with_genres",
+          title: "🎭内容类型",
+          type: "enumeration",
+          description: "选择要筛选的内容类型",
+          value: "",
+          enumOptions: [
+            { title: "全部类型", value: "" },
+            { title: "动作", value: "28" },
+            { title: "科幻", value: "878" },
+            { title: "爱情", value: "10749" },
+            { title: "喜剧", value: "35" },
+            { title: "悬疑", value: "9648" },
+            { title: "家庭", value: "10751" },
+            { title: "犯罪", value: "80" },
+            { title: "历史", value: "36" },
+            { title: "战争", value: "10752" },
+            { title: "恐怖", value: "27" }
+          ]
+        },
+        {
+          name: "sort_by",
+          title: "📊排序方式",
+          type: "enumeration",
+          description: "选择排序方式",
+          value: "popularity.desc",
+          enumOptions: [
+            { title: "热门度↓", value: "popularity.desc" },
+            { title: "热门度↑", value: "popularity.asc" },
+            { title: "评分↓", value: "vote_average.desc" },
+            { title: "评分↑", value: "vote_average.asc" },
+            { title: "首播日期↓", value: "first_air_date.desc" },
+            { title: "首播日期↑", value: "first_air_date.asc" }
+          ]
+        },
+        { name: "page", title: "页码", type: "page" },
+        { name: "language", title: "语言", type: "language", value: "zh-CN" }
+      ]
     }
 
    ]
