@@ -4464,6 +4464,52 @@ async function quickDataTest() {
         const titlePosterData = await loadTmdbTitlePosterTrending({ content_type: "today" });
         console.log(`标题海报功能: ${titlePosterData.length > 0 ? '✅ 成功' : '❌ 失败'}`);
         
+        // 测试横版标题海报功能
+        console.log("=== 测试横版标题海报功能 ===");
+        if (data && data.today_global && data.today_global.length > 0) {
+            const testItem = data.today_global[0];
+            console.log(`测试项目: ${testItem.title || testItem.name}`);
+            
+            // 测试创建横版标题海报
+            const titlePoster = await createTitlePosterWithOverlay(testItem, {
+                title: testItem.title || testItem.name,
+                subtitle: "测试副标题",
+                rating: testItem.vote_average || 0,
+                year: testItem.release_date ? testItem.release_date.substring(0, 4) : "",
+                showRating: true,
+                showYear: true
+            });
+            
+            if (titlePoster) {
+                console.log(`✅ 横版标题海报创建成功: ${titlePoster.title}`);
+                console.log(`   标题: ${titlePoster.title}`);
+                console.log(`   副标题: ${titlePoster.subtitle}`);
+                console.log(`   评分: ${titlePoster.rating}`);
+                console.log(`   年份: ${titlePoster.year}`);
+                console.log(`   图片URL: ${titlePoster.url}`);
+            } else {
+                console.log("❌ 横版标题海报创建失败");
+            }
+            
+            // 测试批量处理
+            const processedBackdrops = await batchProcessBackdrops([testItem], {
+                enableTitleOverlay: true,
+                includeMetadata: true
+            });
+            
+            if (processedBackdrops.length > 0) {
+                console.log(`✅ 批量处理成功: ${processedBackdrops.length}项`);
+                const processed = processedBackdrops[0];
+                console.log(`   项目标题: ${processed.title}`);
+                console.log(`   是否有标题海报: ${processed.titlePoster ? '是' : '否'}`);
+                if (processed.titlePoster) {
+                    console.log(`   标题海报标题: ${processed.titlePoster.title}`);
+                }
+            } else {
+                console.log("❌ 批量处理失败");
+            }
+        }
+        
         console.log("=== 快速数据测试完成 ===");
         return true;
     } catch (error) {
