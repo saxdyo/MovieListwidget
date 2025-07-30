@@ -34,7 +34,7 @@ async function loadTmdbTrendingData() {
 - `GIST_ID`: `[您的 Gist ID]`
 
 ### 2. 自动更新频率
-- ⏰ **每6小时自动更新一次**
+- ⏰ **每12小时自动更新一次**
 - 🖱️ **支持手动触发更新**
 - 📊 **数据实时同步**
 

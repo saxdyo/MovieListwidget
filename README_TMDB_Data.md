@@ -218,7 +218,7 @@ name: Update TMDB Data
 
 on:
   schedule:
-    - cron: '0 */6 * * *'  # 每6小时更新一次
+    - cron: '0 */12 * * *'  # 每12小时更新一次
   workflow_dispatch:  # 手动触发
 
 jobs:
@@ -256,7 +256,7 @@ jobs:
 # 编辑 crontab
 crontab -e
 
-# 添加以下行（每6小时更新一次）
+# 添加以下行（每12小时更新一次）
 0 */6 * * * cd /path/to/your/project && python scripts/generate_tmdb_data.py
 ```
 

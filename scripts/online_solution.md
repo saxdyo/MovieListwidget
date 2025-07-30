@@ -57,7 +57,7 @@ git push
 ```
 
 ### 步骤3：自动更新
-GitHub Actions 会每6小时自动更新数据
+GitHub Actions 会每12小时自动更新数据
 
 ## 方案3：使用在线 JSON 服务
 
