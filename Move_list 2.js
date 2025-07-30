@@ -257,10 +257,6 @@ WidgetMetadata = {
         { name: "language", title: "语言", type: "language", value: "zh-CN" }
       ]
     },
-    // -------------IMDB模块-------------
-
-
-    // -------------TMDB剧集模块-------------
     {
       title: "TMDB 影视榜单",
       description: "热门电影和电视剧集榜单",
@@ -329,7 +325,9 @@ WidgetMetadata = {
             { title: "评分↓", value: "vote_average.desc" },
             { title: "评分↑", value: "vote_average.asc" },
             { title: "上映日期↓", value: "release_date.desc" },
-            { title: "上映日期↑", value: "release_date.asc" }
+            { title: "上映日期↑", value: "release_date.asc" },
+            { title: "首播日期↓", value: "first_air_date.desc" },
+            { title: "首播日期↑", value: "first_air_date.asc" }
           ]
         },
         {
@@ -344,96 +342,6 @@ WidgetMetadata = {
             { title: "7.0分以上", value: "7.0" },
             { title: "8.0分以上", value: "8.0" },
             { title: "9.0分以上", value: "9.0" }
-          ]
-        },
-        { name: "page", title: "页码", type: "page" },
-        { name: "language", title: "语言", type: "language", value: "zh-CN" }
-      ]
-    },
-    {
-      title: "TMDB 剧集时间榜",
-      description: "按时间和地区筛选的剧集内容",
-      requiresWebView: false,
-      functionName: "tmdbTVShowsByTime",
-      cacheDuration: 3600,
-      params: [
-        {
-          name: "time_period",
-          title: "📅时间范围",
-          type: "enumeration",
-          description: "选择时间范围",
-          value: "current_year",
-          enumOptions: [
-            { title: "本年度", value: "current_year" },
-            { title: "去年", value: "last_year" },
-            { title: "最近3年", value: "recent_3_years" },
-            { title: "最近5年", value: "recent_5_years" },
-            { title: "2020年代", value: "2020s" },
-            { title: "2010年代", value: "2010s" },
-            { title: "2000年代", value: "2000s" },
-            { title: "更早期", value: "earlier" }
-          ]
-        },
-        {
-          name: "with_origin_country",
-          title: "🌍制作地区",
-          type: "enumeration",
-          description: "按制作地区筛选",
-          value: "",
-          enumOptions: [
-            { title: "全部地区", value: "" },
-            { title: "美国", value: "US" },
-            { title: "中国", value: "CN" },
-            { title: "日本", value: "JP" },
-            { title: "韩国", value: "KR" },
-            { title: "欧洲", value: "GB,FR,DE,ES,IT" }
-          ]
-        },
-        {
-          name: "with_genres",
-          title: "🎭剧集类型",
-          type: "enumeration",
-          description: "选择剧集类型",
-          value: "",
-          enumOptions: [
-            { title: "全部类型", value: "" },
-            { title: "剧情", value: "18" },
-            { title: "喜剧", value: "35" },
-            { title: "犯罪", value: "80" },
-            { title: "动作冒险", value: "10759" },
-            { title: "科幻奇幻", value: "10765" },
-            { title: "悬疑惊悚", value: "9648,53" },
-            { title: "爱情", value: "10749" },
-            { title: "家庭", value: "10751" }
-          ]
-        },
-        {
-          name: "sort_by",
-          title: "📊排序方式",
-          type: "enumeration",
-          description: "选择排序方式",
-          value: "first_air_date.desc",
-          enumOptions: [
-            { title: "首播日期↓", value: "first_air_date.desc" },
-            { title: "首播日期↑", value: "first_air_date.asc" },
-            { title: "评分↓", value: "vote_average.desc" },
-            { title: "评分↑", value: "vote_average.asc" },
-            { title: "热门度↓", value: "popularity.desc" },
-            { title: "热门度↑", value: "popularity.asc" }
-          ]
-        },
-        {
-          name: "vote_average_gte",
-          title: "⭐最低评分",
-          type: "enumeration",
-          description: "设置最低评分要求",
-          value: "0",
-          enumOptions: [
-            { title: "无要求", value: "0" },
-            { title: "6.0分以上", value: "6.0" },
-            { title: "7.0分以上", value: "7.0" },
-            { title: "8.0分以上", value: "8.0" },
-            { title: "8.5分以上", value: "8.5" }
           ]
         },
         { name: "page", title: "页码", type: "page" },
@@ -521,48 +429,48 @@ WidgetMetadata = {
         { name: "language", title: "语言", type: "language", value: "zh-CN" }
       ]
     },
-     // -------------豆瓣模块-------------
-     // --- 片单解析 ---
-     {
-       title: "豆瓣片单(TMDB版)",
-       description: "豆瓣片单地址",
-       requiresWebView: false,
-       functionName: "loadCardItems",
-       cacheDuration: 43200,
-       params: [
-         {
-           name: "url",
-           title: "列表地址",
-           type: "input",
-           description: "豆瓣片单地址",
-           placeholders: [
-             { title: "豆瓣热门电影", value: "https://m.douban.com/subject_collection/movie_hot_gaia" },
-             { title: "热播新剧", value: "https://m.douban.com/subject_collection/tv_hot" },
-             { title: "热播综艺", value: "https://m.douban.com/subject_collection/show_hot" },
-             { title: "热播动漫", value: "https://m.douban.com/subject_collection/tv_animation" },
-             { title: "影院热映", value: "https://m.douban.com/subject_collection/movie_showing" },
-             { title: "实时热门电影", value: "https://m.douban.com/subject_collection/movie_real_time_hotest" },
-             { title: "实时热门电视", value: "https://m.douban.com/subject_collection/tv_real_time_hotest" },
-             { title: "豆瓣 Top 250", value: "https://m.douban.com/subject_collection/movie_top250" },
-             { title: "一周电影口碑榜", value: "https://m.douban.com/subject_collection/movie_weekly_best" },
-             { title: "华语口碑剧集榜", value: "https://m.douban.com/subject_collection/tv_chinese_best_weekly" },
-             { title: "全球口碑剧集榜", value: "https://m.douban.com/subject_collection/tv_global_best_weekly" },
-             { title: "国内综艺口碑榜", value: "https://m.douban.com/subject_collection/show_chinese_best_weekly" },
-             { title: "全球综艺口碑榜", value: "https://m.douban.com/subject_collection/show_global_best_weekly" },
-             { title: "第97届奥斯卡", value: "https://m.douban.com/subject_collection/EC7I7ZDRA?type=rank" },
-             { title: "IMDB MOVIE TOP 250", value: "https://m.douban.com/doulist/1518184" },
-             { title: "IMDB TV TOP 250", value: "https://m.douban.com/doulist/41573512" },
-             { title: "意外结局电影", value: "https://m.douban.com/doulist/11324" }
-           ]
-         },
-         {
-           name: "page",
-           title: "页码",
-           type: "page"
-         }
-       ]
-     },
-     {
+    // -------------豆瓣模块-------------
+    // --- 片单解析 ---
+    {
+      title: "豆瓣片单(TMDB版)",
+      description: "豆瓣片单地址",
+      requiresWebView: false,
+      functionName: "loadCardItems",
+      cacheDuration: 43200,
+      params: [
+        {
+          name: "url",
+          title: "列表地址",
+          type: "input",
+          description: "豆瓣片单地址",
+          placeholders: [
+            { title: "豆瓣热门电影", value: "https://m.douban.com/subject_collection/movie_hot_gaia" },
+            { title: "热播新剧", value: "https://m.douban.com/subject_collection/tv_hot" },
+            { title: "热播综艺", value: "https://m.douban.com/subject_collection/show_hot" },
+            { title: "热播动漫", value: "https://m.douban.com/subject_collection/tv_animation" },
+            { title: "影院热映", value: "https://m.douban.com/subject_collection/movie_showing" },
+            { title: "实时热门电影", value: "https://m.douban.com/subject_collection/movie_real_time_hotest" },
+            { title: "实时热门电视", value: "https://m.douban.com/subject_collection/tv_real_time_hotest" },
+            { title: "豆瓣 Top 250", value: "https://m.douban.com/subject_collection/movie_top250" },
+            { title: "一周电影口碑榜", value: "https://m.douban.com/subject_collection/movie_weekly_best" },
+            { title: "华语口碑剧集榜", value: "https://m.douban.com/subject_collection/tv_chinese_best_weekly" },
+            { title: "全球口碑剧集榜", value: "https://m.douban.com/subject_collection/tv_global_best_weekly" },
+            { title: "国内综艺口碑榜", value: "https://m.douban.com/subject_collection/show_chinese_best_weekly" },
+            { title: "全球综艺口碑榜", value: "https://m.douban.com/subject_collection/show_global_best_weekly" },
+            { title: "第97届奥斯卡", value: "https://m.douban.com/subject_collection/EC7I7ZDRA?type=rank" },
+            { title: "IMDB MOVIE TOP 250", value: "https://m.douban.com/doulist/1518184" },
+            { title: "IMDB TV TOP 250", value: "https://m.douban.com/doulist/41573512" },
+            { title: "意外结局电影", value: "https://m.douban.com/doulist/11324" }
+          ]
+        },
+        {
+          name: "page",
+          title: "页码",
+          type: "page"
+        }
+      ]
+    },
+    {
       title: "影视主题分类",
       description: "按类型/题材分类展示电影或剧集",
       requiresWebView: false,
@@ -699,9 +607,8 @@ WidgetMetadata = {
         { name: "page", title: "页码", type: "page", value: "1" }
       ]
     }
-
-   ]
- };
+  ]
+};
 
 // 删除所有模块排序选项中的投票数相关选项
 WidgetMetadata.modules.forEach(module => {
