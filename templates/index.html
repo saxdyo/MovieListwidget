@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>图标库 - 自助上传系统</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎨</text></svg>">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1 class="title">🎨 图标库</h1>
+            <p class="subtitle">自助上传系统</p>
+        </header>
+
+        <main class="main">
+            <!-- 上传表单 -->
+            <section class="upload-section">
+                <h2>上传新图标</h2>
+                <form id="uploadForm" class="upload-form">
+                    <div class="form-group">
+                        <label for="iconName">图标名称</label>
+                        <input type="text" id="iconName" name="name" placeholder="请输入图标名称" required>
+                        <small>名称将自动检查重复，重复时会添加数字后缀</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="iconFile">选择图片</label>
+                        <div class="file-input-wrapper">
+                            <input type="file" id="iconFile" name="image" accept="image/*" required>
+                            <div class="file-input-display">
+                                <span class="file-input-text">点击选择文件</span>
+                                <span class="file-input-icon">📁</span>
+                            </div>
+                        </div>
+                        <small>支持 PNG、JPG、GIF、SVG、WebP 格式，建议尺寸 64x64 或更大</small>
+                    </div>
+
+                    <div class="form-group">
+                        <button type="submit" class="upload-btn" id="uploadBtn">
+                            <span class="btn-text">上传图标</span>
+                            <span class="btn-loading" style="display: none;">上传中...</span>
+                        </button>
+                    </div>
+                </form>
+            </section>
+
+            <!-- 图标展示 -->
+            <section class="icons-section">
+                <div class="section-header">
+                    <h2>图标库</h2>
+                    <div class="controls">
+                        <input type="text" id="searchInput" placeholder="搜索图标..." class="search-input">
+                        <button id="refreshBtn" class="refresh-btn">🔄 刷新</button>
+                    </div>
+                </div>
+                
+                <div id="iconsContainer" class="icons-grid">
+                    <div class="loading">加载中...</div>
+                </div>
+            </section>
+        </main>
+
+        <!-- 成功提示 -->
+        <div id="successModal" class="modal" style="display: none;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>✅ 上传成功</h3>
+                    <button class="close-btn" onclick="closeModal()">×</button>
+                </div>
+                <div class="modal-body">
+                    <div class="success-info">
+                        <p><strong>图标名称:</strong> <span id="successName"></span></p>
+                        <p><strong>图片地址:</strong></p>
+                        <div class="url-display">
+                            <input type="text" id="successUrl" readonly>
+                            <button onclick="copyUrl()" class="copy-btn">复制</button>
+                        </div>
+                        <div class="preview-image">
+                            <img id="successImage" alt="上传的图标">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button onclick="closeModal()" class="btn-secondary">关闭</button>
+                    <a id="gistLink" href="#" target="_blank" class="btn-primary">查看 Gist</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 错误提示 -->
+        <div id="errorModal" class="modal" style="display: none;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>❌ 上传失败</h3>
+                    <button class="close-btn" onclick="closeErrorModal()">×</button>
+                </div>
+                <div class="modal-body">
+                    <p id="errorMessage"></p>
+                </div>
+                <div class="modal-footer">
+                    <button onclick="closeErrorModal()" class="btn-primary">确定</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/script.js"></script>
+</body>
+</html>
