@@ -610,11 +610,12 @@ WidgetMetadata = {
   ]
 };
 
-// 删除所有模块排序选项中的投票数相关选项
+// 优化模块参数配置和性能监控
 WidgetMetadata.modules.forEach(module => {
   if (Array.isArray(module.params)) {
     module.params.forEach(param => {
       if (param.name === 'sort_by' && Array.isArray(param.enumOptions)) {
+        // 移除投票数相关的排序选项，提高性能
         param.enumOptions = param.enumOptions.filter(opt =>
           !(opt.title && opt.title.includes('投票数')) &&
           !(opt.value && opt.value.includes('vote_count'))
@@ -623,6 +624,31 @@ WidgetMetadata.modules.forEach(module => {
     });
   }
 });
+
+// 性能监控
+const performanceMonitor = {
+  startTime: Date.now(),
+  requestCount: 0,
+  errorCount: 0,
+  
+  logRequest() {
+    this.requestCount++;
+  },
+  
+  logError() {
+    this.errorCount++;
+  },
+  
+  getStats() {
+    const uptime = Date.now() - this.startTime;
+    return {
+      uptime: Math.round(uptime / 1000),
+      requestCount: this.requestCount,
+      errorCount: this.errorCount,
+      successRate: this.requestCount > 0 ? ((this.requestCount - this.errorCount) / this.requestCount * 100).toFixed(1) : 0
+    };
+  }
+};
 
 const API_KEY = 'f3ae69ddca232b56265600eb919d46ab'; // TMDB API Key
 
@@ -2624,6 +2650,7 @@ async function tmdbMediaRanking(params = {}) {
     console.log(`[TMDB影视榜单] API请求参数:`, queryParams);
     
     // 发起API请求 - 直接使用Widget.tmdb，不使用任何缓存
+    performanceMonitor.logRequest();
     const res = await Widget.tmdb.get(endpoint, {
       params: queryParams
     });
@@ -2684,6 +2711,7 @@ async function tmdbMediaRanking(params = {}) {
     return filteredResults;
     
   } catch (error) {
+    performanceMonitor.logError();
     console.error("Error fetching TMDB media ranking:", error);
     return [];
   }
@@ -3418,7 +3446,7 @@ const BASE_DATA_URL = `https://raw.githubusercontent.com/${GITHUB_OWNER}/${GITHU
 const IMG_BASE_POSTER = 'https://image.tmdb.org/t/p/w500';
 const IMG_BASE_BACKDROP = 'https://image.tmdb.org/t/p/w780'; 
 const ITEMS_PER_PAGE = 30; 
-const DEBUG_LOG = true;
+const DEBUG_LOG = false; // 生产环境关闭调试日志
 
 // --- 缓存 ---
 let cachedData = {}; // 用于缓存单个分页文件的请求结果
@@ -3854,6 +3882,18 @@ console.log("[系统] 影视榜单脚本加载完成，所有模块已就绪");
 console.log("[系统] 标题海报功能已就绪，可使用 'TMDB 标题海报热门' 模块");
 console.log("[系统] 简化数据获取机制已激活，确保稳定运行");
 
+// 定期清理缓存和监控性能
+setInterval(() => {
+  // 清理过期缓存
+  cleanupExpiredCache();
+  
+  // 每5分钟输出一次性能统计
+  if (performanceMonitor.requestCount > 0) {
+    const stats = performanceMonitor.getStats();
+    console.log(`[性能监控] 运行时间: ${stats.uptime}秒, 请求数: ${stats.requestCount}, 错误数: ${stats.errorCount}, 成功率: ${stats.successRate}%`);
+  }
+}, 5 * 60 * 1000); // 5分钟
+
 // 快速数据测试函数（可在控制台调用）
 async function quickDataTest() {
     try {
@@ -3890,49 +3930,20 @@ if (typeof global !== 'undefined') {
     global.fetchSimpleData = fetchSimpleData;
     global.fetchRealtimeData = fetchRealtimeData;
     global.createSimpleWidgetItem = createSimpleWidgetItem;
+    global.performanceMonitor = performanceMonitor; // 导出性能监控器
+}
+
+// 全局错误处理
+if (typeof global !== 'undefined') {
+    global.handleError = (error, context = 'unknown') => {
+        performanceMonitor.logError();
+        console.error(`[错误处理] ${context}:`, error);
+        return [];
+    };
 }
 
 
 
-// 获取TVB剧集（豆瓣）
-async function tvbDoubanTVShows(params = {}) {
-  const page = params.page || 1;
-  const page_limit = params.page_limit || 20;
-  const page_start = (page - 1) * page_limit;
-  const url = `https://movie.douban.com/j/search_subjects?type=tv&tag=TVB&sort=recommend&page_limit=${page_limit}&page_start=${page_start}`;
-  try {
-    const res = await Widget.http.get(url, {
-      headers: {
-        'Referer': 'https://movie.douban.com/tv/',
-        'User-Agent': 'Mozilla/5.0'
-      }
-    });
-    if (res.data && res.data.subjects) {
-      return res.data.subjects.map(item => ({
-        id: item.id,
-        title: item.title,
-        cover: item.cover,
-        url: item.url,
-        rate: item.rate,
-        is_new: item.is_new
-      }));
-    }
-    return [];
-  } catch (error) {
-    console.error('Error fetching TVB shows from Douban:', error);
-    return [];
-  }
-}
-global.tvbDoubanTVShows = tvbDoubanTVShows;
 
-// 获取TV Tokyo平台剧集
-async function tvTokyoShows(params = {}) {
-  return await tmdbDiscoverByNetwork({
-    ...params,
-    with_networks: "84"
-  });
-}
-
-global.tvTokyoShows = tvTokyoShows;
 
 
