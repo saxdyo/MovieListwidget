@@ -1261,6 +1261,35 @@ async function loadTmdbTitlePosterTrending(params = {}) {
     }
 }
 
+// 横版标题海报加载器
+async function loadTitlePosterWithBackdrops(items, maxItems = 20) {
+    const results = [];
+    
+    // 尝试获取缓存的横版标题海报
+    const cachedBackdrops = [];
+    for (const item of items.slice(0, maxItems)) {
+        const cachedBackdrop = getCachedBackdrop(`backdrop_${item.id}`);
+        if (cachedBackdrop && cachedBackdrop.titlePoster) {
+            cachedBackdrops.push(cachedBackdrop);
+        }
+    }
+    
+    if (cachedBackdrops.length > 0) {
+        console.log(`[横版标题海报] 使用缓存的横版标题海报: ${cachedBackdrops.length}项`);
+        return cachedBackdrops.map(backdrop => ({
+            id: backdrop.id,
+            title: backdrop.title,
+            posterPath: backdrop.backdropUrl,
+            titlePoster: backdrop.titlePoster,
+            metadata: backdrop.metadata
+        }));
+    } else {
+        // 如果没有缓存的横版标题海报，使用普通数据
+        console.log(`[横版标题海报] 没有缓存的横版标题海报，使用普通数据`);
+        return items.map(item => createEnhancedWidgetItem(item));
+    }
+}
+
 // 简化的组件项目创建器
 function createSimpleWidgetItem(item) {
     return {
