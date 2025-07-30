@@ -606,7 +606,7 @@ WidgetMetadata = {
         },
         { name: "page", title: "页码", type: "page", value: "1" }
       ]
-    
+    }
   ]
 };
 
