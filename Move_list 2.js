@@ -3946,4 +3946,14 @@ async function tvbDoubanTVShows(params = {}) {
 }
 global.tvbDoubanTVShows = tvbDoubanTVShows;
 
+// 获取TV Tokyo平台剧集
+async function tvTokyoShows(params = {}) {
+  return await tmdbDiscoverByNetwork({
+    ...params,
+    with_networks: "84"
+  });
+}
+
+global.tvTokyoShows = tvTokyoShows;
+
 
