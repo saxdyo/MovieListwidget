@@ -788,7 +788,7 @@ async function loadTmdbTrendingData() {
 // 简化的数据包获取
 async function fetchSimpleData() {
     try {
-        const response = await Widget.http.get("https://raw.githubusercontent.com/quantumultxx/ForwardWidgets/refs/heads/main/data/TMDB_Trending.json", {
+        const response = await Widget.http.get("https://gist.githubusercontent.com/saxdyo/1b652522aa446bb21f888c66a76bf6cb/raw/fd776ad18fcef7e87828d3c25a8751f34c9711a4/TMDB_Trending.json", {
             timeout: 10000,
             headers: {
                 'Cache-Control': 'no-cache',
@@ -796,8 +796,8 @@ async function fetchSimpleData() {
             }
         });
         
-        if (response.data && response.data.today_global && response.data.today_global.length > 0) {
-            console.log(`[数据包] 获取成功，今日热门: ${response.data.today_global.length}项`);
+        if (response.data && response.data.data && (response.data.data.movies.length > 0 || response.data.data.tv_shows.length > 0)) {
+            console.log(`[数据包] 获取成功，电影: ${response.data.data.movies.length}部，电视剧: ${response.data.data.tv_shows.length}部`);
             return response.data;
         }
         
@@ -1091,7 +1091,7 @@ async function fetchFromPrimarySource() {
     try {
         console.log("[主要数据源] 尝试获取TMDB热门数据包...");
         
-        const response = await Widget.http.get("https://raw.githubusercontent.com/quantumultxx/ForwardWidgets/refs/heads/main/data/TMDB_Trending.json", {
+        const response = await Widget.http.get("https://gist.githubusercontent.com/saxdyo/1b652522aa446bb21f888c66a76bf6cb/raw/fd776ad18fcef7e87828d3c25a8751f34c9711a4/TMDB_Trending.json", {
             timeout: 8000,
             headers: {
                 'Cache-Control': 'no-cache',
@@ -1109,10 +1109,10 @@ async function fetchFromPrimarySource() {
         console.log(`[主要数据源] 响应数据类型: ${typeof response.data}`);
         console.log(`[主要数据源] 响应数据键: ${Object.keys(response.data).join(', ')}`);
         
-        if (response.data.today_global && Array.isArray(response.data.today_global)) {
-            console.log(`[主要数据源] 今日热门数据项数量: ${response.data.today_global.length}`);
+        if (response.data.data && (response.data.data.movies.length > 0 || response.data.data.tv_shows.length > 0)) {
+            console.log(`[主要数据源] 电影数据项数量: ${response.data.data.movies.length}，电视剧数据项数量: ${response.data.data.tv_shows.length}`);
             
-            if (response.data.today_global.length > 0) {
+            if (response.data.data.movies.length > 0 || response.data.data.tv_shows.length > 0) {
                 console.log("[主要数据源] 成功获取TMDB热门数据包");
                 
                 // 验证数据完整性和时效性
@@ -1129,10 +1129,10 @@ async function fetchFromPrimarySource() {
                     console.log("[主要数据源] 数据验证失败或数据过期");
                 }
             } else {
-                console.log("[主要数据源] 今日热门数据为空");
+                console.log("[主要数据源] 数据为空");
             }
         } else {
-            console.log("[主要数据源] 数据包格式不正确 - 缺少today_global字段或不是数组");
+            console.log("[主要数据源] 数据包格式不正确 - 缺少data字段或数据为空");
         }
     } catch (error) {
         console.log(`[主要数据源] 获取失败: ${error.message}`);
@@ -1152,7 +1152,7 @@ async function fetchFromBackupSources() {
         },
         {
             name: "备用数据源2", 
-            url: "https://api.github.com/repos/quantumultxx/ForwardWidgets/contents/data/TMDB_Trending.json",
+            url: "https://api.github.com/gists/1b652522aa446bb21f888c66a76bf6cb",
             timeout: 6000,
             isGithubApi: true
         }

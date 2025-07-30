@@ -1,4 +1,4 @@
-# 🎯 TMDB 数据包使用指南
+# 🎯 TMDB 数据包设置指南
 
 ## ✅ 您的专属数据包已就绪！
 
@@ -29,9 +29,9 @@ async function loadTmdbTrendingData() {
 
 ### 1. 设置 GitHub Secrets
 在您的 GitHub 仓库中设置以下 Secrets：
-- `TMDB_API_KEY`: `f3ae69ddca232b56265600eb919d46ab`
-- `GITHUB_TOKEN`: `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`
-- `GIST_ID`: `1b652522aa446bb21f888c66a76bf6cb`
+- `TMDB_API_KEY`: `[您的 TMDB API Key]`
+- `GITHUB_TOKEN`: `[您的 GitHub Token]`
+- `GIST_ID`: `[您的 Gist ID]`
 
 ### 2. 自动更新频率
 - ⏰ **每6小时自动更新一次**
