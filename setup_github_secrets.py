@@ -84,7 +84,7 @@ def setup_github_secrets(config):
         print()
     
     print("✅ 设置完成后，GitHub Actions 将自动运行")
-    print("⏰ 每6小时自动更新一次数据")
+    print("⏰ 每12小时自动更新一次数据")
     
     return True
 
