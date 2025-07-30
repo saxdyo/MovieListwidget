@@ -63,17 +63,18 @@ WidgetMetadata = {
       functionName: "loadTmdbTrendingCombined",
       cacheDuration: 60,
       params: [
-        { 
-          name: "content_type", 
-          title: "📺内容类型", 
-          type: "enumeration", 
+        {
+          name: "sort_by",
+          title: "📺内容类型",
+          type: "enumeration",
+          description: "选择内容类型",
+          value: "today",
           enumOptions: [
             { title: "今日热门", value: "today" },
             { title: "本周热门", value: "week" },
             { title: "热门电影", value: "popular" },
             { title: "高分内容", value: "top_rated" }
-          ], 
-          value: "today" 
+          ]
         },
         { 
           name: "media_type", 
@@ -86,10 +87,10 @@ WidgetMetadata = {
           ], 
           value: "all" 
         },
-        {
-          name: "sort_by",
-          title: "📊排序方式",
-          type: "enumeration",
+        { 
+          name: "content_type", 
+          title: "📊排序方式", 
+          type: "enumeration", 
           description: "选择排序方式",
           value: "popularity.desc",
           enumOptions: [
@@ -2322,17 +2323,18 @@ async function tmdbDiscoverByCompany(params = {}) {
 // TMDB热门内容合并模块 - 整合今日热门、本周热门、热门电影、高分内容
 async function loadTmdbTrendingCombined(params = {}) {
   const { 
-    content_type = "today", 
+    sort_by = "today",  // 现在sort_by包含内容类型
     media_type = "all", 
     language = "zh-CN", 
     page = 1, 
-    sort_by = "popularity.desc" 
+    content_type = "popularity.desc"  // 现在content_type包含排序方式
   } = params;
   
   try {
     let results = [];
     
-    switch (content_type) {
+    // 使用sort_by作为内容类型选择器
+    switch (sort_by) {
       case "today":
         // 今日热门
         const todayData = await loadTmdbTrendingData();
@@ -2377,7 +2379,7 @@ async function loadTmdbTrendingCombined(params = {}) {
         
       case "popular":
         // 热门电影
-        if ((parseInt(page) || 1) === 1 && sort_by.startsWith("popularity")) {
+        if ((parseInt(page) || 1) === 1 && content_type.startsWith("popularity")) {
           const popularData = await loadTmdbTrendingData();
           if (popularData.popular_movies && popularData.popular_movies.length > 0) {
             results = popularData.popular_movies
@@ -2388,7 +2390,7 @@ async function loadTmdbTrendingCombined(params = {}) {
         
         if (results.length === 0) {
           // 标准API调用
-          if (sort_by.startsWith("popularity")) {
+          if (content_type.startsWith("popularity")) {
             const res = await Widget.tmdb.get("/movie/popular", { 
               params: { 
                 language: 'zh-CN',
@@ -2405,7 +2407,7 @@ async function loadTmdbTrendingCombined(params = {}) {
                 language: 'zh-CN',
                 region: 'CN', 
                 page, 
-                sort_by,
+                sort_by: content_type,
                 api_key: API_KEY 
               }
             });
@@ -2417,7 +2419,7 @@ async function loadTmdbTrendingCombined(params = {}) {
         
       case "top_rated":
         // 高分内容
-        if (sort_by.startsWith("vote_average")) {
+        if (content_type.startsWith("vote_average")) {
           const api = media_type === "movie" ? "/movie/top_rated" : "/tv/top_rated";
           const res = await Widget.tmdb.get(api, { 
             params: { 
@@ -2438,7 +2440,7 @@ async function loadTmdbTrendingCombined(params = {}) {
               language: 'zh-CN',
               region: 'CN', 
               page, 
-              sort_by,
+              sort_by: content_type,
               api_key: API_KEY 
             }
           });
@@ -2450,7 +2452,7 @@ async function loadTmdbTrendingCombined(params = {}) {
         break;
         
       default:
-        console.error("Unknown content type:", content_type);
+        console.error("Unknown content type:", sort_by);
         return [];
     }
     
