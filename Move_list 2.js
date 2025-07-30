@@ -86,9 +86,7 @@ WidgetMetadata = {
             { title: "上映日期↓", value: "release_date.desc" },
             { title: "上映日期↑", value: "release_date.asc" },
             { title: "收入↓", value: "revenue.desc" },
-            { title: "收入↑", value: "revenue.asc" },
-            { title: "投票数↓", value: "vote_count.desc" },
-            { title: "投票数↑", value: "vote_count.asc" }
+            { title: "收入↑", value: "revenue.asc" }
           ]
         },
         { name: "language", title: "语言", type: "language", value: "zh-CN" },
@@ -144,9 +142,7 @@ WidgetMetadata = {
             { title: "评分↓", value: "vote_average.desc" },
             { title: "评分↑", value: "vote_average.asc" },
             { title: "首播日期↓", value: "first_air_date.desc" },
-            { title: "首播日期↑", value: "first_air_date.asc" },
-            { title: "投票数↓", value: "vote_count.desc" },
-            { title: "投票数↑", value: "vote_count.asc" }
+            { title: "首播日期↑", value: "first_air_date.asc" }
           ]
         },
         { name: "page", title: "页码", type: "page" },
@@ -237,11 +233,7 @@ WidgetMetadata = {
             { title: "上映日期↓", value: "release_date.desc" },
             { title: "上映日期↑", value: "release_date.asc" },
             { title: "首播日期↓", value: "first_air_date.desc" },
-            { title: "首播日期↑", value: "first_air_date.asc" },
-            { title: "投票数↓", value: "vote_count.desc" },
-            { title: "投票数↑", value: "vote_count.asc" },
-            { title: "收入↓", value: "revenue.desc" },
-            { title: "收入↑", value: "revenue.asc" }
+            { title: "首播日期↑", value: "first_air_date.asc" }
           ]
         },
         { name: "page", title: "页码", type: "page" },
@@ -305,9 +297,7 @@ WidgetMetadata = {
             { title: "评分↓", value: "vote_average.desc" },
             { title: "评分↑", value: "vote_average.asc" },
             { title: "首播日期↓", value: "first_air_date.desc" },
-            { title: "首播日期↑", value: "first_air_date.asc" },
-            { title: "投票数↓", value: "vote_count.desc" },
-            { title: "投票数↑", value: "vote_count.asc" }
+            { title: "首播日期↑", value: "first_air_date.asc" }
           ]
         },
         {
@@ -397,8 +387,7 @@ WidgetMetadata = {
             { title: "评分↓", value: "vote_average.desc" },
             { title: "评分↑", value: "vote_average.asc" },
             { title: "热门度↓", value: "popularity.desc" },
-            { title: "热门度↑", value: "popularity.asc" },
-            { title: "投票数↓", value: "vote_count.desc" }
+            { title: "热门度↑", value: "popularity.asc" }
           ]
         },
         {
@@ -449,8 +438,7 @@ WidgetMetadata = {
           enumOptions: [
             { title: "热门度↓", value: "popularity.desc" },
             { title: "评分↓", value: "vote_average.desc" },
-            { title: "播出日期↓", value: "first_air_date.desc" },
-            { title: "投票数↓", value: "vote_count.desc" }
+            { title: "播出日期↓", value: "first_air_date.desc" }
           ]
         },
         {
@@ -575,9 +563,7 @@ WidgetMetadata = {
             { title: "评分↓", value: "vote_average.desc" },
             { title: "评分↑", value: "vote_average.asc" },
             { title: "上映日期↓", value: "release_date.desc" },
-            { title: "上映日期↑", value: "release_date.asc" },
-            { title: "投票数↓", value: "vote_count.desc" },
-            { title: "投票数↑", value: "vote_count.asc" }
+            { title: "上映日期↑", value: "release_date.asc" }
           ]
         },
         {
@@ -629,10 +615,7 @@ WidgetMetadata = {
             { title: "评分↓", value: "r_desc" },
             { title: "评分↑", value: "r_asc" },
             { title: "播出时间↓", value: "date_desc" },
-            { title: "播出时间↑", value: "date_asc" },
-            { title: "投票数↓", value: "vote_desc" },
-            { title: "投票数↑", value: "vote_asc" },
-            { title: "默认排序", value: "d_desc" }
+            { title: "播出时间↑", value: "date_asc" }
           ]
         },
         {
@@ -656,6 +639,20 @@ WidgetMetadata = {
 
    ]
  };
+
+// 删除所有模块排序选项中的投票数相关选项
+WidgetMetadata.modules.forEach(module => {
+  if (Array.isArray(module.params)) {
+    module.params.forEach(param => {
+      if (param.name === 'sort_by' && Array.isArray(param.enumOptions)) {
+        param.enumOptions = param.enumOptions.filter(opt =>
+          !(opt.title && opt.title.includes('投票数')) &&
+          !(opt.value && opt.value.includes('vote_count'))
+        );
+      }
+    });
+  }
+});
 
 const API_KEY = 'f3ae69ddca232b56265600eb919d46ab'; // TMDB API Key
 
@@ -761,6 +758,63 @@ function formatTmdbItem(item, genreMap) {
     episode: 0,
     childItems: []
   };
+}
+
+// --- 优化后的TMDB主加载函数 ---
+const tmdbCache = { data: null, time: 0 };
+const TMDB_CACHE_DURATION = 30 * 60 * 1000; // 30分钟
+
+async function loadTmdbTrendingData() {
+    // 1. 优先用缓存
+    if (tmdbCache.data && Date.now() - tmdbCache.time < TMDB_CACHE_DURATION) {
+        return tmdbCache.data;
+    }
+    // 2. 主数据包
+    let data = await fetchTmdbDataFromUrl("https://raw.githubusercontent.com/quantumultxx/ForwardWidgets/main/data/TMDB_Trending.json");
+    if (!isValidTmdbData(data)) {
+        // 3. 备用数据包
+        data = await fetchTmdbDataFromUrl("https://raw.githubusercontent.com/saxdyo/MovieListwidget/main/data/TMDB_Trending.json");
+    }
+    if (!isValidTmdbData(data)) {
+        // 4. 实时API
+        data = await fetchTmdbDataFromApi();
+    }
+    // 5. 健康检查
+    if (isValidTmdbData(data)) {
+        tmdbCache.data = data;
+        tmdbCache.time = Date.now();
+        return data;
+    } else {
+        throw new Error("TMDB数据加载失败");
+    }
+}
+
+async function fetchTmdbDataFromUrl(url) {
+    try {
+        const res = await Widget.http.get(url, { timeout: 8000 });
+        return res.data;
+    } catch { return null; }
+}
+
+function isValidTmdbData(data) {
+    return data && Array.isArray(data.today_global) && data.today_global.length > 0;
+}
+
+async function fetchTmdbDataFromApi() {
+    try {
+        const [todayRes, weekRes, popularRes] = await Promise.allSettled([
+            Widget.tmdb.get("/trending/all/day", { params: { language: 'zh-CN', region: 'CN', api_key: API_KEY } }),
+            Widget.tmdb.get("/trending/all/week", { params: { language: 'zh-CN', region: 'CN', api_key: API_KEY } }),
+            Widget.tmdb.get("/movie/popular", { params: { language: 'zh-CN', region: 'CN', api_key: API_KEY } })
+        ]);
+        return {
+            today_global: todayRes.status === 'fulfilled' && todayRes.value.results ? todayRes.value.results : [],
+            week_global_all: weekRes.status === 'fulfilled' && weekRes.value.results ? weekRes.value.results : [],
+            popular_movies: popularRes.status === 'fulfilled' && popularRes.value.results ? popularRes.value.results : []
+        };
+    } catch {
+        return { today_global: [], week_global_all: [], popular_movies: [] };
+    }
 }
 
 // 简化的TMDB数据获取函数 - 确保稳定运行
