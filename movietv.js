@@ -2502,17 +2502,15 @@ async function loadTmdbTrendingCombined(params = {}) {
         break;
         
       case "popular":
-        // 热门电影 - 增强版
+        // 热门电影 - 增强版，优先使用横版标题海报
         console.log(`[TMDB热门内容] 加载热门电影数据...`);
         
         // 尝试多个数据源
         if ((parseInt(page) || 1) === 1 && content_type.startsWith("popularity")) {
           const popularData = await loadTmdbTrendingData();
           if (popularData.popular_movies && popularData.popular_movies.length > 0) {
-            results = popularData.popular_movies
-              .slice(0, 30)  // 增加数量
-              .map(item => createEnhancedWidgetItem(item));
-            console.log(`[TMDB热门内容] 从缓存获取热门电影: ${results.length}项`);
+            results = await loadEnhancedTitlePosterWithBackdrops(popularData.popular_movies, max_items, "popular");
+            console.log(`[TMDB热门内容] 热门电影加载完成: ${results.length}项`);
           }
         }
         
@@ -2563,33 +2561,45 @@ async function loadTmdbTrendingCombined(params = {}) {
         break;
         
       case "top_rated":
-        // 高分内容 - 增强版
+        // 高分内容 - 增强版，优先使用横版标题海报
         console.log(`[TMDB热门内容] 加载高分内容数据...`);
         
         if (content_type.startsWith("vote_average")) {
-          // 获取电影和剧集的高分内容
-          const endpoints = [
-            { api: "/movie/top_rated", mediaType: "movie" },
-            { api: "/tv/top_rated", mediaType: "tv" }
-          ];
-          
-          for (const endpoint of endpoints) {
-            const res = await Widget.tmdb.get(endpoint.api, { 
-              params: { 
-                language: 'zh-CN', 
-                region: 'CN',
-                page: 1, 
-                api_key: API_KEY 
-              }
-            });
-            const genreMap = await fetchTmdbGenres();
-            const endpointResults = res.results
-              .map(item => formatTmdbItem(item, genreMap[endpoint.mediaType]))
-              .filter(item => item.posterPath);
-            results.push(...endpointResults);
+          // 尝试从缓存获取高分内容
+          const popularData = await loadTmdbTrendingData();
+          if (popularData.popular_movies && popularData.popular_movies.length > 0) {
+            results = await loadEnhancedTitlePosterWithBackdrops(popularData.popular_movies, max_items, "top_rated");
+            console.log(`[TMDB热门内容] 高分内容加载完成: ${results.length}项`);
           }
           
-          console.log(`[TMDB热门内容] 获取高分内容: ${results.length}项`);
+          // 如果缓存数据不足，补充API数据
+          if (results.length < max_items) {
+            console.log(`[TMDB热门内容] 缓存数据不足，补充API数据...`);
+            
+            // 获取电影和剧集的高分内容
+            const endpoints = [
+              { api: "/movie/top_rated", mediaType: "movie" },
+              { api: "/tv/top_rated", mediaType: "tv" }
+            ];
+            
+            for (const endpoint of endpoints) {
+              const res = await Widget.tmdb.get(endpoint.api, { 
+                params: { 
+                  language: 'zh-CN', 
+                  region: 'CN',
+                  page: 1, 
+                  api_key: API_KEY 
+                }
+              });
+              const genreMap = await fetchTmdbGenres();
+              const endpointResults = res.results
+                .map(item => formatTmdbItem(item, genreMap[endpoint.mediaType]))
+                .filter(item => item.posterPath);
+              results.push(...endpointResults);
+            }
+            
+            console.log(`[TMDB热门内容] 补充API数据: ${results.length}项`);
+          }
         } else {
           // 使用discover API
           const endpoints = [
@@ -2755,12 +2765,10 @@ async function loadTmdbTitlePosterTrending(params = {}) {
             break;
             
           case "popular":
-            // 热门电影 - 增强版
+            // 热门电影 - 增强版，优先使用横版标题海报
             if (trendingData && trendingData.popular_movies && trendingData.popular_movies.length > 0) {
-              results = trendingData.popular_movies
-                .slice(0, 30)  // 增加数量
-                .map(item => createEnhancedWidgetItem(item));
-              console.log(`[标题海报] 从缓存获取热门电影: ${results.length}项`);
+              results = await loadEnhancedTitlePosterWithBackdrops(trendingData.popular_movies, max_items, "popular");
+              console.log(`[标题海报] 热门电影加载完成: ${results.length}项`);
             }
             
             // 如果缓存数据不足，补充API数据
@@ -2794,32 +2802,43 @@ async function loadTmdbTitlePosterTrending(params = {}) {
             break;
             
           case "top_rated":
-            // 高分内容 - 增强版
+            // 高分内容 - 增强版，优先使用横版标题海报
             console.log(`[标题海报] 加载高分内容数据...`);
             
-            // 获取电影和剧集的高分内容
-            const endpoints = [
-              { api: "/movie/top_rated", mediaType: "movie" },
-              { api: "/tv/top_rated", mediaType: "tv" }
-            ];
-            
-            for (const endpoint of endpoints) {
-              const res = await Widget.tmdb.get(endpoint.api, { 
-                params: { 
-                  language: 'zh-CN', 
-                  region: 'CN',
-                  page: 1, 
-                  api_key: API_KEY 
-                }
-              });
-              const genreMap = await fetchTmdbGenres();
-              const endpointResults = res.results
-                .map(item => formatTmdbItem(item, genreMap[endpoint.mediaType]))
-                .filter(item => item.posterPath);
-              results.push(...endpointResults);
+            // 尝试从缓存获取高分内容
+            if (trendingData && trendingData.popular_movies && trendingData.popular_movies.length > 0) {
+              results = await loadEnhancedTitlePosterWithBackdrops(trendingData.popular_movies, max_items, "top_rated");
+              console.log(`[标题海报] 高分内容加载完成: ${results.length}项`);
             }
             
-            console.log(`[标题海报] 获取高分内容: ${results.length}项`);
+            // 如果缓存数据不足，补充API数据
+            if (results.length < max_items) {
+              console.log(`[标题海报] 缓存数据不足，补充API数据...`);
+              
+              // 获取电影和剧集的高分内容
+              const endpoints = [
+                { api: "/movie/top_rated", mediaType: "movie" },
+                { api: "/tv/top_rated", mediaType: "tv" }
+              ];
+              
+              for (const endpoint of endpoints) {
+                const res = await Widget.tmdb.get(endpoint.api, { 
+                  params: { 
+                    language: 'zh-CN', 
+                    region: 'CN',
+                    page: 1, 
+                    api_key: API_KEY 
+                  }
+                });
+                const genreMap = await fetchTmdbGenres();
+                const endpointResults = res.results
+                  .map(item => formatTmdbItem(item, genreMap[endpoint.mediaType]))
+                  .filter(item => item.posterPath);
+                results.push(...endpointResults);
+              }
+              
+              console.log(`[标题海报] 补充API数据: ${results.length}项`);
+            }
             break;
             
           default:
