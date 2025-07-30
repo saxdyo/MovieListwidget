@@ -929,30 +929,60 @@ async function fetchRealtimeData() {
             popular_movies: []
         };
         
-        // 处理今日热门 - 增加数量到50项
+                // 处理今日热门 - 增加数量到50项，优先剧集
         if (todayRes.status === 'fulfilled' && todayRes.value.results) {
-            result.today_global = todayRes.value.results.slice(0, 50).map(item => ({
-                id: item.id,
-                title: item.title || item.name,
-                poster_url: item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : '',
-                backdrop_path: item.backdrop_path,
-                vote_average: item.vote_average,
-                release_date: item.release_date || item.first_air_date,
-                media_type: item.media_type
-            }));
+          // 分离电影和剧集
+          const movies = [];
+          const tvShows = [];
+          
+          todayRes.value.results.forEach(item => {
+            const mappedItem = {
+              id: item.id,
+              title: item.title || item.name,
+              poster_url: item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : '',
+              backdrop_path: item.backdrop_path,
+              vote_average: item.vote_average,
+              release_date: item.release_date || item.first_air_date,
+              media_type: item.media_type
+            };
+            
+            if (item.media_type === 'tv') {
+              tvShows.push(mappedItem);
+            } else {
+              movies.push(mappedItem);
+            }
+          });
+          
+          // 优先剧集，然后补充电影
+          result.today_global = [...tvShows.slice(0, 30), ...movies.slice(0, 20)];
         }
         
-        // 处理本周热门 - 增加数量到50项
+                // 处理本周热门 - 增加数量到50项，优先剧集
         if (weekRes.status === 'fulfilled' && weekRes.value.results) {
-            result.week_global_all = weekRes.value.results.slice(0, 50).map(item => ({
-                id: item.id,
-                title: item.title || item.name,
-                poster_url: item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : '',
-                backdrop_path: item.backdrop_path,
-                vote_average: item.vote_average,
-                release_date: item.release_date || item.first_air_date,
-                media_type: item.media_type
-            }));
+          // 分离电影和剧集
+          const movies = [];
+          const tvShows = [];
+          
+          weekRes.value.results.forEach(item => {
+            const mappedItem = {
+              id: item.id,
+              title: item.title || item.name,
+              poster_url: item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : '',
+              backdrop_path: item.backdrop_path,
+              vote_average: item.vote_average,
+              release_date: item.release_date || item.first_air_date,
+              media_type: item.media_type
+            };
+            
+            if (item.media_type === 'tv') {
+              tvShows.push(mappedItem);
+            } else {
+              movies.push(mappedItem);
+            }
+          });
+          
+          // 优先剧集，然后补充电影
+          result.week_global_all = [...tvShows.slice(0, 30), ...movies.slice(0, 20)];
         }
         
         // 处理热门电影 - 合并电影和剧集数据
@@ -2512,12 +2542,19 @@ async function loadTmdbTrendingCombined(params = {}) {
         if (results.length < max_items) {
           console.log(`[TMDB热门内容] 缓存数据不足，补充API数据...`);
           
+          // 根据媒体类型选择API端点
+          let apiEndpoint = "/trending/all/day";
+          if (media_type === "tv") {
+            apiEndpoint = "/trending/tv/day";  // 专门获取剧集
+            console.log(`[TMDB热门内容] 选择剧集专用API: ${apiEndpoint}`);
+          }
+          
           // 获取多页数据以增加数量
           const pages = [1, 2, 3];  // 获取前3页
           const allApiResults = [];
           
           for (const pageNum of pages) {
-            const res = await Widget.tmdb.get("/trending/all/day", { 
+            const res = await Widget.tmdb.get(apiEndpoint, { 
               params: { 
                 language: 'zh-CN',
                 region: 'CN',
@@ -2554,12 +2591,19 @@ async function loadTmdbTrendingCombined(params = {}) {
         if (results.length < max_items) {
           console.log(`[TMDB热门内容] 缓存数据不足，补充API数据...`);
           
+          // 根据媒体类型选择API端点
+          let apiEndpoint = "/trending/all/week";
+          if (media_type === "tv") {
+            apiEndpoint = "/trending/tv/week";  // 专门获取剧集
+            console.log(`[TMDB热门内容] 选择剧集专用API: ${apiEndpoint}`);
+          }
+          
           // 获取多页数据以增加数量
           const pages = [1, 2, 3];  // 获取前3页
           const allApiResults = [];
           
           for (const pageNum of pages) {
-            const res = await Widget.tmdb.get("/trending/all/week", { 
+            const res = await Widget.tmdb.get(apiEndpoint, { 
               params: { 
                 language: 'zh-CN',
                 region: 'CN',
@@ -4737,6 +4781,57 @@ async function smartDelay(url) {
         await new Promise(resolve => setTimeout(resolve, delay));
     }
 }
+
+// 12小时定时获取横版封面数据包
+setInterval(async () => {
+  try {
+    console.log("[定时任务] 开始12小时定时获取横版封面数据包...");
+
+    // 获取最新数据包
+    const trendingData = await loadTmdbTrendingData();
+
+    if (trendingData) {
+      console.log(`[定时任务] 成功获取数据包 - 今日热门: ${trendingData.today_global ? trendingData.today_global.length : 0}项`);
+      console.log(`[定时任务] 成功获取数据包 - 本周热门: ${trendingData.week_global_all ? trendingData.week_global_all.length : 0}项`);
+      console.log(`[定时任务] 成功获取数据包 - 热门电影: ${trendingData.popular_movies ? trendingData.popular_movies.length : 0}项`);
+
+      // 缓存数据包
+      cacheTrendingData(trendingData);
+      console.log("[定时任务] 数据包已缓存");
+    } else {
+      console.log("[定时任务] 数据包获取失败");
+    }
+
+    // 预加载横版封面
+    console.log("[定时任务] 开始预加载横版封面...");
+    if (trendingData && trendingData.today_global) {
+      const items = trendingData.today_global.slice(0, 20); // 预加载前20项
+      await batchProcessBackdrops(items, {
+        forceRegenerate: false,
+        maxConcurrent: 3
+      });
+      console.log(`[定时任务] 横版封面预加载完成: ${items.length}项`);
+    }
+
+    console.log("[定时任务] 12小时定时任务完成");
+  } catch (error) {
+    console.error("[定时任务] 12小时定时任务失败:", error);
+  }
+}, 12 * 60 * 60 * 1000); // 12小时
+
+// 立即执行一次数据包获取（启动时）
+setTimeout(async () => {
+  try {
+    console.log("[启动任务] 立即获取横版封面数据包...");
+    const trendingData = await loadTmdbTrendingData();
+    if (trendingData) {
+      cacheTrendingData(trendingData);
+      console.log("[启动任务] 数据包获取完成");
+    }
+  } catch (error) {
+    console.error("[启动任务] 数据包获取失败:", error);
+  }
+}, 5000); // 5秒后执行
 
 
 
