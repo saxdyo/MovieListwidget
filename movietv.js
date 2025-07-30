@@ -4179,32 +4179,65 @@ async function batchProcessBackdrops(items, options = {}) {
     const {
         enableTitleOverlay = true,
         preferredSize = 'auto',
-        includeMetadata = true
+        includeMetadata = true,
+        forceRegenerate = false,
+        maxConcurrent = 3
     } = options;
     
-    return items.map(item => {
-        const result = {
-            id: item.id,
-            backdropUrl: createSmartBackdropUrl(item, preferredSize)
-        };
+    console.log(`[横版海报] 开始批量处理 ${items.length} 项横版海报...`);
+    
+    const results = [];
+    
+    // 分批处理，避免并发过多
+    const batchSize = Math.ceil(items.length / maxConcurrent);
+    for (let i = 0; i < items.length; i += batchSize) {
+        const batch = items.slice(i, i + batchSize);
+        const batchPromises = batch.map(async (item) => {
+            try {
+                // 生成带标题的横版海报
+                const titlePoster = await createTitlePosterWithOverlay(item, {
+                    title: item.title || item.name,
+                    subtitle: item.genreTitle || item.genre_title || "",
+                    rating: item.vote_average || item.rating || 0,
+                    year: item.release_date ? item.release_date.substring(0, 4) : (item.first_air_date ? item.first_air_date.substring(0, 4) : ""),
+                    showRating: true,
+                    showYear: true,
+                    overlayOpacity: 0.7,
+                    textColor: "#FFFFFF",
+                    backgroundColor: "rgba(0, 0, 0, 0.6)"
+                });
+                
+                const result = {
+                    id: item.id,
+                    title: item.title || item.name,
+                    backdropUrl: createSmartBackdropUrl(item, preferredSize),
+                    titlePoster: titlePoster
+                };
+                
+                if (includeMetadata) {
+                    result.metadata = {
+                        title: item.title || item.name,
+                        year: item.release_date ? item.release_date.substring(0, 4) : (item.first_air_date ? item.first_air_date.substring(0, 4) : ""),
+                        rating: item.vote_average || item.rating || 0,
+                        mediaType: item.media_type || item.type
+                    };
+                }
+                
+                console.log(`[横版海报] 完成处理: ${result.title}`);
+                return result;
+                
+            } catch (error) {
+                console.error(`[横版海报] 处理项目失败: ${item.title || item.name}`, error);
+                return null;
+            }
+        });
         
-        if (enableTitleOverlay) {
-            const overlay = generateBackdropWithTitleOverlay(item, options);
-            result.titleOverlay = overlay.titleOverlay;
-            result.cssClasses = overlay.cssClasses;
-        }
-        
-        if (includeMetadata) {
-            result.metadata = {
-                title: item.title,
-                year: item.year,
-                rating: item.rating,
-                mediaType: item.type
-            };
-        }
-        
-        return result;
-    });
+        const batchResults = await Promise.all(batchPromises);
+        results.push(...batchResults.filter(result => result !== null));
+    }
+    
+    console.log(`[横版海报] 批量处理完成: ${results.length} 项成功`);
+    return results;
 }
 
 // 横版海报缓存管理器
@@ -4827,11 +4860,29 @@ setInterval(async () => {
     console.log("[定时任务] 开始预加载横版封面...");
     if (trendingData && trendingData.today_global) {
       const items = trendingData.today_global.slice(0, 20); // 预加载前20项
-      await batchProcessBackdrops(items, {
-        forceRegenerate: false,
-        maxConcurrent: 3
-      });
-      console.log(`[定时任务] 横版封面预加载完成: ${items.length}项`);
+      console.log(`[定时任务] 准备处理 ${items.length} 项横版封面...`);
+      
+      try {
+        const processedBackdrops = await batchProcessBackdrops(items, {
+          enableTitleOverlay: true,
+          preferredSize: 'w1280',
+          includeMetadata: true,
+          forceRegenerate: false,
+          maxConcurrent: 3
+        });
+        
+        // 缓存处理结果
+        processedBackdrops.forEach((backdrop, index) => {
+          if (backdrop && backdrop.id) {
+            cacheBackdrop(`backdrop_${backdrop.id}`, backdrop);
+            console.log(`[定时任务] 缓存横版封面 ${index + 1}: ${backdrop.title}`);
+          }
+        });
+        
+        console.log(`[定时任务] 横版封面预加载完成: ${processedBackdrops.length}项`);
+      } catch (error) {
+        console.error("[定时任务] 横版封面预加载失败:", error);
+      }
     }
 
     console.log("[定时任务] 12小时定时任务完成");
