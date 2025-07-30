@@ -1,10 +1,10 @@
 WidgetMetadata = {
   id: "forward.combined.media.lists",
-  title: "影视榜单",
-  description: "影视动画榜单",
+  title: "TMDB影视榜单",
+  description: "TMDB影视动画榜单",
   author: "saxdyo",
   site: "https://github.com/saxdyo/MovieListwidget",
-  version: "1.0.0",
+  version: "1.1.0",
   requiredVersion: "0.0.1",
   detailCacheDuration: 60,
   modules: [
@@ -63,17 +63,18 @@ WidgetMetadata = {
       functionName: "loadTmdbTrendingCombined",
       cacheDuration: 60,
       params: [
-        { 
-          name: "content_type", 
-          title: "📺内容类型", 
-          type: "enumeration", 
+        {
+          name: "sort_by",
+          title: "📺内容类型",
+          type: "enumeration",
+          description: "选择内容类型",
+          value: "today",
           enumOptions: [
             { title: "今日热门", value: "today" },
             { title: "本周热门", value: "week" },
             { title: "热门电影", value: "popular" },
             { title: "高分内容", value: "top_rated" }
-          ], 
-          value: "today" 
+          ]
         },
         { 
           name: "media_type", 
@@ -86,10 +87,10 @@ WidgetMetadata = {
           ], 
           value: "all" 
         },
-        {
-          name: "sort_by",
-          title: "📊排序方式",
-          type: "enumeration",
+        { 
+          name: "content_type", 
+          title: "📊排序方式", 
+          type: "enumeration", 
           description: "选择排序方式",
           value: "popularity.desc",
           enumOptions: [
@@ -261,17 +262,28 @@ WidgetMetadata = {
 
     // -------------TMDB剧集模块-------------
     {
-      title: "TMDB 热门剧集",
-      description: "热门电视剧集和迷你剧",
+      title: "TMDB 影视榜单",
+      description: "热门电影和电视剧集榜单",
       requiresWebView: false,
-      functionName: "tmdbPopularTVShows",
+      functionName: "tmdbMediaRanking",
       cacheDuration: 3600,
       params: [
+        {
+          name: "media_type",
+          title: "🎭媒体类型",
+          type: "enumeration",
+          description: "选择媒体类型",
+          value: "tv",
+          enumOptions: [
+            { title: "剧集", value: "tv" },
+            { title: "电影", value: "movie" }
+          ]
+        },
         {
           name: "with_origin_country",
           title: "🌍制作地区",
           type: "enumeration",
-          description: "按制作地区筛选剧集",
+          description: "按制作地区筛选内容",
           value: "",
           enumOptions: [
             { title: "全部地区", value: "" },
@@ -284,21 +296,25 @@ WidgetMetadata = {
         },
         {
           name: "with_genres",
-          title: "🎭剧集类型",
+          title: "🎬内容类型",
           type: "enumeration",
-          description: "选择剧集类型",
+          description: "选择内容类型",
           value: "",
           enumOptions: [
             { title: "全部类型", value: "" },
             { title: "剧情", value: "18" },
             { title: "喜剧", value: "35" },
             { title: "犯罪", value: "80" },
-            { title: "动作冒险", value: "10759" },
-            { title: "科幻奇幻", value: "10765" },
+            { title: "动作", value: "28" },
+            { title: "冒险", value: "12" },
+            { title: "动画", value: "16" },
+            { title: "科幻", value: "878" },
+            { title: "奇幻", value: "14" },
             { title: "悬疑", value: "9648" },
             { title: "惊悚", value: "53" },
             { title: "爱情", value: "10749" },
-            { title: "家庭", value: "10751" }
+            { title: "家庭", value: "10751" },
+            { title: "恐怖", value: "27" }
           ]
         },
         {
@@ -312,8 +328,8 @@ WidgetMetadata = {
             { title: "热门度↑", value: "popularity.asc" },
             { title: "评分↓", value: "vote_average.desc" },
             { title: "评分↑", value: "vote_average.asc" },
-            { title: "首播日期↓", value: "first_air_date.desc" },
-            { title: "首播日期↑", value: "first_air_date.asc" }
+            { title: "上映日期↓", value: "release_date.desc" },
+            { title: "上映日期↑", value: "release_date.asc" }
           ]
         },
         {
@@ -2307,17 +2323,18 @@ async function tmdbDiscoverByCompany(params = {}) {
 // TMDB热门内容合并模块 - 整合今日热门、本周热门、热门电影、高分内容
 async function loadTmdbTrendingCombined(params = {}) {
   const { 
-    content_type = "today", 
+    sort_by = "today",  // 现在sort_by包含内容类型
     media_type = "all", 
     language = "zh-CN", 
     page = 1, 
-    sort_by = "popularity.desc" 
+    content_type = "popularity.desc"  // 现在content_type包含排序方式
   } = params;
   
   try {
     let results = [];
     
-    switch (content_type) {
+    // 使用sort_by作为内容类型选择器
+    switch (sort_by) {
       case "today":
         // 今日热门
         const todayData = await loadTmdbTrendingData();
@@ -2362,7 +2379,7 @@ async function loadTmdbTrendingCombined(params = {}) {
         
       case "popular":
         // 热门电影
-        if ((parseInt(page) || 1) === 1 && sort_by.startsWith("popularity")) {
+        if ((parseInt(page) || 1) === 1 && content_type.startsWith("popularity")) {
           const popularData = await loadTmdbTrendingData();
           if (popularData.popular_movies && popularData.popular_movies.length > 0) {
             results = popularData.popular_movies
@@ -2373,7 +2390,7 @@ async function loadTmdbTrendingCombined(params = {}) {
         
         if (results.length === 0) {
           // 标准API调用
-          if (sort_by.startsWith("popularity")) {
+          if (content_type.startsWith("popularity")) {
             const res = await Widget.tmdb.get("/movie/popular", { 
               params: { 
                 language: 'zh-CN',
@@ -2390,7 +2407,7 @@ async function loadTmdbTrendingCombined(params = {}) {
                 language: 'zh-CN',
                 region: 'CN', 
                 page, 
-                sort_by,
+                sort_by: content_type,
                 api_key: API_KEY 
               }
             });
@@ -2402,7 +2419,7 @@ async function loadTmdbTrendingCombined(params = {}) {
         
       case "top_rated":
         // 高分内容
-        if (sort_by.startsWith("vote_average")) {
+        if (content_type.startsWith("vote_average")) {
           const api = media_type === "movie" ? "/movie/top_rated" : "/tv/top_rated";
           const res = await Widget.tmdb.get(api, { 
             params: { 
@@ -2423,7 +2440,7 @@ async function loadTmdbTrendingCombined(params = {}) {
               language: 'zh-CN',
               region: 'CN', 
               page, 
-              sort_by,
+              sort_by: content_type,
               api_key: API_KEY 
             }
           });
@@ -2435,7 +2452,7 @@ async function loadTmdbTrendingCombined(params = {}) {
         break;
         
       default:
-        console.error("Unknown content type:", content_type);
+        console.error("Unknown content type:", sort_by);
         return [];
     }
     
@@ -2641,11 +2658,12 @@ async function bangumiHotNewAnime(params = {}) {
   }
 }
 
-// TMDB热门剧集 - 热门电视剧集和迷你剧
-async function tmdbPopularTVShows(params = {}) {
+// TMDB影视榜单 - 热门电影和电视剧集榜单
+async function tmdbMediaRanking(params = {}) {
   const { 
     language = "zh-CN", 
     page = 1, 
+    media_type = "tv",
     with_origin_country,
     with_genres,
     sort_by = "popularity.desc",
@@ -2653,7 +2671,8 @@ async function tmdbPopularTVShows(params = {}) {
   } = params;
   
   try {
-    const endpoint = "/discover/tv";
+    // 根据媒体类型选择API端点
+    const endpoint = media_type === "movie" ? "/discover/movie" : "/discover/tv";
     
     // 构建查询参数
     const queryParams = { 
@@ -2661,8 +2680,8 @@ async function tmdbPopularTVShows(params = {}) {
       page, 
       sort_by,
       api_key: API_KEY,
-      // 剧集筛选
-      vote_count_gte: 50  // 确保有足够投票数
+      // 确保有足够投票数
+      vote_count_gte: media_type === "movie" ? 100 : 50
     };
     
     // 添加制作地区
@@ -2670,7 +2689,7 @@ async function tmdbPopularTVShows(params = {}) {
       queryParams.with_origin_country = with_origin_country;
     }
     
-    // 添加剧集类型
+    // 添加内容类型
     if (with_genres) {
       queryParams.with_genres = with_genres;
     }
@@ -2678,6 +2697,19 @@ async function tmdbPopularTVShows(params = {}) {
     // 添加最低评分要求
     if (vote_average_gte && vote_average_gte !== "0") {
       queryParams.vote_average_gte = vote_average_gte;
+    }
+    
+    // 根据媒体类型调整排序参数
+    if (media_type === "movie") {
+      // 电影使用 release_date
+      if (sort_by.includes("first_air_date")) {
+        queryParams.sort_by = sort_by.replace("first_air_date", "release_date");
+      }
+    } else {
+      // 剧集使用 first_air_date
+      if (sort_by.includes("release_date")) {
+        queryParams.sort_by = sort_by.replace("release_date", "first_air_date");
+      }
     }
     
     // 发起API请求
@@ -2689,10 +2721,11 @@ async function tmdbPopularTVShows(params = {}) {
     return res.results
       .map(item => {
         const formattedItem = formatTmdbItem(item, genreMap);
-        // 添加剧集特殊标识
-        formattedItem.type = "tmdb-tv";
-        formattedItem.source = "TMDB热门剧集";
-        formattedItem.contentType = "TV剧集";
+        // 添加媒体类型标识
+        formattedItem.type = `tmdb-${media_type}`;
+        formattedItem.source = `TMDB影视榜单-${media_type === "movie" ? "电影" : "剧集"}`;
+        formattedItem.contentType = media_type === "movie" ? "电影" : "剧集";
+        formattedItem.mediaType = media_type;
         return formattedItem;
       })
       .filter(item => {
@@ -2711,11 +2744,19 @@ async function tmdbPopularTVShows(params = {}) {
         const cat3Keywords = ['三级片','三級片','三級','3级片','3級片','3级','3級','R级','R級','限制级','限制級','成人片','情色片','无码','無碼','无码片','無碼片'];
         if (cat3Keywords.some(k => lowerTitle.includes(k) || lowerDesc.includes(k) || (item.genreTitle && item.genreTitle.includes(k)))) return false;
         return true;
-      }); // TMDB热门剧集
+      }); // TMDB影视榜单
   } catch (error) {
-    console.error("Error fetching TMDB popular TV shows:", error);
+    console.error("Error fetching TMDB media ranking:", error);
     return [];
   }
+}
+
+// 保留原有的TMDB热门剧集函数以保持兼容性
+async function tmdbPopularTVShows(params = {}) {
+  return await tmdbMediaRanking({
+    ...params,
+    media_type: "tv"
+  });
 }
 
 // TMDB剧集时间榜 - 按时间和地区筛选的剧集内容
