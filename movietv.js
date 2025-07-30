@@ -4185,6 +4185,57 @@ setInterval(() => {
   }
 }, 5 * 60 * 1000); // 5分钟
 
+// 12小时定时获取横版封面数据包
+setInterval(async () => {
+  try {
+    console.log("[定时任务] 开始12小时定时获取横版封面数据包...");
+    
+    // 获取最新数据包
+    const trendingData = await loadTmdbTrendingData();
+    
+    if (trendingData) {
+      console.log(`[定时任务] 成功获取数据包 - 今日热门: ${trendingData.today_global ? trendingData.today_global.length : 0}项`);
+      console.log(`[定时任务] 成功获取数据包 - 本周热门: ${trendingData.week_global_all ? trendingData.week_global_all.length : 0}项`);
+      console.log(`[定时任务] 成功获取数据包 - 热门电影: ${trendingData.popular_movies ? trendingData.popular_movies.length : 0}项`);
+      
+      // 缓存数据包
+      cacheTrendingData(trendingData);
+      console.log("[定时任务] 数据包已缓存");
+    } else {
+      console.log("[定时任务] 数据包获取失败");
+    }
+    
+    // 预加载横版封面
+    console.log("[定时任务] 开始预加载横版封面...");
+    if (trendingData && trendingData.today_global) {
+      const items = trendingData.today_global.slice(0, 20); // 预加载前20项
+      await batchProcessBackdrops(items, { 
+        forceRegenerate: false,
+        maxConcurrent: 3 
+      });
+      console.log(`[定时任务] 横版封面预加载完成: ${items.length}项`);
+    }
+    
+    console.log("[定时任务] 12小时定时任务完成");
+  } catch (error) {
+    console.error("[定时任务] 12小时定时任务失败:", error);
+  }
+}, 12 * 60 * 60 * 1000); // 12小时
+
+// 立即执行一次数据包获取（启动时）
+setTimeout(async () => {
+  try {
+    console.log("[启动任务] 立即获取横版封面数据包...");
+    const trendingData = await loadTmdbTrendingData();
+    if (trendingData) {
+      cacheTrendingData(trendingData);
+      console.log("[启动任务] 数据包获取完成");
+    }
+  } catch (error) {
+    console.error("[启动任务] 数据包获取失败:", error);
+  }
+}, 5000); // 5秒后执行
+
 // 快速数据测试函数（可在控制台调用）
 async function quickDataTest() {
     try {
