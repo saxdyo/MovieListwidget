@@ -23,7 +23,8 @@ WidgetMetadata = {
           enumOptions: [
             { title: "今日热门", value: "today" },
             { title: "本周热门", value: "week" },
-            { title: "热门电影", value: "popular" }
+            { title: "热门电影", value: "popular" },
+            { title: "高分内容", value: "top_rated" }
           ], 
           value: "today" 
         },
@@ -40,19 +41,15 @@ WidgetMetadata = {
         },
         {
           name: "sort_by",
-          title: "📊排序方式",
+          title: "内容类型切换",
           type: "enumeration",
-          description: "选择排序方式",
-          value: "popularity.desc",
+          description: "选择榜单类型",
+          value: "today",
           enumOptions: [
-            { title: "热门度↓", value: "popularity.desc" },
-            { title: "热门度↑", value: "popularity.asc" },
-            { title: "评分↓", value: "vote_average.desc" },
-            { title: "评分↑", value: "vote_average.asc" },
-            { title: "上映日期↓", value: "release_date.desc" },
-            { title: "上映日期↑", value: "release_date.asc" },
-            { title: "收入↓", value: "revenue.desc" },
-            { title: "收入↑", value: "revenue.asc" }
+            { title: "今日热门", value: "today" },
+            { title: "本周热门", value: "week" },
+            { title: "热门电影", value: "popular" },
+            { title: "高分内容", value: "top_rated" }
           ]
         },
         { name: "language", title: "语言", type: "language", value: "zh-CN" },
@@ -964,18 +961,18 @@ async function fetchRealtimeData() {
 
 // 简化的标题海报热门内容加载器
 async function loadTmdbTitlePosterTrending(params = {}) {
-  // 联动逻辑：如果sort_by为评分排序，则内容类型强制为热门电影
+  // 只根据sort_by切换内容类型，不再做强制联动
   let { 
     content_type = "today", 
     media_type = "all", 
-    sort_by = "popularity.desc", 
+    sort_by = "today", 
     language = "zh-CN", 
     page = 1
   } = params;
 
-  // 联动：评分排序时内容类型强制为热门电影
-  if (sort_by === "vote_average.desc" || sort_by === "vote_average.asc") {
-    content_type = "popular";
+  // 如果sort_by有值，直接用sort_by作为内容类型
+  if (["today","week","popular","top_rated"].includes(sort_by)) {
+    content_type = sort_by;
   }
     
     try {
@@ -1010,6 +1007,13 @@ async function loadTmdbTitlePosterTrending(params = {}) {
                 if (trendingData.popular_movies && trendingData.popular_movies.length > 0) {
                     results = trendingData.popular_movies.map(item => createSimpleWidgetItem(item));
                     console.log(`[标题海报] 热门电影: ${results.length}个项目`);
+                }
+                break;
+                
+            case "top_rated":
+                if (trendingData.top_rated && trendingData.top_rated.length > 0) {
+                    results = trendingData.top_rated.map(item => createSimpleWidgetItem(item));
+                    console.log(`[标题海报] 高分内容: ${results.length}个项目`);
                 }
                 break;
                 
@@ -2424,18 +2428,18 @@ async function loadTmdbTrendingCombined(params = {}) {
 
 // 标题海报热门内容加载器
 async function loadTmdbTitlePosterTrending(params = {}) {
-  // 联动逻辑：如果sort_by为评分排序，则内容类型强制为热门电影
+  // 只根据sort_by切换内容类型，不再做强制联动
   let { 
     content_type = "today", 
     media_type = "all", 
-    sort_by = "popularity.desc", 
+    sort_by = "today", 
     language = "zh-CN", 
     page = 1
   } = params;
 
-  // 联动：评分排序时内容类型强制为热门电影
-  if (sort_by === "vote_average.desc" || sort_by === "vote_average.asc") {
-    content_type = "popular";
+  // 如果sort_by有值，直接用sort_by作为内容类型
+  if (["today","week","popular","top_rated"].includes(sort_by)) {
+    content_type = sort_by;
   }
     
     try {
@@ -2495,6 +2499,17 @@ async function loadTmdbTitlePosterTrending(params = {}) {
             } else {
               console.log("[标题海报] 热门电影数据不可用，使用备用方案");
               results = await tmdbPopularMovies(params);
+            }
+            break;
+            
+          case "top_rated":
+            // 高分内容
+            if (trendingData && trendingData.top_rated && trendingData.top_rated.length > 0) {
+              results = trendingData.top_rated.map(item => createEnhancedWidgetItem(item));
+              console.log(`[标题海报] 高分内容: ${results.length}个项目`);
+            } else {
+              console.log("[标题海报] 高分内容数据不可用，使用备用方案");
+              results = await tmdbTopRated(params);
             }
             break;
             
