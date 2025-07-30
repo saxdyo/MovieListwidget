@@ -1885,28 +1885,6 @@ async function createTitlePosterWithOverlay(item, options = {}) {
         
         console.log(`[横版海报] 生成带标题的横版海报: ${title}`);
         return titlePoster;
-        }
-        
-        // 构建标题海报数据
-        const titlePoster = {
-            url: backgroundUrl,
-            width: 1280,
-            height: 720,
-            type: "title_poster",
-            overlay: {
-                title: title,
-                subtitle: subtitle,
-                rating: rating,
-                year: year,
-                showRating: showRating,
-                showYear: showYear,
-                overlayOpacity: overlayOpacity,
-                textColor: textColor,
-                backgroundColor: backgroundColor
-            }
-        };
-        
-        return titlePoster;
     } catch (error) {
         console.error("[标题海报] 创建带覆盖的标题海报时出错:", error);
         return null;
@@ -4424,11 +4402,27 @@ setInterval(async () => {
     console.log("[定时任务] 开始预加载横版封面...");
     if (trendingData && trendingData.today_global) {
       const items = trendingData.today_global.slice(0, 20); // 预加载前20项
-      await batchProcessBackdrops(items, { 
-        forceRegenerate: false,
-        maxConcurrent: 3 
-      });
-      console.log(`[定时任务] 横版封面预加载完成: ${items.length}项`);
+      console.log(`[定时任务] 准备处理 ${items.length} 项横版封面...`);
+      try {
+        const processedBackdrops = await batchProcessBackdrops(items, {
+          enableTitleOverlay: true,
+          preferredSize: 'w1280',
+          includeMetadata: true,
+          forceRegenerate: false,
+          maxConcurrent: 3
+        });
+        
+        // 缓存处理后的横版封面
+        processedBackdrops.forEach((backdrop, index) => {
+          if (backdrop && backdrop.id) {
+            cacheBackdrop(`backdrop_${backdrop.id}`, backdrop);
+            console.log(`[定时任务] 缓存横版封面 ${index + 1}: ${backdrop.title}`);
+          }
+        });
+        console.log(`[定时任务] 横版封面预加载完成: ${processedBackdrops.length}项`);
+      } catch (error) {
+        console.error("[定时任务] 横版封面预加载失败:", error);
+      }
     }
     
     console.log("[定时任务] 12小时定时任务完成");
