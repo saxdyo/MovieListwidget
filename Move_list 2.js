@@ -128,7 +128,9 @@ WidgetMetadata = {
             { title: "Bilibili", value: "1605" },
             { title: "Netflix", value: "213" },
             { title: "Disney+", value: "2739" },
-            { title: "HBO", value: "49" }
+            { title: "HBO", value: "49" },
+            { title: "Apple TV+", value: "2552" },
+            { title: "TV Tokyo", value: "84" }
           ]
         },
         {
@@ -444,6 +446,31 @@ WidgetMetadata = {
           ]
         },
         {
+          name: "with_genres",
+          title: "动画类型",
+          type: "enumeration",
+          description: "选择动画类型",
+          value: "16",
+          enumOptions: [
+            { title: "全部类型", value: "" },
+            { title: "动画", value: "16" },
+            { title: "奇幻", value: "14" },
+            { title: "科幻", value: "878" },
+            { title: "冒险", value: "12" },
+            { title: "喜剧", value: "35" },
+            { title: "爱情", value: "10749" },
+            { title: "动作", value: "28" },
+            { title: "悬疑", value: "9648" },
+            { title: "音乐", value: "10402" },
+            { title: "运动", value: "10770" },
+            { title: "家庭", value: "10751" },
+            { title: "犯罪", value: "80" },
+            { title: "历史", value: "36" },
+            { title: "战争", value: "10752" },
+            { title: "恐怖", value: "27" }
+          ]
+        },
+        {
           name: "sort_by",
           title: "📊排序方式",
           type: "enumeration",
@@ -451,8 +478,13 @@ WidgetMetadata = {
           value: "popularity.desc",
           enumOptions: [
             { title: "热门度↓", value: "popularity.desc" },
+            { title: "热门度↑", value: "popularity.asc" },
             { title: "评分↓", value: "vote_average.desc" },
-            { title: "播出日期↓", value: "first_air_date.desc" }
+            { title: "评分↑", value: "vote_average.asc" },
+            { title: "首播日期↓", value: "first_air_date.desc" },
+            { title: "首播日期↑", value: "first_air_date.asc" },
+            { title: "投票数↓", value: "vote_count.desc" },
+            { title: "投票数↑", value: "vote_count.asc" }
           ]
         },
         {
@@ -465,7 +497,8 @@ WidgetMetadata = {
             { title: "无要求", value: "0" },
             { title: "6.0分以上", value: "6.0" },
             { title: "7.0分以上", value: "7.0" },
-            { title: "8.0分以上", value: "8.0" }
+            { title: "8.0分以上", value: "8.0" },
+            { title: "8.5分以上", value: "8.5" }
           ]
         },
         { name: "page", title: "页码", type: "page" },
@@ -2557,39 +2590,40 @@ async function bangumiHotNewAnime(params = {}) {
     language = "zh-CN", 
     page = 1, 
     with_origin_country = "JP",
+    with_genres = "16",
     sort_by = "popularity.desc",
     vote_average_gte = "6.0"
   } = params;
-  
+
   try {
     const endpoint = "/discover/tv";
-    
-    // 构建查询参数 - 专注热门新番
+
+    // 构建查询参数 - 支持多类型动画
     const queryParams = { 
       language, 
       page, 
       sort_by,
       api_key: API_KEY,
-      // 新番动画筛选
-      with_genres: "16", // 动画类型
       vote_count_gte: 10  // 新番投票较少，降低门槛
     };
-    
+    // 动画类型筛选
+    if (with_genres && with_genres !== "") {
+      queryParams.with_genres = with_genres;
+    } else {
+      queryParams.with_genres = "16"; // 默认动画
+    }
     // 添加制作地区
     if (with_origin_country) {
       queryParams.with_origin_country = with_origin_country;
     }
-    
     // 添加最低评分要求
     if (vote_average_gte && vote_average_gte !== "0") {
       queryParams.vote_average_gte = vote_average_gte;
     }
-    
     // 发起API请求
     const res = await Widget.tmdb.get(endpoint, {
       params: queryParams
     });
-    
     const genreMap = await fetchTmdbGenres();
     return res.results
       .map(item => {
@@ -3878,5 +3912,48 @@ if (typeof global !== 'undefined') {
     global.fetchRealtimeData = fetchRealtimeData;
     global.createSimpleWidgetItem = createSimpleWidgetItem;
 }
+
+
+
+// 获取TVB剧集（豆瓣）
+async function tvbDoubanTVShows(params = {}) {
+  const page = params.page || 1;
+  const page_limit = params.page_limit || 20;
+  const page_start = (page - 1) * page_limit;
+  const url = `https://movie.douban.com/j/search_subjects?type=tv&tag=TVB&sort=recommend&page_limit=${page_limit}&page_start=${page_start}`;
+  try {
+    const res = await Widget.http.get(url, {
+      headers: {
+        'Referer': 'https://movie.douban.com/tv/',
+        'User-Agent': 'Mozilla/5.0'
+      }
+    });
+    if (res.data && res.data.subjects) {
+      return res.data.subjects.map(item => ({
+        id: item.id,
+        title: item.title,
+        cover: item.cover,
+        url: item.url,
+        rate: item.rate,
+        is_new: item.is_new
+      }));
+    }
+    return [];
+  } catch (error) {
+    console.error('Error fetching TVB shows from Douban:', error);
+    return [];
+  }
+}
+global.tvbDoubanTVShows = tvbDoubanTVShows;
+
+// 获取TV Tokyo平台剧集
+async function tvTokyoShows(params = {}) {
+  return await tmdbDiscoverByNetwork({
+    ...params,
+    with_networks: "84"
+  });
+}
+
+global.tvTokyoShows = tvTokyoShows;
 
 
