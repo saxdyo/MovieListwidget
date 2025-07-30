@@ -128,7 +128,9 @@ WidgetMetadata = {
             { title: "Bilibili", value: "1605" },
             { title: "Netflix", value: "213" },
             { title: "Disney+", value: "2739" },
-            { title: "HBO", value: "49" }
+            { title: "HBO", value: "49" },
+            { title: "Apple TV+", value: "2552" },
+            { title: "TVB", value: "3196" }
           ]
         },
         {
