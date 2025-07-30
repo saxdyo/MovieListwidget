@@ -929,7 +929,7 @@ async function fetchRealtimeData() {
             popular_movies: []
         };
         
-                // 处理今日热门 - 增加数量到50项，优先剧集
+                // 处理今日热门 - 调整为20项，优先剧集
         if (todayRes.status === 'fulfilled' && todayRes.value.results) {
           // 分离电影和剧集
           const movies = [];
@@ -953,11 +953,11 @@ async function fetchRealtimeData() {
             }
           });
           
-          // 优先剧集，然后补充电影
-          result.today_global = [...tvShows.slice(0, 30), ...movies.slice(0, 20)];
+          // 优先剧集，然后补充电影，总共20项
+          result.today_global = [...tvShows.slice(0, 12), ...movies.slice(0, 8)];
         }
         
-                // 处理本周热门 - 增加数量到50项，优先剧集
+                // 处理本周热门 - 调整为20项，优先剧集
         if (weekRes.status === 'fulfilled' && weekRes.value.results) {
           // 分离电影和剧集
           const movies = [];
@@ -981,8 +981,8 @@ async function fetchRealtimeData() {
             }
           });
           
-          // 优先剧集，然后补充电影
-          result.week_global_all = [...tvShows.slice(0, 30), ...movies.slice(0, 20)];
+          // 优先剧集，然后补充电影，总共20项
+          result.week_global_all = [...tvShows.slice(0, 12), ...movies.slice(0, 8)];
         }
         
         // 处理热门电影 - 合并电影和剧集数据
@@ -1037,16 +1037,16 @@ async function fetchRealtimeData() {
             })));
         }
         
-        // 去重并限制数量
+                // 去重并限制数量
         const uniqueMovies = [];
         const seenIds = new Set();
         for (const item of allMovies) {
-            if (!seenIds.has(item.id) && item.poster_url) {
-                uniqueMovies.push(item);
-                seenIds.add(item.id);
-            }
+          if (!seenIds.has(item.id) && item.poster_url) {
+            uniqueMovies.push(item);
+            seenIds.add(item.id);
+          }
         }
-        result.popular_movies = uniqueMovies.slice(0, 50);
+        result.popular_movies = uniqueMovies.slice(0, 20);
         
         console.log(`[实时API] 数据获取完成 - 今日热门: ${result.today_global.length}, 本周热门: ${result.week_global_all.length}, 热门电影: ${result.popular_movies.length}`);
         return result;
@@ -1866,6 +1866,27 @@ async function createTitlePosterWithOverlay(item, options = {}) {
             return null;
         }
         
+        // 创建带标题覆盖的横版海报
+        const titlePoster = {
+            url: backgroundUrl,
+            width: 1280,
+            height: 720,
+            type: "backdrop_with_title",
+            title: title,
+            subtitle: subtitle,
+            rating: rating,
+            year: year,
+            showRating: showRating,
+            showYear: showYear,
+            overlayOpacity: overlayOpacity,
+            textColor: textColor,
+            backgroundColor: backgroundColor
+        };
+        
+        console.log(`[横版海报] 生成带标题的横版海报: ${title}`);
+        return titlePoster;
+        }
+        
         // 构建标题海报数据
         const titlePoster = {
             url: backgroundUrl,
@@ -2519,7 +2540,7 @@ async function loadTmdbTrendingCombined(params = {}) {
     language = "zh-CN", 
     page = 1, 
     content_type = "popularity.desc",  // 现在content_type包含排序方式
-    max_items = 50  // 新增：最大返回数量
+    max_items = 20  // 调整为20项
   } = params;
   
   try {
@@ -2781,7 +2802,7 @@ async function loadTmdbTitlePosterTrending(params = {}) {
     sort_by = "today", 
     language = "zh-CN", 
     page = 1,
-    max_items = 50  // 新增：最大返回数量
+    max_items = 20  // 调整为20项
   } = params;
 
   // 如果sort_by有值，直接用sort_by作为内容类型
