@@ -1929,76 +1929,52 @@ function generateEnhancedGenreTitle(genreIds, mediaType, genreMap) {
     return mediaType === 'movie' ? '电影' : '剧集';
 }
 
-// 智能图片URL生成器 - 支持多个CDN和降级方案
+// 扩展的CDN配置 - 更多备用方案
+const CDN_CONFIGS = [
+    {
+        name: 'TMDB官方',
+        baseUrl: 'https://image.tmdb.org/t/p/',
+        reliability: 0.9,
+        speed: 0.9
+    },
+    {
+        name: 'TMDB备用1',
+        baseUrl: 'https://www.themoviedb.org/t/p/',
+        reliability: 0.8,
+        speed: 0.8
+    },
+    {
+        name: 'TMDB备用2',
+        baseUrl: 'https://image.tmdb.org/t/p/',
+        reliability: 0.7,
+        speed: 0.7
+    },
+    {
+        name: 'Cloudflare代理',
+        baseUrl: 'https://image.tmdb.org/t/p/',
+        reliability: 0.85,
+        speed: 0.9
+    }
+];
+
+// 智能CDN选择器
+function selectBestCDN(size = 'w500', type = 'poster') {
+    // 根据图片类型和大小选择最佳CDN
+    if (size.includes('original') || size.includes('w1280')) {
+        return CDN_CONFIGS[0]; // 高清图片使用官方CDN
+    }
+    
+    // 随机选择，避免单一CDN压力过大
+    const availableCDNs = CDN_CONFIGS.filter(cdn => cdn.reliability > 0.7);
+    return availableCDNs[Math.floor(Math.random() * availableCDNs.length)] || CDN_CONFIGS[0];
+}
+
+// 增强的智能图片URL生成器
 function createSmartImageUrl(path, type = 'poster', size = 'w500') {
     if (!path) return '';
     
-    // 多个CDN备用方案
-    const cdnProviders = [
-        {
-            name: 'TMDB官方',
-            baseUrl: 'https://image.tmdb.org/t/p/',
-            reliability: 0.9
-        },
-        {
-            name: 'TMDB备用1',
-            baseUrl: 'https://www.themoviedb.org/t/p/',
-            reliability: 0.8
-        },
-        {
-            name: 'TMDB备用2', 
-            baseUrl: 'https://image.tmdb.org/t/p/',
-            reliability: 0.7
-        }
-    ];
-    
-    // 根据类型和大小选择合适的CDN
-    let selectedCdn = cdnProviders[0]; // 默认使用官方CDN
-    
-    // 如果是高清图片，优先使用更可靠的CDN
-    if (size.includes('original') || size.includes('w1280')) {
-        selectedCdn = cdnProviders[0]; // 官方CDN
-    }
-    
-    return `${selectedCdn.baseUrl}${size}${path}`;
-}
-
-// 增强的图片URL生成器 - 带备用方案
-function generateEnhancedImageUrls(item) {
-    const baseUrl = 'https://image.tmdb.org/t/p/';
-    const backupUrl = 'https://www.themoviedb.org/t/p/';
-    
-    // 生成主要URL
-    const primaryUrls = {
-        poster_w342: item.poster_path ? `${baseUrl}w342${item.poster_path}` : '',
-        poster_w500: item.poster_path ? `${baseUrl}w500${item.poster_path}` : '',
-        poster_w780: item.poster_path ? `${baseUrl}w780${item.poster_path}` : '',
-        poster_original: item.poster_path ? `${baseUrl}original${item.poster_path}` : '',
-        backdrop_w300: item.backdrop_path ? `${baseUrl}w300${item.backdrop_path}` : '',
-        backdrop_w780: item.backdrop_path ? `${baseUrl}w780${item.backdrop_path}` : '',
-        backdrop_w1280: item.backdrop_path ? `${baseUrl}w1280${item.backdrop_path}` : '',
-        backdrop_original: item.backdrop_path ? `${baseUrl}original${item.backdrop_path}` : ''
-    };
-    
-    // 生成备用URL
-    const backupUrls = {
-        poster_w342: item.poster_path ? `${backupUrl}w342${item.poster_path}` : '',
-        poster_w500: item.poster_path ? `${backupUrl}w500${item.poster_path}` : '',
-        poster_w780: item.poster_path ? `${backupUrl}w780${item.poster_path}` : '',
-        poster_original: item.poster_path ? `${backupUrl}original${item.poster_path}` : '',
-        backdrop_w300: item.backdrop_path ? `${backupUrl}w300${item.backdrop_path}` : '',
-        backdrop_w780: item.backdrop_path ? `${backupUrl}w780${item.backdrop_path}` : '',
-        backdrop_w1280: item.backdrop_path ? `${backupUrl}w1280${item.backdrop_path}` : '',
-        backdrop_original: item.backdrop_path ? `${backupUrl}original${item.backdrop_path}` : ''
-    };
-    
-    return {
-        ...primaryUrls,
-        backup: backupUrls,
-        // 智能选择最佳URL
-        smart_poster: createSmartImageUrl(item.poster_path, 'poster', 'w500'),
-        smart_backdrop: createSmartImageUrl(item.backdrop_path, 'backdrop', 'w1280')
-    };
+    const selectedCDN = selectBestCDN(size, type);
+    return `${selectedCDN.baseUrl}${size}${path}`;
 }
 
 // 处理媒体项目数据（优先中文）- 保留原函数作为降级选项
@@ -4098,6 +4074,240 @@ function createSmartImageUrlWithCache(path, type = 'poster', size = 'w500') {
     }
     
     return url;
+}
+
+// 并发图片加载管理器
+class ImageLoadManager {
+    constructor() {
+        this.loadingQueue = new Map();
+        this.loadedImages = new Map();
+        this.maxConcurrent = 5; // 最大并发数
+        this.currentLoading = 0;
+    }
+    
+    // 并发加载图片
+    async loadImagesConcurrently(items, maxConcurrent = 5) {
+        const imagePromises = [];
+        const chunks = this.chunkArray(items, maxConcurrent);
+        
+        for (const chunk of chunks) {
+            const chunkPromises = chunk.map(item => this.loadSingleImage(item));
+            await Promise.allSettled(chunkPromises);
+            
+            // 添加延迟，避免请求过于频繁
+            if (chunks.indexOf(chunk) < chunks.length - 1) {
+                await new Promise(resolve => setTimeout(resolve, 100));
+            }
+        }
+    }
+    
+    // 加载单个图片
+    async loadSingleImage(item) {
+        if (!item.posterPath) return item;
+        
+        try {
+            const cached = getCachedImageUrl(item.posterPath);
+            if (cached) {
+                item.posterPath = cached;
+                return item;
+            }
+            
+            // 尝试加载图片 - 使用智能请求头
+            const successUrl = await loadImageWithSmartHeaders([item.posterPath], 2);
+            if (successUrl) {
+                cacheImageUrl(item.posterPath, successUrl);
+                item.posterPath = successUrl;
+            }
+            
+            return item;
+        } catch (error) {
+            console.log(`[图片加载] 失败: ${item.title}`);
+            return item;
+        }
+    }
+    
+    // 数组分块
+    chunkArray(array, size) {
+        const chunks = [];
+        for (let i = 0; i < array.length; i += size) {
+            chunks.push(array.slice(i, i + size));
+        }
+        return chunks;
+    }
+    
+    // 预加载下一批图片
+    preloadNextBatch(items, startIndex = 0, batchSize = 10) {
+        const batch = items.slice(startIndex, startIndex + batchSize);
+        setTimeout(() => {
+            this.loadImagesConcurrently(batch, 3);
+        }, 1000);
+    }
+}
+
+// 创建全局图片加载管理器
+const imageLoadManager = new ImageLoadManager();
+
+// 智能请求头轮换 - 防止风控
+const USER_AGENTS = [
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+    'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+    'Mozilla/5.0 (iPhone; CPU iPhone OS 14_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0 Mobile/15E148 Safari/604.1',
+    'Mozilla/5.0 (iPad; CPU OS 14_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0 Mobile/15E148 Safari/604.1'
+];
+
+const REFERERS = [
+    'https://www.themoviedb.org/',
+    'https://www.themoviedb.org/movie',
+    'https://www.themoviedb.org/tv',
+    'https://www.google.com/',
+    'https://www.bing.com/'
+];
+
+// 获取随机请求头
+function getRandomHeaders() {
+    return {
+        'User-Agent': USER_AGENTS[Math.floor(Math.random() * USER_AGENTS.length)],
+        'Referer': REFERERS[Math.floor(Math.random() * REFERERS.length)],
+        'Accept': 'image/webp,image/apng,image/*,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.9,zh-CN;q=0.8,zh;q=0.7',
+        'Accept-Encoding': 'gzip, deflate, br',
+        'Cache-Control': 'no-cache',
+        'Pragma': 'no-cache'
+    };
+}
+
+// 增强的图片加载函数 - 带智能请求头和频率限制
+async function loadImageWithSmartHeaders(urls, maxRetries = 3) {
+    const urlArray = Array.isArray(urls) ? urls : [urls];
+    
+    for (let attempt = 0; attempt < maxRetries; attempt++) {
+        for (const url of urlArray) {
+            if (!url) continue;
+            
+            // 检查频率限制
+            if (!requestRateLimiter.canMakeRequest(url)) {
+                console.log(`[频率限制] 等待请求限制重置: ${url}`);
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                continue;
+            }
+            
+            try {
+                // 智能延迟
+                await smartDelay(url);
+                
+                // 使用随机请求头
+                const headers = getRandomHeaders();
+                
+                // 记录请求
+                requestRateLimiter.recordRequest(url);
+                
+                const response = await Widget.http.get(url, {
+                    timeout: 8000,
+                    headers: headers
+                });
+                
+                if (response.status === 200) {
+                    console.log(`[智能加载] 成功: ${url}`);
+                    return url;
+                }
+            } catch (error) {
+                console.log(`[智能加载] 失败 (尝试 ${attempt + 1}/${maxRetries}): ${url}`);
+                continue;
+            }
+        }
+        
+        // 指数退避延迟
+        if (attempt < maxRetries - 1) {
+            const delay = Math.min(1000 * Math.pow(2, attempt), 5000);
+            await new Promise(resolve => setTimeout(resolve, delay));
+        }
+    }
+    
+    console.warn('[智能加载] 所有URL都加载失败');
+    return '';
+}
+
+// 请求频率限制器
+class RequestRateLimiter {
+    constructor() {
+        this.requestHistory = new Map();
+        this.maxRequestsPerMinute = 30;
+        this.maxRequestsPerSecond = 5;
+    }
+    
+    // 检查是否可以发送请求
+    canMakeRequest(url) {
+        const now = Date.now();
+        const domain = this.extractDomain(url);
+        
+        if (!this.requestHistory.has(domain)) {
+            this.requestHistory.set(domain, []);
+        }
+        
+        const history = this.requestHistory.get(domain);
+        
+        // 清理超过1分钟的历史记录
+        const recentRequests = history.filter(time => now - time < 60000);
+        this.requestHistory.set(domain, recentRequests);
+        
+        // 检查频率限制
+        if (recentRequests.length >= this.maxRequestsPerMinute) {
+            return false;
+        }
+        
+        // 检查每秒限制
+        const lastSecondRequests = recentRequests.filter(time => now - time < 1000);
+        if (lastSecondRequests.length >= this.maxRequestsPerSecond) {
+            return false;
+        }
+        
+        return true;
+    }
+    
+    // 记录请求
+    recordRequest(url) {
+        const domain = this.extractDomain(url);
+        const history = this.requestHistory.get(domain) || [];
+        history.push(Date.now());
+        this.requestHistory.set(domain, history);
+    }
+    
+    // 提取域名
+    extractDomain(url) {
+        try {
+            return new URL(url).hostname;
+        } catch {
+            return 'unknown';
+        }
+    }
+    
+    // 获取建议延迟
+    getSuggestedDelay(url) {
+        const domain = this.extractDomain(url);
+        const history = this.requestHistory.get(domain) || [];
+        const now = Date.now();
+        const recentRequests = history.filter(time => now - time < 1000);
+        
+        if (recentRequests.length >= 3) {
+            return 2000; // 2秒延迟
+        } else if (recentRequests.length >= 1) {
+            return 500; // 0.5秒延迟
+        }
+        
+        return 0; // 无延迟
+    }
+}
+
+// 创建全局请求限制器
+const requestRateLimiter = new RequestRateLimiter();
+
+// 智能延迟函数
+async function smartDelay(url) {
+    const delay = requestRateLimiter.getSuggestedDelay(url);
+    if (delay > 0) {
+        await new Promise(resolve => setTimeout(resolve, delay));
+    }
 }
 
 
