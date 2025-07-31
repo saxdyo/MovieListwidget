@@ -1040,11 +1040,6 @@ async function fetchRealtimeData() {
     }
 }
 
-// 简化的标题海报热门内容加载器
-        return [];
-    }
-}
-
 // 横版标题海报加载器
 async function loadTitlePosterWithBackdrops(items, maxItems = 30) {
     // 尝试获取缓存的横版标题海报
