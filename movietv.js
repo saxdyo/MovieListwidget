@@ -4310,6 +4310,318 @@ async function smartDelay(url) {
     }
 }
 
+// ===============================
+// 🚀 高性能TMDB加载器 - 优化版本
+// ===============================
+
+class HighPerformanceTMDBLoader {
+  constructor() {
+    this.cache = new Map();
+    this.genreCache = null;
+    this.genreCacheTime = 0;
+    this.requestQueue = new Map();
+    
+    // 配置参数
+    this.config = {
+      fastTimeout: 3000,        // 快速超时：3秒
+      maxRetries: 2,            // 最大重试次数
+      cacheDuration: 6 * 60 * 60 * 1000, // 6小时缓存
+      genreCacheDuration: 24 * 60 * 60 * 1000, // Genre缓存24小时
+      maxConcurrentRequests: 5,  // 最大并发请求数
+      preloadDelay: 1000        // 预加载延迟1秒
+    };
+    
+    // CDN镜像列表
+    this.dataSources = [
+      {
+        url: "https://cdn.jsdelivr.net/gh/quantumultxx/ForwardWidgets@main/data/TMDB_Trending.json",
+        timeout: 2000,
+        priority: 1
+      },
+      {
+        url: "https://raw.githubusercontent.com/quantumultxx/ForwardWidgets/main/data/TMDB_Trending.json",
+        timeout: 3000,
+        priority: 2
+      },
+      {
+        url: "https://raw.githubusercontent.com/saxdyo/MovieListwidget/main/data/TMDB_Trending.json",
+        timeout: 3000,
+        priority: 3
+      }
+    ];
+    
+    // 启动后台预加载
+    this.startBackgroundPreload();
+  }
+  
+  // 🎯 主要的快速数据获取方法
+  async getFastTrendingData() {
+    try {
+      console.log("[高性能加载器] 开始快速获取TMDB数据...");
+      const startTime = Date.now();
+      
+      // 1. 检查缓存
+      const cached = this.getFromCache('trending_data');
+      if (cached) {
+        console.log(`[高性能加载器] 使用缓存数据 (${Date.now() - startTime}ms)`);
+        return cached;
+      }
+      
+      // 2. 并行请求多个数据源
+      const data = await this.fetchFromMultipleSources();
+      if (data) {
+        this.setCache('trending_data', data);
+        console.log(`[高性能加载器] 获取成功 (${Date.now() - startTime}ms)`);
+        return data;
+      }
+      
+      // 3. 实时API备用
+      console.log("[高性能加载器] 备用方案：实时API");
+      const realtimeData = await this.fetchRealtimeDataFast();
+      if (realtimeData) {
+        this.setCache('trending_data', realtimeData);
+        console.log(`[高性能加载器] 实时API成功 (${Date.now() - startTime}ms)`);
+        return realtimeData;
+      }
+      
+      throw new Error("所有数据源都失败");
+      
+    } catch (error) {
+      console.error("[高性能加载器] 获取失败:", error.message);
+      return this.getEmptyData();
+    }
+  }
+  
+  // 🌐 并行从多个数据源获取
+  async fetchFromMultipleSources() {
+    try {
+      // 按优先级排序数据源
+      const sortedSources = [...this.dataSources].sort((a, b) => a.priority - b.priority);
+      
+      // 创建请求数组
+      const requests = sortedSources.map(source => 
+        this.fetchFromSource(source).catch(error => {
+          console.log(`[数据源] ${source.url} 失败: ${error.message}`);
+          return null;
+        })
+      );
+      
+      // 使用Promise.allSettled等待所有请求
+      const results = await Promise.allSettled(requests);
+      
+      // 返回第一个成功的结果
+      for (const result of results) {
+        if (result.status === 'fulfilled' && result.value) {
+          return result.value;
+        }
+      }
+      
+      return null;
+    } catch (error) {
+      console.error("[并行请求] 失败:", error.message);
+      return null;
+    }
+  }
+  
+  // 📡 从单个数据源获取
+  async fetchFromSource(source) {
+    try {
+      const response = await Widget.http.get(source.url, {
+        timeout: source.timeout,
+        headers: {
+          'Cache-Control': 'no-cache',
+          'User-Agent': 'HighPerformanceTMDBLoader/1.0'
+        }
+      });
+      
+      if (this.isValidData(response.data)) {
+        console.log(`[数据源] ${source.url} 成功`);
+        return response.data;
+      }
+      
+      throw new Error("数据验证失败");
+    } catch (error) {
+      throw new Error(`${source.url}: ${error.message}`);
+    }
+  }
+  
+  // ⚡ 快速实时API获取
+  async fetchRealtimeDataFast() {
+    try {
+      // 并行获取三个主要端点
+      const [todayRes, weekRes, popularRes] = await Promise.allSettled([
+        Widget.tmdb.get("/trending/all/day", { 
+          params: { language: 'zh-CN', region: 'CN', api_key: API_KEY },
+          timeout: this.config.fastTimeout
+        }),
+        Widget.tmdb.get("/trending/all/week", { 
+          params: { language: 'zh-CN', region: 'CN', api_key: API_KEY },
+          timeout: this.config.fastTimeout
+        }),
+        Widget.tmdb.get("/movie/popular", { 
+          params: { language: 'zh-CN', region: 'CN', api_key: API_KEY },
+          timeout: this.config.fastTimeout
+        })
+      ]);
+      
+      return {
+        today_global: todayRes.status === 'fulfilled' && todayRes.value?.results ? todayRes.value.results : [],
+        week_global_all: weekRes.status === 'fulfilled' && weekRes.value?.results ? weekRes.value.results : [],
+        popular_movies: popularRes.status === 'fulfilled' && popularRes.value?.results ? popularRes.value.results : []
+      };
+    } catch (error) {
+      console.error("[实时API] 失败:", error.message);
+      return null;
+    }
+  }
+  
+  // 🎨 快速获取Genre信息（带缓存）
+  async getFastGenres() {
+    const now = Date.now();
+    
+    // 检查缓存
+    if (this.genreCache && (now - this.genreCacheTime) < this.config.genreCacheDuration) {
+      return this.genreCache;
+    }
+    
+    try {
+      const [movieRes, tvRes] = await Promise.allSettled([
+        Widget.tmdb.get("/genre/movie/list", { 
+          params: { language: 'zh-CN', api_key: API_KEY },
+          timeout: this.config.fastTimeout
+        }),
+        Widget.tmdb.get("/genre/tv/list", { 
+          params: { language: 'zh-CN', api_key: API_KEY },
+          timeout: this.config.fastTimeout
+        })
+      ]);
+      
+      const genres = {};
+      if (movieRes.status === 'fulfilled' && movieRes.value?.genres) {
+        movieRes.value.genres.forEach(genre => genres[genre.id] = genre.name);
+      }
+      if (tvRes.status === 'fulfilled' && tvRes.value?.genres) {
+        tvRes.value.genres.forEach(genre => genres[genre.id] = genre.name);
+      }
+      
+      this.genreCache = genres;
+      this.genreCacheTime = now;
+      
+      console.log(`[Genre缓存] 更新成功，共${Object.keys(genres).length}个类型`);
+      return genres;
+      
+    } catch (error) {
+      console.error("[Genre获取] 失败:", error.message);
+      return this.genreCache || {};
+    }
+  }
+  
+  // 🔄 后台预加载
+  startBackgroundPreload() {
+    // 延迟1秒启动预加载，避免影响主要功能
+    setTimeout(() => {
+      this.preloadData();
+      
+      // 每30分钟预加载一次
+      setInterval(() => {
+        this.preloadData();
+      }, 30 * 60 * 1000);
+    }, this.config.preloadDelay);
+  }
+  
+  async preloadData() {
+    try {
+      console.log("[预加载] 开始后台数据更新...");
+      
+      // 并行预加载数据和genres
+      await Promise.allSettled([
+        this.getFastTrendingData(),
+        this.getFastGenres()
+      ]);
+      
+      console.log("[预加载] 后台更新完成");
+    } catch (error) {
+      console.log("[预加载] 失败:", error.message);
+    }
+  }
+  
+  // 💾 缓存管理
+  getFromCache(key) {
+    const cached = this.cache.get(key);
+    if (cached && (Date.now() - cached.time) < this.config.cacheDuration) {
+      return cached.data;
+    }
+    return null;
+  }
+  
+  setCache(key, data) {
+    this.cache.set(key, {
+      data: data,
+      time: Date.now()
+    });
+  }
+  
+  // ✅ 数据验证
+  isValidData(data) {
+    return data && 
+           typeof data === 'object' && 
+           Array.isArray(data.today_global) && 
+           data.today_global.length > 0;
+  }
+  
+  // 📝 空数据结构
+  getEmptyData() {
+    return {
+      today_global: [],
+      week_global_all: [],
+      popular_movies: []
+    };
+  }
+  
+  // 🧹 清理缓存
+  clearCache() {
+    this.cache.clear();
+    this.genreCache = null;
+    this.genreCacheTime = 0;
+    console.log("[缓存清理] 完成");
+  }
+  
+  // 📊 获取性能统计
+  getStats() {
+    return {
+      cacheSize: this.cache.size,
+      genreCacheAge: this.genreCacheTime ? Date.now() - this.genreCacheTime : 0,
+      config: this.config
+    };
+  }
+}
+
+// 创建全局高性能加载器实例
+const fastTMDBLoader = new HighPerformanceTMDBLoader();
+
+// ===============================
+// 🔄 替换原有的慢速函数
+// ===============================
+
+// 新的快速TMDB数据加载函数
+async function loadTmdbTrendingDataFast() {
+  return await fastTMDBLoader.getFastTrendingData();
+}
+
+// 新的快速Genre获取函数
+async function fetchTmdbGenresFast() {
+  return await fastTMDBLoader.getFastGenres();
+}
+
+// 导出给外部使用
+if (typeof global !== 'undefined') {
+  global.fastTMDBLoader = fastTMDBLoader;
+  global.loadTmdbTrendingDataFast = loadTmdbTrendingDataFast;
+  global.fetchTmdbGenresFast = fetchTmdbGenresFast;
+}
+
+console.log("[高性能TMDB加载器] 初始化完成 🚀");
+
 
 
 
