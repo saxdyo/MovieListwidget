@@ -1015,7 +1015,7 @@ const performanceMonitor = {
   }
 };
 
-const API_KEY = 'f3ae69ddca232b56265600eb919d46ab'; // TMDB API Key
+const API_KEY = ''; // TMDB API Key
 
 // TMDB类型缓存
 let tmdbGenresCache = null;
