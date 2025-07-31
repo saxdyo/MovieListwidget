@@ -254,4 +254,40 @@ async function generateAllBackdrops(items, generatorFn) {
   return deepClone(results);
 }
 
+// ========== 优化后的横版标题海报批量生成主流程（业务流程示例） ==========
+/**
+ * 批量生成横版标题海报（带缓存、并发、指纹、命中率统计）
+ * @param {Array} items 影视条目数组
+ * @param {Function} generatorFn 单个条目的横版标题海报生成函数
+ * @returns {Promise<Array>} 生成结果
+ */
+async function loadEnhancedTitlePosterWithBackdropsOptimized(items, generatorFn) {
+  // 1. 去重
+  const uniqueItems = uniqBy(items, item => item.id);
+  // 2. 批量查缓存
+  const cachedResults = [];
+  const toGenerate = [];
+  for (const item of uniqueItems) {
+    const fingerprint = getBackdropFingerprint(item);
+    const cacheKey = `backdrop_${item.id}_${fingerprint}`;
+    const cached = getCachedBackdrop(cacheKey);
+    if (cached) {
+      cachedResults.push(cached);
+    } else {
+      toGenerate.push(item);
+    }
+  }
+  // 3. 批量增量生成未命中部分
+  let generatedResults = [];
+  if (toGenerate.length > 0) {
+    generatedResults = await batchGenerateBackdropsWithCache(toGenerate, generatorFn, CONFIG.MAX_CONCURRENT);
+  }
+  // 4. 合并结果
+  const allResults = [...cachedResults, ...generatedResults];
+  // 5. 输出缓存命中率
+  logCacheStats();
+  // 6. 返回深拷贝，防止外部修改
+  return deepClone(allResults);
+}
+
 // ... 后续可继续迁移和优化具体业务流程、数据处理链等 ...
