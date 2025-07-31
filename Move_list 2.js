@@ -4502,10 +4502,10 @@ setInterval(() => {
   }
 }, 5 * 60 * 1000); // 5分钟
 
-// 12小时定时获取横版封面数据包
+// 6小时定时获取横版封面数据包
 setInterval(async () => {
   try {
-    console.log("[定时任务] 开始12小时定时获取横版封面数据包...");
+    console.log("[定时任务] 开始6小时定时获取横版封面数据包...");
     
     // 获取最新数据包
     const trendingData = await loadTmdbTrendingData();
@@ -4549,11 +4549,11 @@ setInterval(async () => {
       }
     }
     
-    console.log("[定时任务] 12小时定时任务完成");
+    console.log("[定时任务] 6小时定时任务完成");
   } catch (error) {
-    console.error("[定时任务] 12小时定时任务失败:", error);
+    console.error("[定时任务] 6小时定时任务失败:", error);
   }
-}, 12 * 60 * 60 * 1000); // 12小时
+}, 6 * 60 * 60 * 1000); // 6小时
 
 // 立即执行一次数据包获取（启动时）
 setTimeout(async () => {
@@ -5000,10 +5000,10 @@ async function smartDelay(url) {
     }
 }
 
-// 12小时定时获取横版封面数据包
+// 6小时定时获取横版封面数据包
 setInterval(async () => {
   try {
-    console.log("[定时任务] 开始12小时定时获取横版封面数据包...");
+    console.log("[定时任务] 开始6小时定时获取横版封面数据包...");
 
     // 获取最新数据包
     const trendingData = await loadTmdbTrendingData();
@@ -5049,11 +5049,11 @@ setInterval(async () => {
       }
     }
 
-    console.log("[定时任务] 12小时定时任务完成");
+    console.log("[定时任务] 6小时定时任务完成");
   } catch (error) {
-    console.error("[定时任务] 12小时定时任务失败:", error);
+    console.error("[定时任务] 6小时定时任务失败:", error);
   }
-}, 12 * 60 * 60 * 1000); // 12小时
+}, 6 * 60 * 60 * 1000); // 6小时
 
 // 立即执行一次数据包获取（启动时）
 setTimeout(async () => {
