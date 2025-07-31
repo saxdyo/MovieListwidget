@@ -326,4 +326,26 @@ async function loadTmdbTrendingDataOptimized(fetchDataFn, checkHealthFn) {
   return { today_global: [], week_global_all: [], popular_movies: [] };
 }
 
-// ... 后续可继续迁移和优化具体业务流程、数据处理链等 ...
+// ========== 优化后的类型/题材等通用数据处理流程（业务流程示例） ==========
+/**
+ * 类型映射与去重链式处理
+ * @param {Array} items 影视条目数组
+ * @param {Object} genreMap 类型映射表
+ * @param {string} mediaType 'movie'|'tv'
+ * @returns {Array} 处理后的条目
+ */
+function processItemsWithGenre(items, genreMap, mediaType) {
+  // 1. 去重
+  const uniqueItems = uniqBy(items, item => item.id);
+  // 2. 类型映射
+  return uniqueItems.map(item => {
+    const genreIds = item.genre_ids || [];
+    const genres = genreIds.map(id => genreMap[mediaType]?.[id]).filter(Boolean);
+    return {
+      ...item,
+      genreTitle: genres.length > 0 ? genres.join('•') : (mediaType === 'movie' ? '电影' : '剧集')
+    };
+  });
+}
+
+// ... 可继续迁移和优化其他通用数据处理链 ...
