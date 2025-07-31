@@ -761,30 +761,7 @@ function formatTmdbItem(item, genreMap) {
 const tmdbCache = { data: null, time: 0 };
 const TMDB_CACHE_DURATION = 30 * 60 * 1000; // 30分钟
 
-async function loadTmdbTrendingData() {
-    // 1. 优先用缓存
-    if (tmdbCache.data && Date.now() - tmdbCache.time < TMDB_CACHE_DURATION) {
-        return tmdbCache.data;
-    }
-    // 2. 主数据包
-    let data = await fetchTmdbDataFromUrl("https://raw.githubusercontent.com/quantumultxx/ForwardWidgets/main/data/TMDB_Trending.json");
-    if (!isValidTmdbData(data)) {
-        // 3. 备用数据包
-        data = await fetchTmdbDataFromUrl("https://raw.githubusercontent.com/saxdyo/MovieListwidget/main/data/TMDB_Trending.json");
-    }
-    if (!isValidTmdbData(data)) {
-        // 4. 实时API
-        data = await fetchTmdbDataFromApi();
-    }
-    // 5. 健康检查
-    if (isValidTmdbData(data)) {
-        tmdbCache.data = data;
-        tmdbCache.time = Date.now();
-        return data;
-    } else {
-        throw new Error("TMDB数据加载失败");
-    }
-}
+
 
 async function fetchTmdbDataFromUrl(url) {
     try {
