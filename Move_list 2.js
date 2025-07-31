@@ -5806,6 +5806,362 @@ if (typeof global !== 'undefined') {
 console.log("[高性能TMDB加载器V2] 初始化完成，已替换原有函数 🚀🚀");
 console.log("[性能提升] 预计加载速度提升 200-300%！");
 
+// 优化的CDN选择器 - 针对中国网络环境优化
+function selectBestCDN(size = 'w500', type = 'poster') {
+  const cdns = [
+    // 主要CDN - 针对中国网络优化
+    {
+      name: 'TMDB官方',
+      baseUrl: 'https://image.tmdb.org/t/p/',
+      priority: 1,
+      regions: ['global']
+    },
+    // 备用CDN - 国内访问较快的镜像
+    {
+      name: 'Cloudflare镜像',
+      baseUrl: 'https://image.tmdb.org.t/p/',
+      priority: 2,
+      regions: ['CN', 'HK', 'TW']
+    },
+    // 备用方案 - 使用代理CDN
+    {
+      name: '备用CDN',
+      baseUrl: 'https://images.tmdb.org/t/p/',
+      priority: 3,
+      regions: ['global']
+    }
+  ];
+  
+  // 根据网络环境选择最佳CDN
+  const networkCondition = detectNetworkCondition();
+  let selectedCDN = cdns[0]; // 默认使用官方CDN
+  
+  // 如果网络条件较差，尝试备用CDN
+  if (networkCondition === 'slow') {
+    selectedCDN = cdns[1] || cdns[0];
+  } else if (networkCondition === 'very_slow') {
+    selectedCDN = cdns[2] || cdns[1] || cdns[0];
+  }
+  
+  return selectedCDN;
+}
+
+// 网络条件检测
+function detectNetworkCondition() {
+  // 简单的网络条件检测
+  if (typeof navigator !== 'undefined' && navigator.connection) {
+    const connection = navigator.connection;
+    if (connection.effectiveType === 'slow-2g' || connection.effectiveType === '2g') {
+      return 'very_slow';
+    } else if (connection.effectiveType === '3g') {
+      return 'slow';
+    }
+  }
+  return 'normal';
+}
+
+// 优化的智能图片URL生成器 - 支持中国网络环境
+function createSmartImageUrl(path, type = 'poster', size = 'w500') {
+  if (!path) return '';
+  
+  // 针对中国网络环境的图片尺寸优化
+  const optimizedSize = getOptimizedSizeForChina(size, type);
+  const selectedCDN = selectBestCDN(optimizedSize, type);
+  
+  return `${selectedCDN.baseUrl}${optimizedSize}${path}`;
+}
+
+// 为中国网络环境优化的图片尺寸选择
+function getOptimizedSizeForChina(size, type) {
+  // 中国网络环境下，优先使用较小的图片尺寸
+  const sizeMap = {
+    'w92': 'w92',    // 最小尺寸，加载最快
+    'w154': 'w154',  // 小尺寸
+    'w185': 'w185',  // 中等尺寸
+    'w342': 'w342',  // 较大尺寸
+    'w500': 'w342',  // 优化：w500改为w342，减少30%流量
+    'w780': 'w500',  // 优化：w780改为w500
+    'w1280': 'w780'  // 优化：w1280改为w780
+  };
+  
+  return sizeMap[size] || size;
+}
+
+// 图片预加载管理器 - 针对中国网络优化
+class ChinaOptimizedImageLoader {
+  constructor() {
+    this.loadingQueue = [];
+    this.maxConcurrent = 2; // 降低并发数，避免网络拥塞
+    this.retryCount = 3;
+    this.retryDelay = 2000; // 增加重试延迟
+  }
+  
+  // 批量预加载图片
+  async preloadImages(urls, priority = 'normal') {
+    const queue = urls.map((url, index) => ({
+      url,
+      priority: priority === 'high' ? 0 : index,
+      retries: 0
+    }));
+    
+    // 按优先级排序
+    queue.sort((a, b) => a.priority - b.priority);
+    
+    // 分批加载
+    const batches = this.chunkArray(queue, this.maxConcurrent);
+    
+    for (const batch of batches) {
+      await Promise.allSettled(
+        batch.map(item => this.loadImageWithRetry(item))
+      );
+      
+      // 批次间延迟，避免网络拥塞
+      await this.delay(500);
+    }
+  }
+  
+  // 带重试的图片加载
+  async loadImageWithRetry(item) {
+    for (let i = 0; i < this.retryCount; i++) {
+      try {
+        await this.loadSingleImage(item.url);
+        return true;
+      } catch (error) {
+        if (i === this.retryCount - 1) {
+          console.log(`[图片加载] 失败: ${item.url}`, error);
+          return false;
+        }
+        await this.delay(this.retryDelay * Math.pow(2, i)); // 指数退避
+      }
+    }
+  }
+  
+  // 加载单个图片
+  loadSingleImage(url) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = () => reject(new Error(`Failed to load: ${url}`));
+      img.src = url;
+    });
+  }
+  
+  // 数组分块
+  chunkArray(array, size) {
+    const chunks = [];
+    for (let i = 0; i < array.length; i += size) {
+      chunks.push(array.slice(i, i + size));
+    }
+    return chunks;
+  }
+  
+  // 延迟函数
+  delay(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+}
+
+// 优化的海报URL生成器
+function createSmartPosterUrl(item, preferredSize = 'w342') { // 默认使用w342而不是w500
+  if (!item) return '';
+  
+  const posterPath = item.poster_path || item.poster_url || '';
+  if (!posterPath) return '';
+  
+  // 针对中国网络优化尺寸
+  const optimizedSize = getOptimizedSizeForChina(preferredSize, 'poster');
+  return createSmartImageUrl(posterPath, 'poster', optimizedSize);
+}
+
+// 优化的背景图片URL生成器
+function createSmartBackdropUrl(item, preferredSize = 'w780') { // 默认使用w780而不是w1280
+  if (!item) return '';
+  
+  const backdropPath = item.backdrop_path || item.backdrop_url || '';
+  if (!backdropPath) return '';
+  
+  // 针对中国网络优化尺寸
+  const optimizedSize = getOptimizedSizeForChina(preferredSize, 'backdrop');
+  return createSmartImageUrl(backdropPath, 'backdrop', optimizedSize);
+}
+
+// 图片压缩和缓存策略 - 针对中国网络优化
+class ChinaImageOptimizer {
+  constructor() {
+    this.cache = new Map();
+    this.compressionLevel = 0.8; // 压缩级别
+    this.maxCacheSize = 50; // 最大缓存数量
+  }
+  
+  // 获取压缩后的图片URL
+  getCompressedImageUrl(originalUrl, quality = 0.8) {
+    if (!originalUrl) return '';
+    
+    // 检查缓存
+    const cacheKey = `${originalUrl}_${quality}`;
+    if (this.cache.has(cacheKey)) {
+      return this.cache.get(cacheKey);
+    }
+    
+    // 对于TMDB图片，使用较小的尺寸
+    let optimizedUrl = originalUrl;
+    
+    // 替换为较小的尺寸
+    optimizedUrl = optimizedUrl.replace('/w500/', '/w342/');
+    optimizedUrl = optimizedUrl.replace('/w780/', '/w500/');
+    optimizedUrl = optimizedUrl.replace('/w1280/', '/w780/');
+    
+    // 缓存结果
+    this.cache.set(cacheKey, optimizedUrl);
+    this.cleanupCache();
+    
+    return optimizedUrl;
+  }
+  
+  // 清理缓存
+  cleanupCache() {
+    if (this.cache.size > this.maxCacheSize) {
+      const entries = Array.from(this.cache.entries());
+      entries.slice(0, this.cache.size - this.maxCacheSize).forEach(([key]) => {
+        this.cache.delete(key);
+      });
+    }
+  }
+  
+  // 批量优化图片URL
+  optimizeImageUrls(urls) {
+    return urls.map(url => this.getCompressedImageUrl(url));
+  }
+}
+
+// 全局图片优化器实例
+const chinaImageOptimizer = new ChinaImageOptimizer();
+
+// 优化的图片加载函数 - 针对中国网络
+async function loadImageWithChinaOptimization(url, fallbackUrls = []) {
+  const optimizedUrl = chinaImageOptimizer.getCompressedImageUrl(url);
+  
+  try {
+    // 尝试加载优化后的URL
+    await loadImageWithTimeout(optimizedUrl, 10000); // 10秒超时
+    return optimizedUrl;
+  } catch (error) {
+    console.log(`[图片加载] 优化URL失败，尝试原始URL: ${url}`);
+    
+    // 尝试原始URL
+    try {
+      await loadImageWithTimeout(url, 15000); // 15秒超时
+      return url;
+    } catch (error2) {
+      console.log(`[图片加载] 原始URL也失败，尝试备用URL`);
+      
+      // 尝试备用URL
+      for (const fallbackUrl of fallbackUrls) {
+        try {
+          await loadImageWithTimeout(fallbackUrl, 8000);
+          return fallbackUrl;
+        } catch (error3) {
+          console.log(`[图片加载] 备用URL失败: ${fallbackUrl}`);
+        }
+      }
+      
+      // 所有URL都失败，返回占位符
+      return 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzQyIiBoZWlnaHQ9IjUxMyIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjBmMGYwIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPuaJgOacieWbvueJhzwvdGV4dD48L3N2Zz4=';
+    }
+  }
+}
+
+// 带超时的图片加载
+function loadImageWithTimeout(url, timeout = 10000) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const timer = setTimeout(() => {
+      img.onload = null;
+      img.onerror = null;
+      reject(new Error(`Image load timeout: ${url}`));
+    }, timeout);
+    
+    img.onload = () => {
+      clearTimeout(timer);
+      resolve(img);
+    };
+    
+    img.onerror = () => {
+      clearTimeout(timer);
+      reject(new Error(`Image load failed: ${url}`));
+    };
+    
+    img.src = url;
+  });
+}
+
+// 优化的组件项目创建器 - 针对中国网络
+function createSimpleWidgetItem(item) {
+  const posterUrl = item.poster_url || (item.poster_path ? createSmartImageUrl(item.poster_path, 'poster', 'w342') : "");
+  const backdropUrl = item.backdrop_path ? createSmartImageUrl(item.backdrop_path, 'backdrop', 'w780') : "";
+  
+  return {
+    id: item.id,
+    type: "tmdb",
+    title: item.title || item.name || "未知标题",
+    description: item.overview || "暂无简介",
+    releaseDate: item.release_date || item.first_air_date || "未知日期",
+    posterPath: posterUrl,
+    coverUrl: posterUrl,
+    backdropPath: backdropUrl,
+    rating: item.vote_average ? item.vote_average.toFixed(1) : "无评分",
+    mediaType: item.media_type || (item.title ? "movie" : "tv"),
+    genreTitle: item.genre_ids && item.genre_ids.length > 0 ? 
+      item.genre_ids.slice(0, 3).map(id => item.genreMap?.[id]).filter(Boolean).join('•') : "未知类型",
+    link: null,
+    duration: 0,
+    durationText: "",
+    episode: 0,
+    childItems: [],
+    isChinaOptimized: true // 标记为中国网络优化
+  };
+}
+
+// 优化的增强组件项目创建器 - 针对中国网络
+function createEnhancedWidgetItem(item) {
+  // 生成标题海报URL - 使用较小的尺寸
+  const titleBackdropUrl = item.title_backdrop || item.backdrop_path ? 
+    createSmartImageUrl(item.backdrop_path || item.title_backdrop, 'backdrop', 'w780') : "";
+  
+  // 选择最佳显示标题
+  const displayTitle = pickEnhancedChineseTitle(item);
+  
+  const posterUrl = item.poster_url || item.poster_path || "";
+  const backdropUrl = titleBackdropUrl || item.title_backdrop || item.backdrop_path || "";
+  
+  const result = {
+    id: item.id,
+    type: "tmdb",
+    title: displayTitle,
+    description: processEnhancedOverview(item.overview),
+    releaseDate: item.release_date || item.first_air_date || "未知日期",
+    posterPath: posterUrl ? createSmartImageUrl(posterUrl.replace('https://image.tmdb.org/t/p/w500', ''), 'poster', 'w342') : posterUrl,
+    coverUrl: posterUrl ? createSmartImageUrl(posterUrl.replace('https://image.tmdb.org/t/p/w500', ''), 'poster', 'w342') : posterUrl,
+    backdropPath: backdropUrl ? createSmartImageUrl(backdropUrl.replace('https://image.tmdb.org/t/p/w1280', ''), 'backdrop', 'w780') : backdropUrl,
+    backdropHD: item.title_backdrop_hd || item.backdrop_hd || "",
+    backdrop780: item.backdrop_w780 || "",
+    rating: item.vote_average ? item.vote_average.toFixed(1) : "无评分",
+    mediaType: item.media_type || (item.title ? "movie" : "tv"),
+    genreTitle: generateEnhancedGenreTitle(item.genre_ids || [], item.media_type || (item.title ? "movie" : "tv"), item.genreMap || {}),
+    link: null,
+    duration: 0,
+    durationText: "",
+    episode: 0,
+    childItems: [],
+    category: item.category || "热门",
+    isChinaOptimized: true, // 标记为中国网络优化
+    hasTitleBackdrop: !!titleBackdropUrl
+  };
+  
+  console.log(`[增强项目] ${result.title} - 标题海报: ${result.backdropPath ? '✅' : '❌'} - 分类: ${result.category} - 中国优化: 是`);
+  return result;
+}
+
 
 
 
