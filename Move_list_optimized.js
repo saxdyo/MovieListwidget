@@ -168,4 +168,59 @@ async function batchGenerateBackdrops(items, generatorFn, concurrent) {
   return await pool.all(tasks);
 }
 
-// ... 后续将继续迁移和优化横版标题海报生成、主流程等 ...
+// ========== 横版标题海报生成增量优化（优化点3） ==========
+// 简单哈希函数（可替换为更强hash算法）
+function simpleHash(str) {
+  let hash = 0, i, chr;
+  if (str.length === 0) return hash;
+  for (i = 0; i < str.length; i++) {
+    chr   = str.charCodeAt(i);
+    hash  = ((hash << 5) - hash) + chr;
+    hash |= 0; // Convert to 32bit int
+  }
+  return hash;
+}
+
+// 生成条目指纹
+function getBackdropFingerprint(item) {
+  // 只要影响横版标题海报的字段变了，指纹就会变
+  const key = [
+    item.id,
+    item.title,
+    item.name,
+    item.backdrop_path,
+    item.poster_path,
+    item.vote_average,
+    item.release_date,
+    item.first_air_date
+  ].join('|');
+  return simpleHash(key).toString();
+}
+
+// 增量生成横版标题海报，缓存key用指纹
+async function generateBackdropWithCache(item, generatorFn) {
+  const fingerprint = getBackdropFingerprint(item);
+  const cacheKey = `backdrop_${item.id}_${fingerprint}`;
+  let cached = getCachedBackdrop(cacheKey);
+  if (cached) {
+    log(`[横版标题海报] 命中缓存: ${cacheKey}`, 'debug');
+    return cached;
+  }
+  // 未命中则生成
+  const result = await generatorFn(item);
+  if (result) {
+    cacheBackdrop(cacheKey, result);
+  }
+  return result;
+}
+
+// 批量增量生成横版标题海报
+async function batchGenerateBackdropsWithCache(items, generatorFn, concurrent) {
+  return await batchGenerateBackdrops(
+    items,
+    item => generateBackdropWithCache(item, generatorFn),
+    concurrent
+  );
+}
+
+// ... 后续将继续迁移和优化主流程、工具函数结构等 ...
