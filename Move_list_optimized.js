@@ -355,3 +355,44 @@ function processItemsWithGenre(items, genreMap, mediaType) {
 // 这样可确保优先使用环境变量，且便于后续密钥轮换和安全管理
 
 // ... 其余API调用处均应统一引用CONFIG.API_KEY ...
+
+// ========== 日志与性能监控细化（优化点5补充） ==========
+// 支持动态切换日志等级
+function setLogLevel(level) {
+  if (['error','warn','info','debug'].includes(level)) {
+    CONFIG.LOG_LEVEL = level;
+    log(`[日志] 日志等级已切换为: ${level}`, 'info');
+  }
+}
+
+// 性能统计工具
+function withTiming(label, fn) {
+  const start = Date.now();
+  return Promise.resolve(fn()).then(result => {
+    const duration = Date.now() - start;
+    log(`[性能] ${label} 耗时: ${duration}ms`, 'info');
+    return result;
+  });
+}
+
+// 并发任务耗时统计
+async function timedBatch(tasks, label) {
+  const start = Date.now();
+  const results = await Promise.allSettled(tasks.map(t => t()));
+  const duration = Date.now() - start;
+  log(`[性能] 并发批量任务(${label}) 总耗时: ${duration}ms`, 'info');
+  return results;
+}
+
+// 关键异常捕获与上报（可扩展为远程上报）
+function safeAsync(fn, label) {
+  return async (...args) => {
+    try {
+      return await fn(...args);
+    } catch (e) {
+      log(`[异常] ${label || fn.name}: ${e}`, 'error');
+      // 可扩展为远程上报
+      return null;
+    }
+  };
+}
