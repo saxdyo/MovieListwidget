@@ -223,4 +223,35 @@ async function batchGenerateBackdropsWithCache(items, generatorFn, concurrent) {
   );
 }
 
-// ... 后续将继续迁移和优化主流程、工具函数结构等 ...
+// ========== 工具函数抽离与主流程结构优化（优化点6） ==========
+// 通用工具函数
+function deepClone(obj) {
+  return JSON.parse(JSON.stringify(obj));
+}
+function uniqBy(arr, keyFn) {
+  const seen = new Set();
+  return arr.filter(item => {
+    const key = keyFn(item);
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+function isArray(val) {
+  return Array.isArray(val);
+}
+function isObject(val) {
+  return val && typeof val === 'object' && !Array.isArray(val);
+}
+
+// 主流程示例：批量生成横版标题海报（带缓存、并发、去重）
+async function generateAllBackdrops(items, generatorFn) {
+  // 1. 去重
+  const uniqueItems = uniqBy(items, item => item.id);
+  // 2. 批量增量生成（带缓存和并发）
+  const results = await batchGenerateBackdropsWithCache(uniqueItems, generatorFn, CONFIG.MAX_CONCURRENT);
+  // 3. 深拷贝结果，防止外部修改
+  return deepClone(results);
+}
+
+// ... 后续可继续迁移和优化具体业务流程、数据处理链等 ...
