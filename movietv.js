@@ -660,6 +660,31 @@ WidgetMetadata = {
             { title: "9.0分以上", value: "9.0" }
           ]
         },
+        {
+          name: "year",
+          title: "📅年份筛选",
+          type: "enumeration",
+          description: "按播出年份筛选动画",
+          value: "",
+          enumOptions: [
+            { title: "全部年份", value: "" },
+            { title: "2024年", value: "2024" },
+            { title: "2023年", value: "2023" },
+            { title: "2022年", value: "2022" },
+            { title: "2021年", value: "2021" },
+            { title: "2020年", value: "2020" },
+            { title: "2019年", value: "2019" },
+            { title: "2018年", value: "2018" },
+            { title: "2017年", value: "2017" },
+            { title: "2016年", value: "2016" },
+            { title: "2015年", value: "2015" },
+            { title: "2014年", value: "2014" },
+            { title: "2013年", value: "2013" },
+            { title: "2012年", value: "2012" },
+            { title: "2011年", value: "2011" },
+            { title: "2010年", value: "2010" }
+          ]
+        },
         { name: "page", title: "页码", type: "page", value: "1" }
       ]
     }
@@ -4115,15 +4140,20 @@ async function fetchAndProcess(basePath, params) {
 async function listAnime(params) { 
     const region = params.region || 'all';
     const minRating = parseFloat(params.min_rating) || 0;
+    const year = params.year || '';
     const basePath = `anime/${region.replace(':', '_')}`;
     
     try {
+        console.log(`[IMDb-v2] 动画模块参数: 地区=${region}, 最低评分=${minRating}, 年份=${year}`);
+        
         // 获取基础数据
         const items = await fetchAndProcess(basePath, params);
         
+        let filteredItems = items;
+        
         // 如果设置了最低评分要求，进行过滤
         if (minRating > 0) {
-            const filteredItems = items.filter(item => {
+            filteredItems = filteredItems.filter(item => {
                 const rating = parseFloat(item.rating) || 0;
                 return rating >= minRating;
             });
@@ -4131,15 +4161,61 @@ async function listAnime(params) {
             if(DEBUG_LOG) {
                 console.log(`[IMDb-v2 DEBUG] 动画评分过滤: 原始${items.length}项 -> 过滤后${filteredItems.length}项 (最低评分: ${minRating})`);
             }
-            
-            return filteredItems;
         }
         
-        return items;
+        // 如果设置了年份筛选，进行过滤
+        if (year && year !== "") {
+            const targetYear = parseInt(year);
+            filteredItems = filteredItems.filter(item => {
+                // 检查年份信息（可能在title、description或releaseDate中）
+                const itemYear = extractYearFromItem(item);
+                return itemYear === targetYear;
+            });
+            
+            console.log(`[IMDb-v2] 动画年份过滤: 原始${items.length}项 -> 过滤后${filteredItems.length}项 (年份: ${year})`);
+        }
+        
+        return filteredItems;
     } catch (error) {
         console.error(`[IMDb-v2 ERROR] 动画模块处理出错:`, error);
         throw error;
     }
+}
+
+// 从动画项目中提取年份信息
+function extractYearFromItem(item) {
+    // 1. 从标题中提取年份 (如 "动画名称 (2023)")
+    const titleMatch = (item.title || '').match(/\((\d{4})\)/);
+    if (titleMatch) {
+        return parseInt(titleMatch[1]);
+    }
+    
+    // 2. 从描述中提取年份
+    const descMatch = (item.description || '').match(/(\d{4})年/);
+    if (descMatch) {
+        return parseInt(descMatch[1]);
+    }
+    
+    // 3. 从发布日期中提取年份
+    if (item.releaseDate) {
+        const dateMatch = item.releaseDate.match(/^(\d{4})-/);
+        if (dateMatch) {
+            return parseInt(dateMatch[1]);
+        }
+    }
+    
+    // 4. 从其他可能包含年份的字段中提取
+    const allText = JSON.stringify(item).toLowerCase();
+    const yearMatch = allText.match(/(\d{4})/);
+    if (yearMatch) {
+        const year = parseInt(yearMatch[1]);
+        // 只返回合理的年份范围 (1990-2030)
+        if (year >= 1990 && year <= 2030) {
+            return year;
+        }
+    }
+    
+    return null;
 }
 
 // ===============TMDB横版海报工具集===============
