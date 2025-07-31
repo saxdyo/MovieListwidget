@@ -14,7 +14,7 @@ WidgetMetadata = {
       description: "今日热门、本周热门、热门电影 - 带标题海报效果",
       requiresWebView: false,
       functionName: "loadTmdbTitlePosterTrending",
-      cacheDuration: 60,
+      cacheDuration: 360,
       params: [
         { 
           name: "content_type", 
