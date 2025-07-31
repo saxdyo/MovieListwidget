@@ -290,4 +290,40 @@ async function loadEnhancedTitlePosterWithBackdropsOptimized(items, generatorFn)
   return deepClone(allResults);
 }
 
+// ========== 优化后的热门数据加载主流程（业务流程示例） ==========
+/**
+ * 加载TMDB热门数据（带LRU缓存、健康检查、自动恢复、并发优化）
+ * @param {Function} fetchDataFn 拉取数据的异步函数（如API或数据包）
+ * @param {Function} checkHealthFn 健康检查函数
+ * @returns {Promise<Object>} 热门数据
+ */
+async function loadTmdbTrendingDataOptimized(fetchDataFn, checkHealthFn) {
+  // 1. 优先查缓存
+  let cached = getCachedTrendingData();
+  if (cached && checkHealthFn(cached)) {
+    log('[热门数据] 使用缓存', 'info');
+    logCacheStats();
+    return deepClone(cached);
+  }
+  // 2. 拉取数据（支持并发）
+  let data = null;
+  try {
+    data = await fetchDataFn();
+    if (data && checkHealthFn(data)) {
+      cacheTrendingData(data);
+      log('[热门数据] 拉取并缓存新数据', 'info');
+      logCacheStats();
+      return deepClone(data);
+    }
+    log('[热门数据] 拉取数据健康检查未通过，尝试自动恢复', 'warn');
+  } catch (e) {
+    log(`[热门数据] 拉取数据异常: ${e}`, 'error');
+  }
+  // 3. 自动恢复机制（可自定义）
+  // 这里可根据实际情况调用备用数据源、降级API等
+  // ...
+  log('[热门数据] 自动恢复未实现，返回空结构', 'error');
+  return { today_global: [], week_global_all: [], popular_movies: [] };
+}
+
 // ... 后续可继续迁移和优化具体业务流程、数据处理链等 ...
