@@ -348,4 +348,10 @@ function processItemsWithGenre(items, genreMap, mediaType) {
   });
 }
 
-// ... 可继续迁移和优化其他通用数据处理链 ...
+// ========== API Key安全性优化（优化点8） ==========
+// 所有API调用均应通过CONFIG.API_KEY获取密钥
+// 例如：
+// Widget.tmdb.get('/movie/popular', { params: { api_key: CONFIG.API_KEY, ... } })
+// 这样可确保优先使用环境变量，且便于后续密钥轮换和安全管理
+
+// ... 其余API调用处均应统一引用CONFIG.API_KEY ...
