@@ -41,4 +41,73 @@ function log(msg, level = 'info') {
   }
 }
 
-// ... 后续将继续迁移和优化主流程、缓存、并发、横版标题海报等 ...
+// ========== LRU缓存实现与缓存统计（优化点1） ==========
+class LRUCache {
+  constructor(maxSize) {
+    this.maxSize = maxSize;
+    this.cache = new Map();
+    this.hits = 0;
+    this.misses = 0;
+  }
+  get(key) {
+    if (this.cache.has(key)) {
+      const value = this.cache.get(key);
+      this.cache.delete(key);
+      this.cache.set(key, value);
+      this.hits++;
+      return value;
+    } else {
+      this.misses++;
+      return undefined;
+    }
+  }
+  set(key, value) {
+    if (this.cache.has(key)) {
+      this.cache.delete(key);
+    } else if (this.cache.size >= this.maxSize) {
+      // 淘汰最久未用
+      const firstKey = this.cache.keys().next().value;
+      this.cache.delete(firstKey);
+    }
+    this.cache.set(key, value);
+  }
+  stats() {
+    return {
+      size: this.cache.size,
+      hits: this.hits,
+      misses: this.misses,
+      hitRate: this.hits + this.misses > 0 ? (this.hits / (this.hits + this.misses)).toFixed(2) : '0.00'
+    };
+  }
+  clear() {
+    this.cache.clear();
+    this.hits = 0;
+    this.misses = 0;
+  }
+}
+
+// 横版标题海报缓存、数据缓存实例
+const backdropLRUCache = new LRUCache(CONFIG.LRU_CACHE_SIZE);
+const trendingDataLRUCache = new LRUCache(10); // 热门数据缓存可小些
+
+// 缓存操作封装
+function getCachedBackdrop(key) {
+  return backdropLRUCache.get(key);
+}
+function cacheBackdrop(key, data) {
+  backdropLRUCache.set(key, data);
+}
+function getCachedTrendingData() {
+  return trendingDataLRUCache.get('trending_data');
+}
+function cacheTrendingData(data) {
+  trendingDataLRUCache.set('trending_data', data);
+}
+
+// 缓存命中率日志
+function logCacheStats() {
+  log(`[横版标题海报缓存] 命中率: ${JSON.stringify(backdropLRUCache.stats())}`, 'info');
+  log(`[热门数据缓存] 命中率: ${JSON.stringify(trendingDataLRUCache.stats())}`, 'info');
+}
+
+// ... 后续将继续迁移和优化主流程、并发、横版标题海报等 ...
