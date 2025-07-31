@@ -777,7 +777,11 @@ async function fetchTmdbDataFromUrl(url) {
 }
 
 function isValidTmdbData(data) {
-    return data && Array.isArray(data.today_global) && data.today_global.length > 0;
+    return data && (
+        (Array.isArray(data.today_global) && data.today_global.length > 0) ||
+        (Array.isArray(data.week_global_all) && data.week_global_all.length > 0) ||
+        (Array.isArray(data.popular_movies) && data.popular_movies.length > 0)
+    );
 }
 
 async function fetchTmdbDataFromApi() {
@@ -821,39 +825,61 @@ async function loadTmdbTrendingData() {
         // 3. 备用方案：使用实时API
         console.log("[数据源] 数据包不可用，使用实时API");
         const realtimeData = await fetchRealtimeData();
-        if (realtimeData) {
+        if (realtimeData && isValidTmdbData(realtimeData)) {
             // 缓存实时数据
             cacheTrendingData(realtimeData);
+            console.log("[数据源] 实时API数据获取成功");
+            return realtimeData;
         }
-        return realtimeData;
+        
+        // 4. 最后的备用方案：返回空数据结构
+        console.log("[数据源] 所有数据源都失败，返回空数据结构");
+        return {
+            today_global: [],
+            week_global_all: [],
+            popular_movies: []
+        };
         
     } catch (error) {
         console.error("[数据源] 数据获取失败:", error);
-        return await fetchRealtimeData();
+        // 返回空数据结构而不是null
+        return {
+            today_global: [],
+            week_global_all: [],
+            popular_movies: []
+        };
     }
 }
 
 // 简化的数据包获取
 async function fetchSimpleData() {
-    try {
-        const response = await Widget.http.get("https://raw.githubusercontent.com/quantumultxx/ForwardWidgets/refs/heads/main/data/TMDB_Trending.json", {
-            timeout: 10000,
-            headers: {
-                'Cache-Control': 'no-cache',
-                'User-Agent': 'MovieListWidget/2.0'
+    const dataUrls = [
+        "https://raw.githubusercontent.com/quantumultxx/ForwardWidgets/refs/heads/main/data/TMDB_Trending.json",
+        "https://raw.githubusercontent.com/saxdyo/MovieListwidget/main/data/TMDB_Trending.json"
+    ];
+    
+    for (const url of dataUrls) {
+        try {
+            console.log(`[数据包] 尝试获取: ${url}`);
+            const response = await Widget.http.get(url, {
+                timeout: 8000,
+                headers: {
+                    'Cache-Control': 'no-cache',
+                    'User-Agent': 'MovieListWidget/2.0'
+                }
+            });
+            
+            if (response.data && isValidTmdbData(response.data)) {
+                console.log(`[数据包] 获取成功，今日热门: ${response.data.today_global?.length || 0}项`);
+                return response.data;
             }
-        });
-        
-        if (response.data && response.data.today_global && response.data.today_global.length > 0) {
-            console.log(`[数据包] 获取成功，今日热门: ${response.data.today_global.length}项`);
-            return response.data;
+        } catch (error) {
+            console.log(`[数据包] 获取失败 ${url}: ${error.message}`);
         }
-        
-        return null;
-    } catch (error) {
-        console.log(`[数据包] 获取失败: ${error.message}`);
-        return null;
     }
+    
+    console.log("[数据包] 所有数据源都获取失败");
+    return null;
 }
 
 // 增强的实时数据获取 - 包含更多剧集数据
@@ -1568,45 +1594,35 @@ function validateTrendingData(data) {
         }
         
         const requiredFields = ['today_global', 'week_global_all', 'popular_movies'];
+        let validFields = 0;
         
         // 检查基本字段是否存在
         for (const field of requiredFields) {
             if (!data[field]) {
                 console.log(`[验证] 缺少字段: ${field}`);
-                return false;
+                continue;
             }
             
             if (!Array.isArray(data[field])) {
                 console.log(`[验证] 字段不是数组: ${field}`);
-                return false;
+                continue;
             }
             
             if (data[field].length === 0) {
                 console.log(`[验证] 数组为空: ${field}`);
-                return false;
+                continue;
             }
+            
+            validFields++;
         }
         
-        // 检查数据项的基本完整性（不要求title_backdrop，因为这是我们要添加的）
-        const sampleItems = [
-            ...data.today_global.slice(0, 3),
-            ...data.week_global_all.slice(0, 3),
-            ...data.popular_movies.slice(0, 3)
-        ];
-        
-        const validItems = sampleItems.filter(item => 
-            item && 
-            item.id && 
-            (item.title || item.name) && 
-            (item.poster_url || item.poster_path)
-        );
-        
-        if (validItems.length < sampleItems.length * 0.7) {
-            console.log(`[验证] 数据项质量不足: ${validItems.length}/${sampleItems.length}`);
+        // 只要有一个字段有效就通过验证
+        if (validFields === 0) {
+            console.log("[验证] 没有有效的数据字段");
             return false;
         }
         
-        console.log(`[验证] 数据验证通过 - 今日热门: ${data.today_global.length}, 本周热门: ${data.week_global_all.length}, 热门电影: ${data.popular_movies.length}`);
+        console.log(`[验证] 数据验证通过 - 有效字段: ${validFields}/${requiredFields.length}`);
         return true;
     } catch (error) {
         console.error("[验证] 数据验证出错:", error);
