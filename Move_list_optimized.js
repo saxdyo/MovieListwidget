@@ -110,4 +110,62 @@ function logCacheStats() {
   log(`[热门数据缓存] 命中率: ${JSON.stringify(trendingDataLRUCache.stats())}`, 'info');
 }
 
-// ... 后续将继续迁移和优化主流程、并发、横版标题海报等 ...
+// ========== 动态并发控制与任务队列（优化点2） ==========
+class PromisePool {
+  constructor(maxConcurrent) {
+    this.maxConcurrent = maxConcurrent;
+    this.activeCount = 0;
+    this.queue = [];
+  }
+  run(fn) {
+    return new Promise((resolve, reject) => {
+      const task = () => {
+        this.activeCount++;
+        fn().then(resolve, reject).finally(() => {
+          this.activeCount--;
+          if (this.queue.length > 0) {
+            const next = this.queue.shift();
+            next();
+          }
+        });
+      };
+      if (this.activeCount < this.maxConcurrent) {
+        task();
+      } else {
+        this.queue.push(task);
+      }
+    });
+  }
+  async all(tasks) {
+    const results = [];
+    let i = 0;
+    return new Promise((resolve, reject) => {
+      const next = () => {
+        if (i === tasks.length && this.activeCount === 0) {
+          resolve(results);
+        }
+      };
+      for (; i < tasks.length; i++) {
+        this.run(tasks[i])
+          .then(r => results.push(r))
+          .catch(e => results.push(e))
+          .finally(next);
+      }
+      next();
+    });
+  }
+}
+
+// 用于横版标题海报批量生成等场景
+function getPromisePool(concurrent) {
+  return new PromisePool(concurrent || CONFIG.MAX_CONCURRENT);
+}
+
+// 并发处理示例：批量生成横版标题海报
+async function batchGenerateBackdrops(items, generatorFn, concurrent) {
+  const pool = getPromisePool(concurrent);
+  const tasks = items.map(item => () => generatorFn(item));
+  return await pool.all(tasks);
+}
+
+// ... 后续将继续迁移和优化横版标题海报生成、主流程等 ...
