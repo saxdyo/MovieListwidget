@@ -1016,8 +1016,6 @@ const performanceMonitor = {
   }
 };
 
-const API_KEY = 'f3ae69ddca232b56265600eb919d46ab'; // TMDB API Key
-
 // TMDB类型缓存
 let tmdbGenresCache = null;
 
@@ -1030,8 +1028,8 @@ async function fetchTmdbGenres() {
   
   try {
     const [movieGenres, tvGenres] = await Promise.all([
-      Widget.tmdb.get('/genre/movie/list', { params: { language: 'zh-CN', api_key: API_KEY } }),
-      Widget.tmdb.get('/genre/tv/list', { params: { language: 'zh-CN', api_key: API_KEY } })
+      Widget.tmdb.get('/genre/movie/list', { params: { language: 'zh-CN', api_key: CONFIG.API_KEY } }),
+      Widget.tmdb.get('/genre/tv/list', { params: { language: 'zh-CN', api_key: CONFIG.API_KEY } })
     ]);
 
     const genreData = {
@@ -1147,9 +1145,9 @@ function isValidTmdbData(data) {
 async function fetchTmdbDataFromApi() {
     try {
         const [todayRes, weekRes, popularRes] = await Promise.allSettled([
-            Widget.tmdb.get("/trending/all/day", { params: { language: 'zh-CN', region: 'CN', api_key: API_KEY } }),
-            Widget.tmdb.get("/trending/all/week", { params: { language: 'zh-CN', region: 'CN', api_key: API_KEY } }),
-            Widget.tmdb.get("/movie/popular", { params: { language: 'zh-CN', region: 'CN', api_key: API_KEY } })
+            Widget.tmdb.get("/trending/all/day", { params: { language: 'zh-CN', region: 'CN', api_key: CONFIG.API_KEY } }),
+            Widget.tmdb.get("/trending/all/week", { params: { language: 'zh-CN', region: 'CN', api_key: CONFIG.API_KEY } }),
+            Widget.tmdb.get("/movie/popular", { params: { language: 'zh-CN', region: 'CN', api_key: CONFIG.API_KEY } })
         ]);
         return {
             today_global: todayRes.status === 'fulfilled' && todayRes.value.results ? todayRes.value.results : [],
@@ -1252,42 +1250,42 @@ async function fetchRealtimeData() {
                 params: { 
                     language: 'zh-CN',
                     region: 'CN', 
-                    api_key: API_KEY 
+                    api_key: CONFIG.API_KEY 
                 } 
             }),
             Widget.tmdb.get("/trending/all/week", { 
                 params: { 
                     language: 'zh-CN',
                     region: 'CN', 
-                    api_key: API_KEY 
+                    api_key: CONFIG.API_KEY 
                 } 
             }),
             Widget.tmdb.get("/movie/popular", { 
                 params: { 
                     language: 'zh-CN',
                     region: 'CN', 
-                    api_key: API_KEY 
+                    api_key: CONFIG.API_KEY 
                 } 
             }),
             Widget.tmdb.get("/tv/popular", { 
                 params: { 
                     language: 'zh-CN',
                     region: 'CN', 
-                    api_key: API_KEY 
+                    api_key: CONFIG.API_KEY 
                 } 
             }),
             Widget.tmdb.get("/movie/top_rated", { 
                 params: { 
                     language: 'zh-CN',
                     region: 'CN', 
-                    api_key: API_KEY 
+                    api_key: CONFIG.API_KEY 
                 } 
             }),
             Widget.tmdb.get("/tv/top_rated", { 
                 params: { 
                     language: 'zh-CN',
                     region: 'CN', 
-                    api_key: API_KEY 
+                    api_key: CONFIG.API_KEY 
                 } 
             })
         ]);
@@ -1585,21 +1583,21 @@ async function generateSimpleTrendingData() {
                 params: { 
                     language: 'zh-CN',
                     region: 'CN', 
-                    api_key: API_KEY 
+                    api_key: CONFIG.API_KEY 
                 } 
             }),
             Widget.tmdb.get("/trending/all/week", { 
                 params: { 
                     language: 'zh-CN',
                     region: 'CN', 
-                    api_key: API_KEY 
+                    api_key: CONFIG.API_KEY 
                 } 
             }),
             Widget.tmdb.get("/movie/popular", { 
                 params: { 
                     language: 'zh-CN',
                     region: 'CN', 
-                    api_key: API_KEY 
+                    api_key: CONFIG.API_KEY 
                 } 
             })
         ]);
@@ -2179,7 +2177,7 @@ async function generateEnhancedTrendingData() {
                 params: { 
                     language: 'zh-CN',
                     region: 'CN', 
-                    api_key: API_KEY 
+                    api_key: CONFIG.API_KEY 
                 } 
             }),
             // 本周热门
@@ -2187,7 +2185,7 @@ async function generateEnhancedTrendingData() {
                 params: { 
                     language: 'zh-CN',
                     region: 'CN', 
-                    api_key: API_KEY 
+                    api_key: CONFIG.API_KEY 
                 } 
             }),
             // 热门电影
@@ -2195,7 +2193,7 @@ async function generateEnhancedTrendingData() {
                 params: { 
                     language: 'zh-CN',
                     region: 'CN', 
-                    api_key: API_KEY 
+                    api_key: CONFIG.API_KEY 
                 } 
             }),
             // 热门剧集
@@ -2203,7 +2201,7 @@ async function generateEnhancedTrendingData() {
                 params: { 
                     language: 'zh-CN',
                     region: 'CN', 
-                    api_key: API_KEY 
+                    api_key: CONFIG.API_KEY 
                 } 
             }),
             // 类型映射
@@ -2271,19 +2269,19 @@ async function generateBasicTrendingData() {
         Widget.tmdb.get("/trending/all/day", { 
             params: { 
                 language: 'zh-CN',
-                api_key: API_KEY 
+                api_key: CONFIG.API_KEY 
             } 
         }),
         Widget.tmdb.get("/trending/all/week", { 
             params: { 
                 language: 'zh-CN',
-                api_key: API_KEY 
+                api_key: CONFIG.API_KEY 
             } 
         }),
         Widget.tmdb.get("/movie/popular", { 
             params: { 
                 language: 'zh-CN',
-                api_key: API_KEY 
+                api_key: CONFIG.API_KEY 
             } 
         }),
         fetchTmdbGenres()
@@ -2529,7 +2527,7 @@ async function loadTodayGlobalMedia(params = {}) {
             params: { 
                 language: 'zh-CN',
                 region: 'CN',
-                api_key: API_KEY 
+                api_key: CONFIG.API_KEY 
             }
         });
         const genreMap = await fetchTmdbGenres();
@@ -2618,7 +2616,7 @@ async function loadWeekGlobalMovies(params = {}) {
             params: { 
                 language: 'zh-CN',
                 region: 'CN',
-                api_key: API_KEY 
+                api_key: CONFIG.API_KEY 
             }
         });
         const genreMap = await fetchTmdbGenres();
@@ -2653,7 +2651,7 @@ async function tmdbPopularMovies(params = {}) {
           language: 'zh-CN',
           region: 'CN', 
           page, 
-          api_key: API_KEY 
+          api_key: CONFIG.API_KEY 
         }
       });
       const genreMap = await fetchTmdbGenres();
@@ -2665,7 +2663,7 @@ async function tmdbPopularMovies(params = {}) {
           region: 'CN', 
           page, 
           sort_by,
-          api_key: API_KEY 
+          api_key: CONFIG.API_KEY 
         }
       });
       const genreMap = await fetchTmdbGenres();
@@ -2689,7 +2687,7 @@ async function tmdbTopRated(params = {}) {
           language: 'zh-CN', 
           region: 'CN',
           page, 
-          api_key: API_KEY 
+          api_key: CONFIG.API_KEY 
         }
       });
       const genreMap = await fetchTmdbGenres();
@@ -2704,7 +2702,7 @@ async function tmdbTopRated(params = {}) {
           region: 'CN', 
           page, 
           sort_by,
-          api_key: API_KEY 
+          api_key: CONFIG.API_KEY 
         }
       });
       const genreMap = await fetchTmdbGenres();
@@ -2728,7 +2726,7 @@ async function tmdbDiscoverByNetwork(params = {}) {
         page, 
         with_networks,
         sort_by,
-        api_key: API_KEY 
+        api_key: CONFIG.API_KEY 
       }
     });
     const genreMap = await fetchTmdbGenres();
@@ -2751,7 +2749,7 @@ async function tmdbDiscoverByCompany(params = {}) {
       language, 
       page, 
       sort_by,
-      api_key: API_KEY
+      api_key: CONFIG.API_KEY
     };
     
     // 添加出品公司过滤器
@@ -2826,7 +2824,7 @@ async function loadTmdbTrendingCombined(params = {}) {
               params: { 
                 language: 'zh-CN',
                 region: 'CN',
-                api_key: API_KEY,
+                api_key: CONFIG.API_KEY,
                 page: pageNum
               }
             });
@@ -2875,7 +2873,7 @@ async function loadTmdbTrendingCombined(params = {}) {
               params: { 
                 language: 'zh-CN',
                 region: 'CN',
-                api_key: API_KEY,
+                api_key: CONFIG.API_KEY,
                 page: pageNum
               }
             });
@@ -2922,7 +2920,7 @@ async function loadTmdbTrendingCombined(params = {}) {
                 language: 'zh-CN',
                 region: 'CN',
                 page: pageNum,
-                api_key: API_KEY
+                api_key: CONFIG.API_KEY
               }
             });
             const genreMap = await fetchTmdbGenres();
@@ -2937,7 +2935,7 @@ async function loadTmdbTrendingCombined(params = {}) {
                 language: 'zh-CN',
                 region: 'CN',
                 page: pageNum,
-                api_key: API_KEY
+                api_key: CONFIG.API_KEY
               }
             });
             const genreMap = await fetchTmdbGenres();
@@ -2981,7 +2979,7 @@ async function loadTmdbTrendingCombined(params = {}) {
                   language: 'zh-CN', 
                   region: 'CN',
                   page: 1, 
-                  api_key: API_KEY 
+                  api_key: CONFIG.API_KEY 
                 }
               });
               const genreMap = await fetchTmdbGenres();
@@ -3007,7 +3005,7 @@ async function loadTmdbTrendingCombined(params = {}) {
                 region: 'CN', 
                 page: 1, 
                 sort_by: content_type,
-                api_key: API_KEY 
+                api_key: CONFIG.API_KEY 
               }
             });
             const genreMap = await fetchTmdbGenres();
@@ -3109,7 +3107,7 @@ async function loadTmdbTitlePosterTrending(params = {}) {
                 params: { 
                   language: 'zh-CN',
                   region: 'CN',
-                  api_key: API_KEY,
+                  api_key: CONFIG.API_KEY,
                   page: 1
                 }
               });
@@ -3140,7 +3138,7 @@ async function loadTmdbTitlePosterTrending(params = {}) {
                 params: { 
                   language: 'zh-CN',
                   region: 'CN',
-                  api_key: API_KEY,
+                  api_key: CONFIG.API_KEY,
                   page: 1
                 }
               });
@@ -3178,7 +3176,7 @@ async function loadTmdbTitlePosterTrending(params = {}) {
                     language: 'zh-CN',
                     region: 'CN', 
                     page: pageNum, 
-                    api_key: API_KEY 
+                    api_key: CONFIG.API_KEY 
                   }
                 });
                 const genreMap = await fetchTmdbGenres();
@@ -3220,7 +3218,7 @@ async function loadTmdbTitlePosterTrending(params = {}) {
                     language: 'zh-CN', 
                     region: 'CN',
                     page: 1, 
-                    api_key: API_KEY 
+                    api_key: CONFIG.API_KEY 
                   }
                 });
                 const genreMap = await fetchTmdbGenres();
@@ -3288,7 +3286,7 @@ async function bangumiHotNewAnime(params = {}) {
       language, 
       page, 
       sort_by,
-      api_key: API_KEY,
+      api_key: CONFIG.API_KEY,
       vote_count_gte: 10  // 新番投票较少，降低门槛
     };
     
@@ -3401,7 +3399,7 @@ async function tmdbMediaRanking(params = {}) {
       language, 
       page, 
       sort_by,
-      api_key: API_KEY,
+      api_key: CONFIG.API_KEY,
       // 确保有足够投票数
       vote_count_gte: media_type === "movie" ? 100 : 50
     };
@@ -3555,7 +3553,7 @@ async function tmdbTVShowsByTime(params = {}) {
       language, 
       page, 
       sort_by,
-      api_key: API_KEY,
+      api_key: CONFIG.API_KEY,
       // 时间筛选
       vote_count_gte: 20  // 较低门槛，包含更多时间范围内的剧集
     };
@@ -4176,7 +4174,7 @@ async function classifyByGenre(params = {}) {
     const queryParams = {
       language,
       page,
-      api_key: API_KEY,
+      api_key: CONFIG.API_KEY,
       sort_by
     };
     if (genre) {
@@ -5554,23 +5552,23 @@ class HighPerformanceTMDBLoaderV2 {
       // 更多的并行请求以获得更全面的数据
       const [todayRes, weekRes, popularMoviesRes, popularTVRes, topRatedRes] = await Promise.allSettled([
         Widget.tmdb.get("/trending/all/day", { 
-          params: { language: 'zh-CN', region: 'CN', api_key: API_KEY },
+          params: { language: 'zh-CN', region: 'CN', api_key: CONFIG.API_KEY },
           timeout: this.config.fastTimeout
         }),
         Widget.tmdb.get("/trending/all/week", { 
-          params: { language: 'zh-CN', region: 'CN', api_key: API_KEY },
+          params: { language: 'zh-CN', region: 'CN', api_key: CONFIG.API_KEY },
           timeout: this.config.fastTimeout
         }),
         Widget.tmdb.get("/movie/popular", { 
-          params: { language: 'zh-CN', region: 'CN', api_key: API_KEY },
+          params: { language: 'zh-CN', region: 'CN', api_key: CONFIG.API_KEY },
           timeout: this.config.fastTimeout
         }),
         Widget.tmdb.get("/tv/popular", { 
-          params: { language: 'zh-CN', region: 'CN', api_key: API_KEY },
+          params: { language: 'zh-CN', region: 'CN', api_key: CONFIG.API_KEY },
           timeout: this.config.fastTimeout
         }),
         Widget.tmdb.get("/movie/top_rated", { 
-          params: { language: 'zh-CN', region: 'CN', api_key: API_KEY },
+          params: { language: 'zh-CN', region: 'CN', api_key: CONFIG.API_KEY },
           timeout: this.config.fastTimeout
         })
       ]);
@@ -5602,11 +5600,11 @@ class HighPerformanceTMDBLoaderV2 {
       
       const [movieRes, tvRes] = await Promise.allSettled([
         Widget.tmdb.get("/genre/movie/list", { 
-          params: { language: 'zh-CN', api_key: API_KEY },
+          params: { language: 'zh-CN', api_key: CONFIG.API_KEY },
           timeout: this.config.fastTimeout
         }),
         Widget.tmdb.get("/genre/tv/list", { 
-          params: { language: 'zh-CN', api_key: API_KEY },
+          params: { language: 'zh-CN', api_key: CONFIG.API_KEY },
           timeout: this.config.fastTimeout
         })
       ]);
