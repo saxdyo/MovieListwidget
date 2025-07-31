@@ -411,11 +411,25 @@ WidgetMetadata = {
             { title: "iQiyi", value: "1330" },
             { title: "Youku", value: "1419" },
             { title: "Bilibili", value: "1605" },
+            { title: "MGTV", value: "1631" },
             { title: "Netflix", value: "213" },
             { title: "Disney+", value: "2739" },
             { title: "HBO", value: "49" },
+            { title: "HBO Max", value: "3186" },
             { title: "Apple TV+", value: "2552" },
-            { title: "TV Tokyo", value: "84" }
+            { title: "Hulu", value: "453" },
+            { title: "Amazon Prime Video", value: "1024" },
+            { title: "FOX", value: "19" },
+            { title: "Paramount", value: "576" },
+            { title: "Paramount+", value: "4330" },
+            { title: "TV Tokyo", value: "94" },
+            { title: "BBC One", value: "332" },
+            { title: "BBC Two", value: "295" },
+            { title: "NBC", value: "6" },
+            { title: "AMC+", value: "174" },
+            { title: "We TV", value: "3732" },
+            { title: "Viu TV", value: "2146" },
+            { title: "TVB", value: "48" }
           ]
         },
         {
@@ -426,9 +440,34 @@ WidgetMetadata = {
           value: "",
           enumOptions: [
             { title: "全部类型", value: "" },
+            { title: "犯罪", value: "80" },
+            { title: "动画", value: "16" },
+            { title: "喜剧", value: "35" },
+            { title: "剧情", value: "18" },
+            { title: "家庭", value: "10751" },
+            { title: "儿童", value: "10762" },
+            { title: "悬疑", value: "9648" },
+            { title: "真人秀", value: "10764" },
+            { title: "脱口秀", value: "10767" },
+            { title: "肥皂剧", value: "10766" },
+            { title: "纪录片", value: "99" },
+            { title: "动作与冒险", value: "10759" },
+            { title: "科幻与奇幻", value: "10765" },
+            { title: "战争与政治", value: "10768" },
             { title: "动作", value: "28" },
             { title: "科幻", value: "878" },
             { title: "爱情", value: "10749" }
+          ]
+        },
+        {
+          name: "air_status",
+          title: "上映状态",
+          type: "enumeration",
+          description: "默认已上映",
+          value: "released",
+          enumOptions: [
+            { title: "已上映", value: "released" },
+            { title: "未上映", value: "upcoming" }
           ]
         },
         {
@@ -436,14 +475,14 @@ WidgetMetadata = {
           title: "📊排序方式",
           type: "enumeration",
           description: "选择排序方式",
-          value: "popularity.desc",
+          value: "first_air_date.desc",
           enumOptions: [
+            { title: "上映时间↓", value: "first_air_date.desc" },
+            { title: "上映时间↑", value: "first_air_date.asc" },
             { title: "热门度↓", value: "popularity.desc" },
             { title: "热门度↑", value: "popularity.asc" },
             { title: "评分↓", value: "vote_average.desc" },
-            { title: "评分↑", value: "vote_average.asc" },
-            { title: "首播日期↓", value: "first_air_date.desc" },
-            { title: "首播日期↑", value: "first_air_date.asc" }
+            { title: "评分↑", value: "vote_average.asc" }
           ]
         },
         { name: "page", title: "页码", type: "page" },
@@ -1015,7 +1054,7 @@ const performanceMonitor = {
   }
 };
 
-const API_KEY = ''; // TMDB API Key
+const API_KEY = (typeof process !== 'undefined' && process.env.TMDB_API_KEY) ? process.env.TMDB_API_KEY : 'f3ae69ddca232b56265600eb919d46ab'; // 优先环境变量
 
 // TMDB类型缓存
 let tmdbGenresCache = null;
@@ -1045,6 +1084,14 @@ async function fetchTmdbGenres() {
     console.error("Error fetching genres:", error);
     return { movie: {}, tv: {} };
   }
+}
+
+// 获取北京日期（用于上映状态过滤）
+function getBeijingDate() {
+  const now = new Date();
+  const beijingTime = now.getTime() + (8 * 60 * 60 * 1000);
+  const beijingDate = new Date(beijingTime);
+  return `${beijingDate.getUTCFullYear()}-${String(beijingDate.getUTCMonth() + 1).padStart(2, '0')}-${String(beijingDate.getUTCDate()).padStart(2, '0')}`;
 }
 
 // 获取TMDB类型标题（中文）
@@ -2719,17 +2766,45 @@ async function tmdbTopRated(params = {}) {
 
 // 获取播出平台内容
 async function tmdbDiscoverByNetwork(params = {}) {
-  const { language = "zh-CN", page = 1, with_networks, sort_by = "popularity.desc" } = params;
+  const { 
+    language = "zh-CN", 
+    page = 1, 
+    with_networks, 
+    with_genres,
+    air_status = "released",
+    sort_by = "first_air_date.desc" 
+  } = params;
+  
   try {
+    const beijingDate = getBeijingDate();
+    const discoverParams = {
+      language, 
+      page, 
+      sort_by,
+      api_key: API_KEY
+    };
+    
+    // 添加播出平台过滤器
+    if (with_networks) {
+      discoverParams.with_networks = with_networks;
+    }
+    
+    // 添加题材类型过滤器
+    if (with_genres) {
+      discoverParams.with_genres = with_genres;
+    }
+    
+    // 添加上映状态过滤器
+    if (air_status === 'released') {
+      discoverParams['first_air_date.lte'] = beijingDate;
+    } else if (air_status === 'upcoming') {
+      discoverParams['first_air_date.gte'] = beijingDate;
+    }
+    
     const res = await Widget.tmdb.get("/discover/tv", {
-      params: { 
-        language, 
-        page, 
-        with_networks,
-        sort_by,
-        api_key: API_KEY 
-      }
+      params: discoverParams
     });
+    
     const genreMap = await fetchTmdbGenres();
     return res.results.map(item => formatTmdbItem(item, genreMap));
   } catch (error) {
