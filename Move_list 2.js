@@ -1,16 +1,3 @@
-// ========== 优化工具与结构集成（见注释区分，原有业务逻辑保留） ==========
-
-// 集中配置区
-const CONFIG = {
-  CACHE_DURATION: 30 * 60 * 1000, // 30分钟缓存
-  FRESH_DATA_DURATION: 2 * 60 * 60 * 1000, // 2小时内数据新鲜
-  MAX_ITEMS: 30, // 横版标题海报最大条数
-  MAX_CONCURRENT: typeof process !== 'undefined' && process.env.MAX_CONCURRENT ? parseInt(process.env.MAX_CONCURRENT) : 5, // 并发数支持环境变量
-  API_KEY: (typeof process !== 'undefined' && process.env.TMDB_API_KEY) ? process.env.TMDB_API_KEY : 'f3ae69ddca232b56265600eb919d46ab', // 优先环境变量
-  LOG_LEVEL: typeof process !== 'undefined' && process.env.LOG_LEVEL ? process.env.LOG_LEVEL : 'info',
-  LRU_CACHE_SIZE: 100 // LRU缓存最大容量
-};
-
 // 日志工具
 function log(msg, level = 'info') {
   const levels = { error: 0, warn: 1, info: 2, debug: 3 };
