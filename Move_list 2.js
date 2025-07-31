@@ -1,5 +1,441 @@
 // ========== 优化工具与结构集成（见注释区分，原有业务逻辑保留） ==========
+// ========== 优化工具与结构集成（见注释区分，原有业务逻辑保留） ==========
 
+// ========== TVB播出平台优化模块 ==========
+
+// TVB专用缓存系统
+class TvbCache {
+  constructor(maxSize = 50) {
+    this.maxSize = maxSize;
+    this.cache = new Map();
+    this.hits = 0;
+    this.misses = 0;
+    this.lastCleanup = Date.now();
+  }
+
+  get(key) {
+    const item = this.cache.get(key);
+    if (item && Date.now() - item.timestamp < item.ttl) {
+      this.hits++;
+      return item.data;
+    }
+    if (item) {
+      this.cache.delete(key);
+    }
+    this.misses++;
+    return null;
+  }
+
+  set(key, data, ttl = 30 * 60 * 1000) {
+    if (this.cache.size >= this.maxSize) {
+      const firstKey = this.cache.keys().next().value;
+      this.cache.delete(firstKey);
+    }
+    this.cache.set(key, {
+      data,
+      timestamp: Date.now(),
+      ttl
+    });
+  }
+
+  stats() {
+    const total = this.hits + this.misses;
+    return {
+      size: this.cache.size,
+      hits: this.hits,
+      misses: this.misses,
+      hitRate: total > 0 ? ((this.hits / total) * 100).toFixed(2) : '0.00'
+    };
+  }
+}
+
+// TVB性能监控
+class TvbPerformanceMonitor {
+  constructor() {
+    this.requests = 0;
+    this.successes = 0;
+    this.errors = 0;
+    this.responseTimes = [];
+    this.lastReset = Date.now();
+  }
+
+  recordRequest(success, responseTime = 0) {
+    this.requests++;
+    if (success) {
+      this.successes++;
+    } else {
+      this.errors++;
+    }
+    if (responseTime > 0) {
+      this.responseTimes.push(responseTime);
+      if (this.responseTimes.length > 100) {
+        this.responseTimes.shift();
+      }
+    }
+  }
+
+  getStats() {
+    const uptime = Date.now() - this.lastReset;
+    const avgResponseTime = this.responseTimes.length > 0 
+      ? (this.responseTimes.reduce((a, b) => a + b, 0) / this.responseTimes.length).toFixed(2)
+      : 0;
+    
+    return {
+      uptime: Math.floor(uptime / 1000),
+      requests: this.requests,
+      successRate: this.requests > 0 ? ((this.successes / this.requests) * 100).toFixed(2) : '0.00',
+      avgResponseTime: `${avgResponseTime}ms`,
+      errors: this.errors
+    };
+  }
+}
+
+// 初始化TVB优化组件
+const tvbCache = new TvbCache(30);
+const tvbPerformanceMonitor = new TvbPerformanceMonitor();
+
+// 智能重试函数
+async function tvbSmartRetry(fn, maxRetries = 3, baseDelay = 1000) {
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      const startTime = Date.now();
+      const result = await fn();
+      const responseTime = Date.now() - startTime;
+      
+      tvbPerformanceMonitor.recordRequest(true, responseTime);
+      return result;
+    } catch (error) {
+      tvbPerformanceMonitor.recordRequest(false);
+      console.warn(`[TVB优化] 第${attempt + 1}次尝试失败: ${error.message}`);
+      
+      if (attempt === maxRetries - 1) {
+        throw error;
+      }
+      
+      const delay = baseDelay * Math.pow(2, attempt);
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+  }
+}
+
+// 增强的TVB数据获取函数
+async function tmdbDiscoverByNetworkEnhanced(params = {}) {
+  const { 
+    language = "zh-CN", 
+    page = 1, 
+    with_networks, 
+    with_genres,
+    air_status = "released",
+    sort_by = "first_air_date.desc" 
+  } = params;
+
+  // 生成缓存键
+  const cacheKey = `tvb_${with_networks}_${with_genres}_${air_status}_${sort_by}_${page}_${language}`;
+  
+  // 检查缓存
+  const cachedData = tvbCache.get(cacheKey);
+  if (cachedData) {
+    console.log(`[TVB优化] 使用缓存数据，命中率: ${tvbCache.stats().hitRate}%`);
+    return cachedData;
+  }
+
+  try {
+    console.log(`[TVB优化] 开始获取TVB数据，参数:`, params);
+    
+    const fetchData = async () => {
+      const beijingDate = getBeijingDate();
+      const discoverParams = {
+        language,
+        page,
+        sort_by,
+        api_key: API_KEY
+      };
+
+      if (with_networks) {
+        discoverParams.with_networks = with_networks;
+      }
+
+      if (with_genres) {
+        discoverParams.with_genres = with_genres;
+      }
+
+      if (air_status === 'released') {
+        discoverParams['first_air_date.lte'] = beijingDate;
+      } else if (air_status === 'upcoming') {
+        discoverParams['first_air_date.gte'] = beijingDate;
+      }
+
+      const res = await Widget.tmdb.get("/discover/tv", {
+        params: discoverParams
+      });
+
+      const genreMap = await fetchTmdbGenres();
+      const processedData = res.results
+        .map(item => formatTmdbItem(item, genreMap))
+        .filter(Boolean)
+        .map(item => ({ ...item, isTvbOptimized: true }));
+
+      return processedData;
+    };
+
+    const processedData = await tvbSmartRetry(fetchData, 3, 1000);
+    
+    // 缓存结果
+    tvbCache.set(cacheKey, processedData, 30 * 60 * 1000); // 30分钟缓存
+    
+    console.log(`[TVB优化] 成功获取${processedData.length}条TVB数据`);
+    return processedData;
+  } catch (error) {
+    console.error(`[TVB优化] 数据获取失败: ${error.message}`);
+    
+    // 返回错误项
+    return [{
+      id: 'tvb-error',
+      type: 'error',
+      title: 'TVB数据获取失败',
+      description: '网络连接或API服务暂时不可用，请稍后重试',
+      isTvbOptimized: true
+    }];
+  }
+}
+
+// 集中配置区
+const CONFIG = {
+  CACHE_DURATION: 30 * 60 * 1000, // 30分钟缓存
+  FRESH_DATA_DURATION: 2 * 60 * 60 * 1000, // 2小时内数据新鲜
+  MAX_ITEMS: 30, // 横版标题海报最大条数
+  MAX_CONCURRENT: typeof process !== 'undefined' && process.env.MAX_CONCURRENT ? parseInt(process.env.MAX_CONCURRENT) : 5, // 并发数支持环境变量
+  LOG_LEVEL: typeof process !== 'undefined' && process.env.LOG_LEVEL ? process.env.LOG_LEVEL : 'info',
+  LRU_CACHE_SIZE: 100 // LRU缓存最大容量
+};
+
+// 日志工具
+function log(msg, level = 'info') {
+  const levels = { error: 0, warn: 1, info: 2, debug: 3 };
+  if (levels[level] <= levels[CONFIG.LOG_LEVEL]) {
+    if (level === 'error') {
+      console.error(msg);
+    } else if (level === 'warn') {
+      console.warn(msg);
+    } else {
+      console.log(msg);
+    }
+  }
+}
+function setLogLevel(level) {
+  if (['error','warn','info','debug'].includes(level)) {
+    CONFIG.LOG_LEVEL = level;
+    log(`[日志] 日志等级已切换为: ${level}`, 'info');
+  }
+}
+
+// LRU缓存实现
+class LRUCache {
+  constructor(maxSize) {
+    this.maxSize = maxSize;
+    this.cache = new Map();
+    this.hits = 0;
+    this.misses = 0;
+  }
+  get(key) {
+    if (this.cache.has(key)) {
+      const value = this.cache.get(key);
+      this.cache.delete(key);
+      this.cache.set(key, value);
+      this.hits++;
+      return value;
+    } else {
+      this.misses++;
+      return undefined;
+    }
+  }
+  set(key, value) {
+    if (this.cache.has(key)) {
+      this.cache.delete(key);
+    } else if (this.cache.size >= this.maxSize) {
+      const firstKey = this.cache.keys().next().value;
+      this.cache.delete(firstKey);
+    }
+    this.cache.set(key, value);
+  }
+  stats() {
+    return {
+      size: this.cache.size,
+      hits: this.hits,
+      misses: this.misses,
+      hitRate: this.hits + this.misses > 0 ? (this.hits / (this.hits + this.misses)).toFixed(2) : '0.00'
+    };
+  }
+  clear() {
+    this.cache.clear();
+    this.hits = 0;
+    this.misses = 0;
+  }
+}
+const backdropLRUCache = new LRUCache(CONFIG.LRU_CACHE_SIZE);
+const trendingDataLRUCache = new LRUCache(10);
+function getCachedBackdrop(key) { return backdropLRUCache.get(key); }
+function cacheBackdrop(key, data) { backdropLRUCache.set(key, data); }
+function getCachedTrendingData() { return trendingDataLRUCache.get('trending_data'); }
+function cacheTrendingData(data) { trendingDataLRUCache.set('trending_data', data); }
+function logCacheStats() {
+  log(`[横版标题海报缓存] 命中率: ${JSON.stringify(backdropLRUCache.stats())}`, 'info');
+  log(`[热门数据缓存] 命中率: ${JSON.stringify(trendingDataLRUCache.stats())}`, 'info');
+}
+
+// 并发池
+class PromisePool {
+  constructor(maxConcurrent) {
+    this.maxConcurrent = maxConcurrent;
+    this.activeCount = 0;
+    this.queue = [];
+  }
+  run(fn) {
+    return new Promise((resolve, reject) => {
+      const task = () => {
+        this.activeCount++;
+        fn().then(resolve, reject).finally(() => {
+          this.activeCount--;
+          if (this.queue.length > 0) {
+            const next = this.queue.shift();
+            next();
+          }
+        });
+      };
+      if (this.activeCount < this.maxConcurrent) {
+        task();
+      } else {
+        this.queue.push(task);
+      }
+    });
+  }
+  async all(tasks) {
+    const results = [];
+    let i = 0;
+    return new Promise((resolve, reject) => {
+      const next = () => {
+        if (i === tasks.length && this.activeCount === 0) {
+          resolve(results);
+        }
+      };
+      for (; i < tasks.length; i++) {
+        this.run(tasks[i])
+          .then(r => results.push(r))
+          .catch(e => results.push(e))
+          .finally(next);
+      }
+      next();
+    });
+  }
+}
+function getPromisePool(concurrent) { return new PromisePool(concurrent || CONFIG.MAX_CONCURRENT); }
+async function batchGenerateBackdrops(items, generatorFn, concurrent) {
+  const pool = getPromisePool(concurrent);
+  const tasks = items.map(item => () => generatorFn(item));
+  return await pool.all(tasks);
+}
+
+// 横版标题海报指纹缓存
+function simpleHash(str) {
+  let hash = 0, i, chr;
+  if (str.length === 0) return hash;
+  for (i = 0; i < str.length; i++) {
+    chr   = str.charCodeAt(i);
+    hash  = ((hash << 5) - hash) + chr;
+    hash |= 0;
+  }
+  return hash;
+}
+function getBackdropFingerprint(item) {
+  const key = [item.id, item.title, item.name, item.backdrop_path, item.poster_path, item.vote_average, item.release_date, item.first_air_date].join('|');
+  return simpleHash(key).toString();
+}
+async function generateBackdropWithCache(item, generatorFn) {
+  const fingerprint = getBackdropFingerprint(item);
+  const cacheKey = `backdrop_${item.id}_${fingerprint}`;
+  let cached = getCachedBackdrop(cacheKey);
+  if (cached) {
+    log(`[横版标题海报] 命中缓存: ${cacheKey}`, 'debug');
+    return cached;
+  }
+  const result = await generatorFn(item);
+  if (result) {
+    cacheBackdrop(cacheKey, result);
+  }
+  return result;
+}
+async function batchGenerateBackdropsWithCache(items, generatorFn, concurrent) {
+  return await batchGenerateBackdrops(
+    items,
+    item => generateBackdropWithCache(item, generatorFn),
+    concurrent
+  );
+}
+
+// 工具函数
+function deepClone(obj) { return JSON.parse(JSON.stringify(obj)); }
+function uniqBy(arr, keyFn) {
+  const seen = new Set();
+  return arr.filter(item => {
+    const key = keyFn(item);
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+function isArray(val) { return Array.isArray(val); }
+function isObject(val) { return val && typeof val === 'object' && !Array.isArray(val); }
+
+// 性能监控与异常捕获
+function withTiming(label, fn) {
+  const start = Date.now();
+  return Promise.resolve(fn()).then(result => {
+    const duration = Date.now() - start;
+    log(`[性能] ${label} 耗时: ${duration}ms`, 'info');
+    return result;
+  });
+}
+async function timedBatch(tasks, label) {
+  const start = Date.now();
+  const results = await Promise.allSettled(tasks.map(t => t()));
+  const duration = Date.now() - start;
+  log(`[性能] 并发批量任务(${label}) 总耗时: ${duration}ms`, 'info');
+  return results;
+}
+function safeAsync(fn, label) {
+  return async (...args) => {
+    try {
+      return await fn(...args);
+    } catch (e) {
+      log(`[异常] ${label || fn.name}: ${e}`, 'error');
+      return null;
+    }
+  };
+}
+
+// 主流程结构优化示例
+async function loadEnhancedTitlePosterWithBackdropsOptimized(items, generatorFn) {
+  const uniqueItems = uniqBy(items, item => item.id);
+  const cachedResults = [];
+  const toGenerate = [];
+  for (const item of uniqueItems) {
+    const fingerprint = getBackdropFingerprint(item);
+    const cacheKey = `backdrop_${item.id}_${fingerprint}`;
+    const cached = getCachedBackdrop(cacheKey);
+    if (cached) {
+      cachedResults.push(cached);
+    } else {
+      toGenerate.push(item);
+    }
+  }
+  let generatedResults = [];
+  if (toGenerate.length > 0) {
+    generatedResults = await batchGenerateBackdropsWithCache(toGenerate, generatorFn, CONFIG.MAX_CONCURRENT);
+  }
+  const allResults = [...cachedResults, ...generatedResults];
+  logCacheStats();
+  return deepClone(allResults);
+}
 // ========== TVB播出平台优化模块 ==========
 
 // TVB专用缓存系统
