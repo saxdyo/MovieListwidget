@@ -324,14 +324,10 @@ WidgetMetadata = {
             { title: "热门度↑", value: "popularity.asc" },
             { title: "评分↓", value: "vote_average.desc" },
             { title: "评分↑", value: "vote_average.asc" },
-            { title: "最新上映↓", value: "release_date.desc" },
-            { title: "最早上映↑", value: "release_date.asc" },
-            { title: "最新播出↓", value: "first_air_date.desc" },
-            { title: "最早播出↑", value: "first_air_date.asc" },
-            { title: "最新更新↓", value: "last_air_date.desc" },
-            { title: "最早更新↑", value: "last_air_date.asc" },
-            { title: "投票数↓", value: "vote_count.desc" },
-            { title: "投票数↑", value: "vote_count.asc" }
+            { title: "上映日期↓", value: "release_date.desc" },
+            { title: "上映日期↑", value: "release_date.asc" },
+            { title: "首播日期↓", value: "first_air_date.desc" },
+            { title: "首播日期↑", value: "first_air_date.asc" }
           ]
         },
         {
@@ -346,31 +342,6 @@ WidgetMetadata = {
             { title: "7.0分以上", value: "7.0" },
             { title: "8.0分以上", value: "8.0" },
             { title: "9.0分以上", value: "9.0" }
-          ]
-        },
-        {
-          name: "year",
-          title: "📅年份筛选",
-          type: "enumeration",
-          description: "按播出/上映年份筛选内容",
-          value: "",
-          enumOptions: [
-            { title: "全部年份", value: "" },
-            { title: "2024年", value: "2024" },
-            { title: "2023年", value: "2023" },
-            { title: "2022年", value: "2022" },
-            { title: "2021年", value: "2021" },
-            { title: "2020年", value: "2020" },
-            { title: "2019年", value: "2019" },
-            { title: "2018年", value: "2018" },
-            { title: "2017年", value: "2017" },
-            { title: "2016年", value: "2016" },
-            { title: "2015年", value: "2015" },
-            { title: "2014年", value: "2014" },
-            { title: "2013年", value: "2013" },
-            { title: "2012年", value: "2012" },
-            { title: "2011年", value: "2011" },
-            { title: "2010年", value: "2010" }
           ]
         },
         { name: "page", title: "页码", type: "page" },
@@ -434,10 +405,8 @@ WidgetMetadata = {
             { title: "热门度↑", value: "popularity.asc" },
             { title: "评分↓", value: "vote_average.desc" },
             { title: "评分↑", value: "vote_average.asc" },
-            { title: "最新播出↓", value: "first_air_date.desc" },
-            { title: "最早播出↑", value: "first_air_date.asc" },
-            { title: "最新更新↓", value: "last_air_date.desc" },
-            { title: "最早更新↑", value: "last_air_date.asc" },
+            { title: "首播日期↓", value: "first_air_date.desc" },
+            { title: "首播日期↑", value: "first_air_date.asc" },
             { title: "投票数↓", value: "vote_count.desc" },
             { title: "投票数↑", value: "vote_count.asc" }
           ]
@@ -454,31 +423,6 @@ WidgetMetadata = {
             { title: "7.0分以上", value: "7.0" },
             { title: "8.0分以上", value: "8.0" },
             { title: "8.5分以上", value: "8.5" }
-          ]
-        },
-        {
-          name: "year",
-          title: "📅年份筛选",
-          type: "enumeration",
-          description: "按播出年份筛选动画",
-          value: "",
-          enumOptions: [
-            { title: "全部年份", value: "" },
-            { title: "2024年", value: "2024" },
-            { title: "2023年", value: "2023" },
-            { title: "2022年", value: "2022" },
-            { title: "2021年", value: "2021" },
-            { title: "2020年", value: "2020" },
-            { title: "2019年", value: "2019" },
-            { title: "2018年", value: "2018" },
-            { title: "2017年", value: "2017" },
-            { title: "2016年", value: "2016" },
-            { title: "2015年", value: "2015" },
-            { title: "2014年", value: "2014" },
-            { title: "2013年", value: "2013" },
-            { title: "2012年", value: "2012" },
-            { title: "2011年", value: "2011" },
-            { title: "2010年", value: "2010" }
           ]
         },
         { name: "page", title: "页码", type: "page" },
@@ -660,31 +604,6 @@ WidgetMetadata = {
             { title: "9.0分以上", value: "9.0" }
           ]
         },
-        {
-          name: "year",
-          title: "📅年份筛选",
-          type: "enumeration",
-          description: "按播出年份筛选动画",
-          value: "",
-          enumOptions: [
-            { title: "全部年份", value: "" },
-            { title: "2024年", value: "2024" },
-            { title: "2023年", value: "2023" },
-            { title: "2022年", value: "2022" },
-            { title: "2021年", value: "2021" },
-            { title: "2020年", value: "2020" },
-            { title: "2019年", value: "2019" },
-            { title: "2018年", value: "2018" },
-            { title: "2017年", value: "2017" },
-            { title: "2016年", value: "2016" },
-            { title: "2015年", value: "2015" },
-            { title: "2014年", value: "2014" },
-            { title: "2013年", value: "2013" },
-            { title: "2012年", value: "2012" },
-            { title: "2011年", value: "2011" },
-            { title: "2010年", value: "2010" }
-          ]
-        },
         { name: "page", title: "页码", type: "page", value: "1" }
       ]
     }
@@ -842,7 +761,30 @@ function formatTmdbItem(item, genreMap) {
 const tmdbCache = { data: null, time: 0 };
 const TMDB_CACHE_DURATION = 30 * 60 * 1000; // 30分钟
 
-
+async function loadTmdbTrendingData() {
+    // 1. 优先用缓存
+    if (tmdbCache.data && Date.now() - tmdbCache.time < TMDB_CACHE_DURATION) {
+        return tmdbCache.data;
+    }
+    // 2. 主数据包
+    let data = await fetchTmdbDataFromUrl("https://raw.githubusercontent.com/quantumultxx/ForwardWidgets/main/data/TMDB_Trending.json");
+    if (!isValidTmdbData(data)) {
+        // 3. 备用数据包
+        data = await fetchTmdbDataFromUrl("https://raw.githubusercontent.com/saxdyo/MovieListwidget/main/data/TMDB_Trending.json");
+    }
+    if (!isValidTmdbData(data)) {
+        // 4. 实时API
+        data = await fetchTmdbDataFromApi();
+    }
+    // 5. 健康检查
+    if (isValidTmdbData(data)) {
+        tmdbCache.data = data;
+        tmdbCache.time = Date.now();
+        return data;
+    } else {
+        throw new Error("TMDB数据加载失败");
+    }
+}
 
 async function fetchTmdbDataFromUrl(url) {
     try {
@@ -852,11 +794,7 @@ async function fetchTmdbDataFromUrl(url) {
 }
 
 function isValidTmdbData(data) {
-    return data && (
-        (Array.isArray(data.today_global) && data.today_global.length > 0) ||
-        (Array.isArray(data.week_global_all) && data.week_global_all.length > 0) ||
-        (Array.isArray(data.popular_movies) && data.popular_movies.length > 0)
-    );
+    return data && Array.isArray(data.today_global) && data.today_global.length > 0;
 }
 
 async function fetchTmdbDataFromApi() {
@@ -876,93 +814,57 @@ async function fetchTmdbDataFromApi() {
     }
 }
 
-// 优化的TMDB数据获取函数 - 优先使用定时更新的数据包
+// 简化的TMDB数据获取函数 - 确保稳定运行
 async function loadTmdbTrendingData() {
     try {
         console.log("[数据源] 开始获取TMDB热门数据...");
         
-        // 1. 优先使用定时更新的缓存数据
-        const cachedData = getCachedTrendingData();
-        if (cachedData && isDataFresh(cachedData)) {
-            console.log("[数据源] 使用定时更新的缓存数据");
-            return cachedData;
-        }
-        
-        // 2. 尝试获取最新数据包
+        // 直接尝试获取数据包
         const data = await fetchSimpleData();
         if (data) {
             console.log("[数据源] 成功获取数据包");
-            // 缓存数据包
-            cacheTrendingData(data);
             return data;
         }
         
-        // 3. 备用方案：使用实时API
+        // 备用方案：使用实时API
         console.log("[数据源] 数据包不可用，使用实时API");
-        const realtimeData = await fetchRealtimeData();
-        if (realtimeData && isValidTmdbData(realtimeData)) {
-            // 缓存实时数据
-            cacheTrendingData(realtimeData);
-            console.log("[数据源] 实时API数据获取成功");
-            return realtimeData;
-        }
-        
-        // 4. 最后的备用方案：返回空数据结构
-        console.log("[数据源] 所有数据源都失败，返回空数据结构");
-        return {
-            today_global: [],
-            week_global_all: [],
-            popular_movies: []
-        };
+        return await fetchRealtimeData();
         
     } catch (error) {
         console.error("[数据源] 数据获取失败:", error);
-        // 返回空数据结构而不是null
-        return {
-            today_global: [],
-            week_global_all: [],
-            popular_movies: []
-        };
+        return await fetchRealtimeData();
     }
 }
 
 // 简化的数据包获取
 async function fetchSimpleData() {
-    const dataUrls = [
-        "https://raw.githubusercontent.com/quantumultxx/ForwardWidgets/refs/heads/main/data/TMDB_Trending.json",
-        "https://raw.githubusercontent.com/saxdyo/MovieListwidget/main/data/TMDB_Trending.json"
-    ];
-    
-    for (const url of dataUrls) {
-        try {
-            console.log(`[数据包] 尝试获取: ${url}`);
-            const response = await Widget.http.get(url, {
-                timeout: 8000,
-                headers: {
-                    'Cache-Control': 'no-cache',
-                    'User-Agent': 'MovieListWidget/2.0'
-                }
-            });
-            
-            if (response.data && isValidTmdbData(response.data)) {
-                console.log(`[数据包] 获取成功，今日热门: ${response.data.today_global?.length || 0}项`);
-                return response.data;
+    try {
+        const response = await Widget.http.get("https://raw.githubusercontent.com/quantumultxx/ForwardWidgets/refs/heads/main/data/TMDB_Trending.json", {
+            timeout: 10000,
+            headers: {
+                'Cache-Control': 'no-cache',
+                'User-Agent': 'MovieListWidget/2.0'
             }
-        } catch (error) {
-            console.log(`[数据包] 获取失败 ${url}: ${error.message}`);
+        });
+        
+        if (response.data && response.data.today_global && response.data.today_global.length > 0) {
+            console.log(`[数据包] 获取成功，今日热门: ${response.data.today_global.length}项`);
+            return response.data;
         }
+        
+        return null;
+    } catch (error) {
+        console.log(`[数据包] 获取失败: ${error.message}`);
+        return null;
     }
-    
-    console.log("[数据包] 所有数据源都获取失败");
-    return null;
 }
 
-// 增强的实时数据获取 - 包含更多剧集数据
+// 简化的实时数据获取
 async function fetchRealtimeData() {
     try {
         console.log("[实时API] 开始获取实时数据...");
         
-        const [todayRes, weekRes, popularMoviesRes, popularTVRes, topRatedMoviesRes, topRatedTVRes] = await Promise.allSettled([
+        const [todayRes, weekRes, popularRes] = await Promise.allSettled([
             Widget.tmdb.get("/trending/all/day", { 
                 params: { 
                     language: 'zh-CN',
@@ -983,27 +885,6 @@ async function fetchRealtimeData() {
                     region: 'CN', 
                     api_key: API_KEY 
                 } 
-            }),
-            Widget.tmdb.get("/tv/popular", { 
-                params: { 
-                    language: 'zh-CN',
-                    region: 'CN', 
-                    api_key: API_KEY 
-                } 
-            }),
-            Widget.tmdb.get("/movie/top_rated", { 
-                params: { 
-                    language: 'zh-CN',
-                    region: 'CN', 
-                    api_key: API_KEY 
-                } 
-            }),
-            Widget.tmdb.get("/tv/top_rated", { 
-                params: { 
-                    language: 'zh-CN',
-                    region: 'CN', 
-                    api_key: API_KEY 
-                } 
             })
         ]);
         
@@ -1013,66 +894,35 @@ async function fetchRealtimeData() {
             popular_movies: []
         };
         
-                // 处理今日热门 - 调整为20项，优先剧集
+        // 处理今日热门
         if (todayRes.status === 'fulfilled' && todayRes.value.results) {
-          // 分离电影和剧集
-          const movies = [];
-          const tvShows = [];
-          
-          todayRes.value.results.forEach(item => {
-            const mappedItem = {
-              id: item.id,
-              title: item.title || item.name,
-              poster_url: item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : '',
-              backdrop_path: item.backdrop_path,
-              vote_average: item.vote_average,
-              release_date: item.release_date || item.first_air_date,
-              media_type: item.media_type
-            };
-            
-            if (item.media_type === 'tv') {
-              tvShows.push(mappedItem);
-            } else {
-              movies.push(mappedItem);
-            }
-          });
-          
-          // 优先剧集，然后补充电影，总共30项（增加剧集数量）
-          result.today_global = [...tvShows.slice(0, 20), ...movies.slice(0, 10)];
+            result.today_global = todayRes.value.results.slice(0, 20).map(item => ({
+                id: item.id,
+                title: item.title || item.name,
+                poster_url: item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : '',
+                backdrop_path: item.backdrop_path,
+                vote_average: item.vote_average,
+                release_date: item.release_date || item.first_air_date,
+                media_type: item.media_type
+            }));
         }
         
-                // 处理本周热门 - 调整为20项，优先剧集
+        // 处理本周热门
         if (weekRes.status === 'fulfilled' && weekRes.value.results) {
-          // 分离电影和剧集
-          const movies = [];
-          const tvShows = [];
-          
-          weekRes.value.results.forEach(item => {
-            const mappedItem = {
-              id: item.id,
-              title: item.title || item.name,
-              poster_url: item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : '',
-              backdrop_path: item.backdrop_path,
-              vote_average: item.vote_average,
-              release_date: item.release_date || item.first_air_date,
-              media_type: item.media_type
-            };
-            
-            if (item.media_type === 'tv') {
-              tvShows.push(mappedItem);
-            } else {
-              movies.push(mappedItem);
-            }
-          });
-          
-          // 优先剧集，然后补充电影，总共30项（增加剧集数量）
-          result.week_global_all = [...tvShows.slice(0, 20), ...movies.slice(0, 10)];
+            result.week_global_all = weekRes.value.results.slice(0, 20).map(item => ({
+                id: item.id,
+                title: item.title || item.name,
+                poster_url: item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : '',
+                backdrop_path: item.backdrop_path,
+                vote_average: item.vote_average,
+                release_date: item.release_date || item.first_air_date,
+                media_type: item.media_type
+            }));
         }
         
-        // 处理热门电影 - 合并电影和剧集数据
-        const allMovies = [];
-        if (popularMoviesRes.status === 'fulfilled' && popularMoviesRes.value.results) {
-            allMovies.push(...popularMoviesRes.value.results.slice(0, 25).map(item => ({
+        // 处理热门电影
+        if (popularRes.status === 'fulfilled' && popularRes.value.results) {
+            result.popular_movies = popularRes.value.results.slice(0, 20).map(item => ({
                 id: item.id,
                 title: item.title,
                 poster_url: item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : '',
@@ -1080,57 +930,8 @@ async function fetchRealtimeData() {
                 vote_average: item.vote_average,
                 release_date: item.release_date,
                 media_type: 'movie'
-            })));
+            }));
         }
-        
-        // 添加热门剧集数据
-        if (popularTVRes.status === 'fulfilled' && popularTVRes.value.results) {
-            allMovies.push(...popularTVRes.value.results.slice(0, 25).map(item => ({
-                id: item.id,
-                title: item.name,
-                poster_url: item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : '',
-                backdrop_path: item.backdrop_path,
-                vote_average: item.vote_average,
-                release_date: item.first_air_date,
-                media_type: 'tv'
-            })));
-        }
-        
-        // 添加高分电影和剧集
-        if (topRatedMoviesRes.status === 'fulfilled' && topRatedMoviesRes.value.results) {
-            allMovies.push(...topRatedMoviesRes.value.results.slice(0, 15).map(item => ({
-                id: item.id,
-                title: item.title,
-                poster_url: item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : '',
-                backdrop_path: item.backdrop_path,
-                vote_average: item.vote_average,
-                release_date: item.release_date,
-                media_type: 'movie'
-            })));
-        }
-        
-        if (topRatedTVRes.status === 'fulfilled' && topRatedTVRes.value.results) {
-            allMovies.push(...topRatedTVRes.value.results.slice(0, 15).map(item => ({
-                id: item.id,
-                title: item.name,
-                poster_url: item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : '',
-                backdrop_path: item.backdrop_path,
-                vote_average: item.vote_average,
-                release_date: item.first_air_date,
-                media_type: 'tv'
-            })));
-        }
-        
-                // 去重并限制数量
-        const uniqueMovies = [];
-        const seenIds = new Set();
-        for (const item of allMovies) {
-          if (!seenIds.has(item.id) && item.poster_url) {
-            uniqueMovies.push(item);
-            seenIds.add(item.id);
-          }
-        }
-        result.popular_movies = uniqueMovies.slice(0, 20);
         
         console.log(`[实时API] 数据获取完成 - 今日热门: ${result.today_global.length}, 本周热门: ${result.week_global_all.length}, 热门电影: ${result.popular_movies.length}`);
         return result;
@@ -1141,117 +942,94 @@ async function fetchRealtimeData() {
     }
 }
 
-// 横版标题海报加载器
-async function loadTitlePosterWithBackdrops(items, maxItems = 30) {
-    // 尝试获取缓存的横版标题海报
-    const cachedBackdrops = [];
-    for (const item of items.slice(0, maxItems)) {
-        const cachedBackdrop = getCachedBackdrop(`backdrop_${item.id}`);
-        if (cachedBackdrop && cachedBackdrop.titlePoster) {
-            cachedBackdrops.push(cachedBackdrop);
-        }
-    }
-    
-    if (cachedBackdrops.length > 0) {
-        console.log(`[横版标题海报] 使用缓存的横版标题海报: ${cachedBackdrops.length}项`);
-        return cachedBackdrops.map(backdrop => ({
-            id: backdrop.id,
-            title: backdrop.title,
-            posterPath: backdrop.backdropUrl,
-            titlePoster: backdrop.titlePoster,
-            metadata: backdrop.metadata
-        }));
-    } else {
-        // 如果没有缓存的横版标题海报，立即生成
-        console.log(`[横版标题海报] 立即生成横版标题海报...`);
-        const processedItems = await batchProcessBackdrops(items.slice(0, maxItems), {
-            enableTitleOverlay: true,
-            preferredSize: 'w1280',
-            includeMetadata: true,
-            forceRegenerate: true, // 强制重新生成
-            maxConcurrent: 5 // 增加并发数加快生成速度
-        });
-        
-        if (processedItems.length > 0) {
-            console.log(`[横版标题海报] 立即生成成功: ${processedItems.length}项`);
-            
-            // 缓存生成的结果
-            processedItems.forEach((item, index) => {
-                if (item && item.id) {
-                    cacheBackdrop(`backdrop_${item.id}`, item);
-                    console.log(`[横版标题海报] 缓存生成结果 ${index + 1}: ${item.title}`);
-                }
-            });
-            
-            return processedItems.map(item => ({
-                id: item.id,
-                title: item.title,
-                posterPath: item.backdropUrl,
-                titlePoster: item.titlePoster,
-                metadata: item.metadata
-            }));
-        } else {
-            // 如果生成失败，使用普通数据
-            console.log(`[横版标题海报] 生成失败，使用普通数据`);
-            return items.map(item => createEnhancedWidgetItem(item));
-        }
-    }
-}
+// 简化的标题海报热门内容加载器
+async function loadTmdbTitlePosterTrending(params = {}) {
+  // 只根据sort_by切换内容类型，不再做强制联动
+  let { 
+    content_type = "today", 
+    media_type = "all", 
+    sort_by = "today", 
+    language = "zh-CN", 
+    page = 1
+  } = params;
 
-// 增强的横版标题海报加载器（支持更多数据源）
-async function loadEnhancedTitlePosterWithBackdrops(items, maxItems = 30, contentType = "today") {
-    // 尝试获取缓存的横版标题海报
-    const cachedBackdrops = [];
-    for (const item of items.slice(0, maxItems)) {
-        const cachedBackdrop = getCachedBackdrop(`backdrop_${item.id}`);
-        if (cachedBackdrop && cachedBackdrop.titlePoster) {
-            cachedBackdrops.push(cachedBackdrop);
-        }
-    }
+  // 如果sort_by有值，直接用sort_by作为内容类型
+  if (["today","week","popular","top_rated"].includes(sort_by)) {
+    content_type = sort_by;
+  }
     
-    if (cachedBackdrops.length > 0) {
-        console.log(`[增强横版标题海报] 使用缓存的横版标题海报: ${cachedBackdrops.length}项`);
-        return cachedBackdrops.map(backdrop => ({
-            id: backdrop.id,
-            title: backdrop.title,
-            posterPath: backdrop.backdropUrl,
-            titlePoster: backdrop.titlePoster,
-            metadata: backdrop.metadata
-        }));
-    } else {
-        // 如果没有缓存的横版标题海报，立即生成
-        console.log(`[增强横版标题海报] 立即生成横版标题海报...`);
-        const processedItems = await batchProcessBackdrops(items.slice(0, maxItems), {
-            enableTitleOverlay: true,
-            preferredSize: 'w1280',
-            includeMetadata: true,
-            forceRegenerate: true, // 强制重新生成
-            maxConcurrent: 5 // 增加并发数加快生成速度
-        });
+    try {
+        console.log(`[标题海报] 加载${content_type}内容...`);
         
-        if (processedItems.length > 0) {
-            console.log(`[增强横版标题海报] 立即生成成功: ${processedItems.length}项`);
-            
-            // 缓存生成的结果
-            processedItems.forEach((item, index) => {
-                if (item && item.id) {
-                    cacheBackdrop(`backdrop_${item.id}`, item);
-                    console.log(`[增强横版标题海报] 缓存生成结果 ${index + 1}: ${item.title}`);
-                }
-            });
-            
-            return processedItems.map(item => ({
-                id: item.id,
-                title: item.title,
-                posterPath: item.backdropUrl,
-                titlePoster: item.titlePoster,
-                metadata: item.metadata
-            }));
-        } else {
-            // 如果生成失败，使用普通数据
-            console.log(`[增强横版标题海报] 生成失败，使用普通数据`);
-            return items.map(item => createEnhancedWidgetItem(item));
+        // 获取数据
+        const trendingData = await loadTmdbTrendingData();
+        
+        if (!trendingData) {
+            console.log("[标题海报] 无法获取数据，返回空结果");
+            return [];
         }
+        
+        let results = [];
+        
+        switch (content_type) {
+            case "today":
+                if (trendingData.today_global && trendingData.today_global.length > 0) {
+                    results = trendingData.today_global.map(item => createSimpleWidgetItem(item));
+                    console.log(`[标题海报] 今日热门: ${results.length}个项目`);
+                }
+                break;
+                
+            case "week":
+                if (trendingData.week_global_all && trendingData.week_global_all.length > 0) {
+                    results = trendingData.week_global_all.map(item => createSimpleWidgetItem(item));
+                    console.log(`[标题海报] 本周热门: ${results.length}个项目`);
+                }
+                break;
+                
+            case "popular":
+                if (trendingData.popular_movies && trendingData.popular_movies.length > 0) {
+                    results = trendingData.popular_movies.map(item => createSimpleWidgetItem(item));
+                    console.log(`[标题海报] 热门电影: ${results.length}个项目`);
+                }
+                break;
+                
+            case "top_rated":
+                if (trendingData.top_rated && trendingData.top_rated.length > 0) {
+                    results = trendingData.top_rated.map(item => createSimpleWidgetItem(item));
+                    console.log(`[标题海报] 高分内容: ${results.length}个项目`);
+                }
+                break;
+                
+            default:
+                console.error("[标题海报] 未知内容类型:", content_type);
+                return [];
+        }
+        
+        // 根据媒体类型过滤
+        if (media_type !== "all") {
+            results = results.filter(item => {
+                if (media_type === "movie") {
+                    return item.mediaType === "movie";
+                } else if (media_type === "tv") {
+                    return item.mediaType === "tv";
+                }
+                return true;
+            });
+        }
+        
+        // 添加标题海报标识
+        results = results.map(item => ({
+            ...item,
+            hasTitlePoster: true,
+            titlePosterSource: "TMDB数据"
+        }));
+        
+        console.log(`[标题海报] 最终结果: ${results.length}个项目`);
+        return results;
+        
+    } catch (error) {
+        console.error("[标题海报] 加载失败:", error);
+        return [];
     }
 }
 
@@ -1669,35 +1447,45 @@ function validateTrendingData(data) {
         }
         
         const requiredFields = ['today_global', 'week_global_all', 'popular_movies'];
-        let validFields = 0;
         
         // 检查基本字段是否存在
         for (const field of requiredFields) {
             if (!data[field]) {
                 console.log(`[验证] 缺少字段: ${field}`);
-                continue;
+                return false;
             }
             
             if (!Array.isArray(data[field])) {
                 console.log(`[验证] 字段不是数组: ${field}`);
-                continue;
+                return false;
             }
             
             if (data[field].length === 0) {
                 console.log(`[验证] 数组为空: ${field}`);
-                continue;
+                return false;
             }
-            
-            validFields++;
         }
         
-        // 只要有一个字段有效就通过验证
-        if (validFields === 0) {
-            console.log("[验证] 没有有效的数据字段");
+        // 检查数据项的基本完整性（不要求title_backdrop，因为这是我们要添加的）
+        const sampleItems = [
+            ...data.today_global.slice(0, 3),
+            ...data.week_global_all.slice(0, 3),
+            ...data.popular_movies.slice(0, 3)
+        ];
+        
+        const validItems = sampleItems.filter(item => 
+            item && 
+            item.id && 
+            (item.title || item.name) && 
+            (item.poster_url || item.poster_path)
+        );
+        
+        if (validItems.length < sampleItems.length * 0.7) {
+            console.log(`[验证] 数据项质量不足: ${validItems.length}/${sampleItems.length}`);
             return false;
         }
         
-        console.log(`[验证] 数据验证通过 - 有效字段: ${validFields}/${requiredFields.length}`);
+        console.log(`[验证] 数据验证通过 - 今日热门: ${data.today_global.length}, 本周热门: ${data.week_global_all.length}, 热门电影: ${data.popular_movies.length}`);
         return true;
     } catch (error) {
         console.error("[验证] 数据验证出错:", error);
@@ -1850,24 +1638,25 @@ async function createTitlePosterWithOverlay(item, options = {}) {
             return null;
         }
         
-        // 创建带标题覆盖的横版海报
+        // 构建标题海报数据
         const titlePoster = {
             url: backgroundUrl,
             width: 1280,
             height: 720,
-            type: "backdrop_with_title",
-            title: title,
-            subtitle: subtitle,
-            rating: rating,
-            year: year,
-            showRating: showRating,
-            showYear: showYear,
-            overlayOpacity: overlayOpacity,
-            textColor: textColor,
-            backgroundColor: backgroundColor
+            type: "title_poster",
+            overlay: {
+                title: title,
+                subtitle: subtitle,
+                rating: rating,
+                year: year,
+                showRating: showRating,
+                showYear: showYear,
+                overlayOpacity: overlayOpacity,
+                textColor: textColor,
+                backgroundColor: backgroundColor
+            }
         };
         
-        console.log(`[横版海报] 生成带标题的横版海报: ${title}`);
         return titlePoster;
     } catch (error) {
         console.error("[标题海报] 创建带覆盖的标题海报时出错:", error);
@@ -2501,8 +2290,7 @@ async function loadTmdbTrendingCombined(params = {}) {
     media_type = "all", 
     language = "zh-CN", 
     page = 1, 
-    content_type = "popularity.desc",  // 现在content_type包含排序方式
-    max_items = 30  // 调整为30项（增加剧集数量）
+    content_type = "popularity.desc"  // 现在content_type包含排序方式
   } = params;
   
   try {
@@ -2511,228 +2299,118 @@ async function loadTmdbTrendingCombined(params = {}) {
     // 使用sort_by作为内容类型选择器
     switch (sort_by) {
       case "today":
-        // 今日热门 - 增强版
-        console.log(`[TMDB热门内容] 加载今日热门数据...`);
-        
-        // 尝试多个数据源
+        // 今日热门
         const todayData = await loadTmdbTrendingData();
         if (todayData && todayData.today_global && todayData.today_global.length > 0) {
           results = todayData.today_global.map(item => createEnhancedWidgetItem(item));
-          console.log(`[TMDB热门内容] 从缓存获取今日热门: ${results.length}项`);
-        }
-        
-        // 如果缓存数据不足，补充API数据
-        if (results.length < max_items) {
-          console.log(`[TMDB热门内容] 缓存数据不足，补充API数据...`);
-          
-          // 根据媒体类型选择API端点
-          let apiEndpoint = "/trending/all/day";
-          if (media_type === "tv") {
-            apiEndpoint = "/trending/tv/day";  // 专门获取剧集
-            console.log(`[TMDB热门内容] 选择剧集专用API: ${apiEndpoint}`);
-          }
-          
-          // 获取多页数据以增加数量
-          const pages = [1, 2, 3];  // 获取前3页
-          const allApiResults = [];
-          
-          for (const pageNum of pages) {
-            const res = await Widget.tmdb.get(apiEndpoint, { 
-              params: { 
-                language: 'zh-CN',
-                region: 'CN',
-                api_key: API_KEY,
-                page: pageNum
-              }
-            });
-            const genreMap = await fetchTmdbGenres();
-            const pageResults = res.results
-              .map(item => formatTmdbItem(item, genreMap))
-              .filter(item => item.posterPath);
-            allApiResults.push(...pageResults);
-          }
-          
-          // 合并结果，去重
-          const existingIds = new Set(results.map(item => item.id));
-          const newResults = allApiResults.filter(item => !existingIds.has(item.id));
-          results = [...results, ...newResults];
-          console.log(`[TMDB热门内容] 补充API数据: ${newResults.length}项`);
+        } else {
+          // 备用方案
+          const res = await Widget.tmdb.get("/trending/all/day", { 
+            params: { 
+              language: 'zh-CN',
+              region: 'CN',
+              api_key: API_KEY 
+            }
+          });
+          const genreMap = await fetchTmdbGenres();
+          results = res.results
+            .map(item => formatTmdbItem(item, genreMap))
+            .filter(item => item.posterPath);
         }
         break;
         
       case "week":
-        // 本周热门 - 增强版
-        console.log(`[TMDB热门内容] 加载本周热门数据...`);
-        
+        // 本周热门
         const weekData = await loadTmdbTrendingData();
         if (weekData && weekData.week_global_all && weekData.week_global_all.length > 0) {
           results = weekData.week_global_all.map(item => createEnhancedWidgetItem(item));
-          console.log(`[TMDB热门内容] 从缓存获取本周热门: ${results.length}项`);
-        }
-        
-        // 如果缓存数据不足，补充API数据
-        if (results.length < max_items) {
-          console.log(`[TMDB热门内容] 缓存数据不足，补充API数据...`);
-          
-          // 根据媒体类型选择API端点
-          let apiEndpoint = "/trending/all/week";
-          if (media_type === "tv") {
-            apiEndpoint = "/trending/tv/week";  // 专门获取剧集
-            console.log(`[TMDB热门内容] 选择剧集专用API: ${apiEndpoint}`);
-          }
-          
-          // 获取多页数据以增加数量
-          const pages = [1, 2, 3];  // 获取前3页
-          const allApiResults = [];
-          
-          for (const pageNum of pages) {
-            const res = await Widget.tmdb.get(apiEndpoint, { 
-              params: { 
-                language: 'zh-CN',
-                region: 'CN',
-                api_key: API_KEY,
-                page: pageNum
-              }
-            });
-            const genreMap = await fetchTmdbGenres();
-            const pageResults = res.results
-              .map(item => formatTmdbItem(item, genreMap))
-              .filter(item => item.posterPath);
-            allApiResults.push(...pageResults);
-          }
-          
-          // 合并结果，去重
-          const existingIds = new Set(results.map(item => item.id));
-          const newResults = allApiResults.filter(item => !existingIds.has(item.id));
-          results = [...results, ...newResults];
-          console.log(`[TMDB热门内容] 补充API数据: ${newResults.length}项`);
+        } else {
+          // 备用方案
+          const res = await Widget.tmdb.get("/trending/all/week", { 
+            params: { 
+              language: 'zh-CN',
+              region: 'CN',
+              api_key: API_KEY 
+            }
+          });
+          const genreMap = await fetchTmdbGenres();
+          results = res.results
+            .map(item => formatTmdbItem(item, genreMap))
+            .filter(item => item.posterPath);
         }
         break;
         
       case "popular":
-        // 热门电影 - 增强版，优先使用横版标题海报
-        console.log(`[TMDB热门内容] 加载热门电影数据...`);
-        
-        // 尝试多个数据源
+        // 热门电影
         if ((parseInt(page) || 1) === 1 && content_type.startsWith("popularity")) {
           const popularData = await loadTmdbTrendingData();
           if (popularData.popular_movies && popularData.popular_movies.length > 0) {
-            results = await loadEnhancedTitlePosterWithBackdrops(popularData.popular_movies, max_items, "popular");
-            console.log(`[TMDB热门内容] 热门电影加载完成: ${results.length}项`);
+            results = popularData.popular_movies
+              .slice(0, 15)
+              .map(item => createEnhancedWidgetItem(item));
           }
         }
         
-                // 如果缓存数据不足，补充API数据
-        if (results.length < max_items) {
-          console.log(`[TMDB热门内容] 缓存数据不足，补充API数据...`);
-
-          // 获取多页电影和剧集数据
-          const pages = [1, 2, 3];  // 获取前3页
-          const allApiResults = [];
-
-          // 获取热门电影
-          for (const pageNum of pages) {
-            const res = await Widget.tmdb.get("/movie/popular", {
-              params: {
-                language: 'zh-CN',
-                region: 'CN',
-                page: pageNum,
-                api_key: API_KEY
-              }
-            });
-            const genreMap = await fetchTmdbGenres();
-            const pageResults = res.results.map(item => formatTmdbItem(item, genreMap));
-            allApiResults.push(...pageResults);
-          }
-
-          // 获取热门剧集
-          for (const pageNum of pages) {
-            const res = await Widget.tmdb.get("/tv/popular", {
-              params: {
-                language: 'zh-CN',
-                region: 'CN',
-                page: pageNum,
-                api_key: API_KEY
-              }
-            });
-            const genreMap = await fetchTmdbGenres();
-            const pageResults = res.results.map(item => formatTmdbItem(item, genreMap));
-            allApiResults.push(...pageResults);
-          }
-
-          // 合并结果，去重
-          const existingIds = new Set(results.map(item => item.id));
-          const newResults = allApiResults.filter(item => !existingIds.has(item.id) && item.posterPath);
-          results = [...results, ...newResults];
-          console.log(`[TMDB热门内容] 补充API数据: ${newResults.length}项`);
-        }
-        break;
-        
-      case "top_rated":
-        // 高分内容 - 增强版，优先使用横版标题海报
-        console.log(`[TMDB热门内容] 加载高分内容数据...`);
-        
-        if (content_type.startsWith("vote_average")) {
-          // 尝试从缓存获取高分内容
-          const popularData = await loadTmdbTrendingData();
-          if (popularData.popular_movies && popularData.popular_movies.length > 0) {
-            results = await loadEnhancedTitlePosterWithBackdrops(popularData.popular_movies, max_items, "top_rated");
-            console.log(`[TMDB热门内容] 高分内容加载完成: ${results.length}项`);
-          }
-          
-          // 如果缓存数据不足，补充API数据
-          if (results.length < max_items) {
-            console.log(`[TMDB热门内容] 缓存数据不足，补充API数据...`);
-            
-            // 获取电影和剧集的高分内容
-            const endpoints = [
-              { api: "/movie/top_rated", mediaType: "movie" },
-              { api: "/tv/top_rated", mediaType: "tv" }
-            ];
-            
-            for (const endpoint of endpoints) {
-              const res = await Widget.tmdb.get(endpoint.api, { 
-                params: { 
-                  language: 'zh-CN', 
-                  region: 'CN',
-                  page: 1, 
-                  api_key: API_KEY 
-                }
-              });
-              const genreMap = await fetchTmdbGenres();
-              const endpointResults = res.results
-                .map(item => formatTmdbItem(item, genreMap[endpoint.mediaType]))
-                .filter(item => item.posterPath);
-              results.push(...endpointResults);
-            }
-            
-            console.log(`[TMDB热门内容] 补充API数据: ${results.length}项`);
-          }
-        } else {
-          // 使用discover API
-          const endpoints = [
-            { api: "/discover/movie", mediaType: "movie" },
-            { api: "/discover/tv", mediaType: "tv" }
-          ];
-          
-          for (const endpoint of endpoints) {
-            const res = await Widget.tmdb.get(endpoint.api, {
+        if (results.length === 0) {
+          // 标准API调用
+          if (content_type.startsWith("popularity")) {
+            const res = await Widget.tmdb.get("/movie/popular", { 
               params: { 
                 language: 'zh-CN',
                 region: 'CN', 
-                page: 1, 
+                page, 
+                api_key: API_KEY 
+              }
+            });
+            const genreMap = await fetchTmdbGenres();
+            results = res.results.map(item => formatTmdbItem(item, genreMap));
+          } else {
+            const res = await Widget.tmdb.get("/discover/movie", {
+              params: { 
+                language: 'zh-CN',
+                region: 'CN', 
+                page, 
                 sort_by: content_type,
                 api_key: API_KEY 
               }
             });
             const genreMap = await fetchTmdbGenres();
-            const endpointResults = res.results
-              .map(item => formatTmdbItem(item, genreMap[endpoint.mediaType]))
-              .filter(item => item.posterPath);
-            results.push(...endpointResults);
+            results = res.results.map(item => formatTmdbItem(item, genreMap));
           }
-          
-          console.log(`[TMDB热门内容] 获取discover内容: ${results.length}项`);
+        }
+        break;
+        
+      case "top_rated":
+        // 高分内容
+        if (content_type.startsWith("vote_average")) {
+          const api = media_type === "movie" ? "/movie/top_rated" : "/tv/top_rated";
+          const res = await Widget.tmdb.get(api, { 
+            params: { 
+              language: 'zh-CN', 
+              region: 'CN',
+              page, 
+              api_key: API_KEY 
+            }
+          });
+          const genreMap = await fetchTmdbGenres();
+          results = res.results
+            .map(item => formatTmdbItem(item, genreMap[media_type]))
+            .filter(item => item.posterPath);
+        } else {
+          const endpoint = media_type === "movie" ? "/discover/movie" : "/discover/tv";
+          const res = await Widget.tmdb.get(endpoint, {
+            params: { 
+              language: 'zh-CN',
+              region: 'CN', 
+              page, 
+              sort_by: content_type,
+              api_key: API_KEY 
+            }
+          });
+          const genreMap = await fetchTmdbGenres();
+          results = res.results
+            .map(item => formatTmdbItem(item, genreMap[media_type]))
+            .filter(item => item.posterPath);
         }
         break;
         
@@ -2753,10 +2431,6 @@ async function loadTmdbTrendingCombined(params = {}) {
       });
     }
     
-    // 限制返回数量
-    results = results.slice(0, max_items);
-    
-    console.log(`[TMDB热门内容] 最终返回: ${results.length}项`);
     return results;
     
   } catch (error) {
@@ -2773,8 +2447,7 @@ async function loadTmdbTitlePosterTrending(params = {}) {
     media_type = "all", 
     sort_by = "today", 
     language = "zh-CN", 
-    page = 1,
-    max_items = 30  // 调整为30项（增加剧集数量）
+    page = 1
   } = params;
 
   // 如果sort_by有值，直接用sort_by作为内容类型
@@ -2808,149 +2481,53 @@ async function loadTmdbTitlePosterTrending(params = {}) {
         
         let results = [];
         
-        // 根据内容类型获取数据
         switch (content_type) {
           case "today":
-            // 今日热门 - 增强版，优先使用横版标题海报
+            // 今日热门
             if (trendingData && trendingData.today_global && trendingData.today_global.length > 0) {
-              results = await loadEnhancedTitlePosterWithBackdrops(trendingData.today_global, max_items, "today");
-              console.log(`[标题海报] 今日热门加载完成: ${results.length}项`);
-            }
-            
-            // 如果缓存数据不足，补充API数据
-            if (results.length < max_items) {
-              console.log(`[标题海报] 缓存数据不足，补充API数据...`);
-              const res = await Widget.tmdb.get("/trending/all/day", { 
-                params: { 
-                  language: 'zh-CN',
-                  region: 'CN',
-                  api_key: API_KEY,
-                  page: 1
-                }
-              });
-              const genreMap = await fetchTmdbGenres();
-              const apiResults = res.results
-                .map(item => formatTmdbItem(item, genreMap))
-                .filter(item => item.posterPath);
-              
-              // 合并结果，去重
-              const existingIds = new Set(results.map(item => item.id));
-              const newResults = apiResults.filter(item => !existingIds.has(item.id));
-              results = [...results, ...newResults];
-              console.log(`[标题海报] 补充API数据: ${newResults.length}项`);
+              results = trendingData.today_global.map(item => createEnhancedWidgetItem(item));
+              console.log(`[标题海报] 今日热门: ${results.length}个项目`);
+            } else {
+              console.log("[标题海报] 今日热门数据不可用，使用备用方案");
+              results = await loadTodayGlobalMedia(params);
             }
             break;
             
           case "week":
-            // 本周热门 - 增强版，优先使用横版标题海报
+            // 本周热门
             if (trendingData && trendingData.week_global_all && trendingData.week_global_all.length > 0) {
-              results = await loadEnhancedTitlePosterWithBackdrops(trendingData.week_global_all, max_items, "week");
-              console.log(`[标题海报] 本周热门加载完成: ${results.length}项`);
-            }
-            
-            // 如果缓存数据不足，补充API数据
-            if (results.length < max_items) {
-              console.log(`[标题海报] 缓存数据不足，补充API数据...`);
-              const res = await Widget.tmdb.get("/trending/all/week", { 
-                params: { 
-                  language: 'zh-CN',
-                  region: 'CN',
-                  api_key: API_KEY,
-                  page: 1
-                }
-              });
-              const genreMap = await fetchTmdbGenres();
-              const apiResults = res.results
-                .map(item => formatTmdbItem(item, genreMap))
-                .filter(item => item.posterPath);
-              
-              // 合并结果，去重
-              const existingIds = new Set(results.map(item => item.id));
-              const newResults = apiResults.filter(item => !existingIds.has(item.id));
-              results = [...results, ...newResults];
-              console.log(`[标题海报] 补充API数据: ${newResults.length}项`);
+              results = trendingData.week_global_all.map(item => createEnhancedWidgetItem(item));
+              console.log(`[标题海报] 本周热门: ${results.length}个项目`);
+            } else {
+              console.log("[标题海报] 本周热门数据不可用，使用备用方案");
+              results = await loadWeekGlobalMovies(params);
             }
             break;
             
           case "popular":
-            // 热门电影 - 增强版，优先使用横版标题海报
+            // 热门电影
             if (trendingData && trendingData.popular_movies && trendingData.popular_movies.length > 0) {
-              results = await loadEnhancedTitlePosterWithBackdrops(trendingData.popular_movies, max_items, "popular");
-              console.log(`[标题海报] 热门电影加载完成: ${results.length}项`);
-            }
-            
-            // 如果缓存数据不足，补充API数据
-            if (results.length < max_items) {
-              console.log(`[标题海报] 缓存数据不足，补充API数据...`);
-              
-              // 获取多页数据
-              const pages = [1, 2];  // 获取前2页
-              const allApiResults = [];
-              
-              for (const pageNum of pages) {
-                const res = await Widget.tmdb.get("/movie/popular", { 
-                  params: { 
-                    language: 'zh-CN',
-                    region: 'CN', 
-                    page: pageNum, 
-                    api_key: API_KEY 
-                  }
-                });
-                const genreMap = await fetchTmdbGenres();
-                const pageResults = res.results.map(item => formatTmdbItem(item, genreMap));
-                allApiResults.push(...pageResults);
-              }
-              
-              // 合并结果，去重
-              const existingIds = new Set(results.map(item => item.id));
-              const newResults = allApiResults.filter(item => !existingIds.has(item.id) && item.posterPath);
-              results = [...results, ...newResults];
-              console.log(`[标题海报] 补充API数据: ${newResults.length}项`);
+              results = trendingData.popular_movies.map(item => createEnhancedWidgetItem(item));
+              console.log(`[标题海报] 热门电影: ${results.length}个项目`);
+            } else {
+              console.log("[标题海报] 热门电影数据不可用，使用备用方案");
+              results = await tmdbPopularMovies(params);
             }
             break;
             
           case "top_rated":
-            // 高分内容 - 增强版，优先使用横版标题海报
-            console.log(`[标题海报] 加载高分内容数据...`);
-            
-            // 尝试从缓存获取高分内容
-            if (trendingData && trendingData.popular_movies && trendingData.popular_movies.length > 0) {
-              results = await loadEnhancedTitlePosterWithBackdrops(trendingData.popular_movies, max_items, "top_rated");
-              console.log(`[标题海报] 高分内容加载完成: ${results.length}项`);
-            }
-            
-            // 如果缓存数据不足，补充API数据
-            if (results.length < max_items) {
-              console.log(`[标题海报] 缓存数据不足，补充API数据...`);
-              
-              // 获取电影和剧集的高分内容
-              const endpoints = [
-                { api: "/movie/top_rated", mediaType: "movie" },
-                { api: "/tv/top_rated", mediaType: "tv" }
-              ];
-              
-              for (const endpoint of endpoints) {
-                const res = await Widget.tmdb.get(endpoint.api, { 
-                  params: { 
-                    language: 'zh-CN', 
-                    region: 'CN',
-                    page: 1, 
-                    api_key: API_KEY 
-                  }
-                });
-                const genreMap = await fetchTmdbGenres();
-                const endpointResults = res.results
-                  .map(item => formatTmdbItem(item, genreMap[endpoint.mediaType]))
-                  .filter(item => item.posterPath);
-                results.push(...endpointResults);
-              }
-              
-              console.log(`[标题海报] 补充API数据: ${results.length}项`);
+            // 高分内容
+            if (trendingData && trendingData.top_rated && trendingData.top_rated.length > 0) {
+              results = trendingData.top_rated.map(item => createEnhancedWidgetItem(item));
+              console.log(`[标题海报] 高分内容: ${results.length}个项目`);
+            } else {
+              console.log("[标题海报] 高分内容数据不可用，使用备用方案");
+              results = await tmdbTopRated(params);
             }
             break;
             
           default:
-            console.error("Unknown content type:", content_type);
+            console.error("[标题海报] 未知内容类型:", content_type);
             return [];
         }
         
@@ -2966,14 +2543,19 @@ async function loadTmdbTitlePosterTrending(params = {}) {
           });
         }
         
-        // 限制返回数量
-        results = results.slice(0, max_items);
+        // 添加标题海报标识和数据源信息
+        results = results.map(item => ({
+          ...item,
+          hasTitlePoster: true,
+          titlePosterSource: trendingData ? "TMDB数据包" : "实时API",
+          dataHealth: health.healthy ? "healthy" : "recovered"
+        }));
         
-        console.log(`[标题海报] 最终返回: ${results.length}项`);
+        console.log(`[标题海报] 最终结果: ${results.length}个项目 (数据源: ${trendingData ? "TMDB数据包" : "实时API"})`);
         return results;
         
     } catch (error) {
-        console.error("Error in loadTmdbTitlePosterTrending:", error);
+        console.error("[标题海报] 加载标题海报热门内容时出错:", error);
         return [];
     }
 }
@@ -2990,12 +2572,10 @@ async function bangumiHotNewAnime(params = {}) {
     with_origin_country = "JP",
     with_genres = "16",
     sort_by = "popularity.desc",
-    vote_average_gte = "6.0",
-    year = ""
+    vote_average_gte = "6.0"
   } = params;
 
   try {
-    console.log(`[Bangumi新番] 开始获取动画数据，排序: ${sort_by}`);
     const endpoint = "/discover/tv";
 
     // 构建查询参数 - 支持多类型动画
@@ -3006,90 +2586,37 @@ async function bangumiHotNewAnime(params = {}) {
       api_key: API_KEY,
       vote_count_gte: 10  // 新番投票较少，降低门槛
     };
-    
-    // 动画类型筛选 - 确保只获取动画内容
+    // 动画类型筛选
     if (with_genres && with_genres !== "") {
       queryParams.with_genres = with_genres;
-      // 确保包含动画类型
-      if (!queryParams.with_genres.includes("16")) {
-        queryParams.with_genres = `${queryParams.with_genres},16`;
-      }
     } else {
       queryParams.with_genres = "16"; // 默认动画
     }
-    
     // 添加制作地区
     if (with_origin_country) {
       queryParams.with_origin_country = with_origin_country;
-      console.log(`[Bangumi新番] 地区筛选: ${with_origin_country}`);
     }
-    
     // 添加最低评分要求
     if (vote_average_gte && vote_average_gte !== "0") {
       queryParams.vote_average_gte = vote_average_gte;
-      console.log(`[Bangumi新番] 最低评分: ${vote_average_gte}`);
     }
-    
-    // 添加年份筛选
-    if (year && year !== "") {
-      // 设置年份范围，从该年1月1日到12月31日
-      const startDate = `${year}-01-01`;
-      const endDate = `${year}-12-31`;
-      queryParams.first_air_date_gte = startDate;
-      queryParams.first_air_date_lte = endDate;
-      console.log(`[Bangumi新番] 年份筛选: ${year}年 (${startDate} - ${endDate})`);
-    }
-    
     // 发起API请求
     const res = await Widget.tmdb.get(endpoint, {
       params: queryParams
     });
-    
-    console.log(`[Bangumi新番] 获取到 ${res.results.length} 项动画数据`);
-    
     const genreMap = await fetchTmdbGenres();
-    let results = res.results
+    return res.results
       .map(item => {
         const formattedItem = formatTmdbItem(item, genreMap);
         // 添加Bangumi新番标识
         formattedItem.type = "bangumi-new";
         formattedItem.source = "Bangumi热门新番";
         formattedItem.isNewAnime = true;
-        
-        // 优化日期显示
-        if (formattedItem.releaseDate) {
-          const date = new Date(formattedItem.releaseDate);
-          if (!isNaN(date.getTime())) {
-            formattedItem.airDate = formattedItem.releaseDate;
-            formattedItem.airYear = date.getFullYear();
-            formattedItem.isRecent = (new Date().getTime() - date.getTime()) < (365 * 24 * 60 * 60 * 1000); // 一年内
-          }
-        }
-        
         return formattedItem;
       })
-      .filter(item => item.posterPath);
-    
-    // 根据排序方式进一步优化结果
-    if (sort_by.includes("first_air_date") || sort_by.includes("last_air_date")) {
-      // 日期排序时，优先显示有播出日期的动画
-      results = results.sort((a, b) => {
-        const aDate = a.airDate ? new Date(a.airDate).getTime() : 0;
-        const bDate = b.airDate ? new Date(b.airDate).getTime() : 0;
-        
-        if (sort_by.includes("desc")) {
-          return bDate - aDate; // 最新在前
-        } else {
-          return aDate - bDate; // 最早在前
-        }
-      });
-      
-      console.log(`[Bangumi新番] 按播出日期排序完成，共 ${results.length} 项`);
-    }
-    
-    return results;
+      .filter(item => item.posterPath); // Bangumi新番
   } catch (error) {
-    console.error("[Bangumi新番] 获取动画数据失败:", error);
+    console.error("Error fetching Bangumi hot new anime:", error);
     return [];
   }
 }
@@ -3103,8 +2630,7 @@ async function tmdbMediaRanking(params = {}) {
     with_origin_country,
     with_genres,
     sort_by = "popularity.desc",
-    vote_average_gte = "0",
-    year = ""
+    vote_average_gte = "0"
   } = params;
   
   try {
@@ -3136,24 +2662,6 @@ async function tmdbMediaRanking(params = {}) {
     // 添加最低评分要求
     if (vote_average_gte && vote_average_gte !== "0") {
       queryParams.vote_average_gte = vote_average_gte;
-    }
-    
-    // 添加年份筛选
-    if (year && year !== "") {
-      const startDate = `${year}-01-01`;
-      const endDate = `${year}-12-31`;
-      
-      if (media_type === "movie") {
-        // 电影使用 release_date
-        queryParams.release_date_gte = startDate;
-        queryParams.release_date_lte = endDate;
-        console.log(`[TMDB影视榜单] 电影年份筛选: ${year}年 (${startDate} - ${endDate})`);
-      } else {
-        // 剧集使用 first_air_date
-        queryParams.first_air_date_gte = startDate;
-        queryParams.first_air_date_lte = endDate;
-        console.log(`[TMDB影视榜单] 剧集年份筛选: ${year}年 (${startDate} - ${endDate})`);
-      }
     }
     
     // 根据媒体类型调整排序参数
@@ -4140,20 +3648,15 @@ async function fetchAndProcess(basePath, params) {
 async function listAnime(params) { 
     const region = params.region || 'all';
     const minRating = parseFloat(params.min_rating) || 0;
-    const year = params.year || '';
     const basePath = `anime/${region.replace(':', '_')}`;
     
     try {
-        console.log(`[IMDb-v2] 动画模块参数: 地区=${region}, 最低评分=${minRating}, 年份=${year}`);
-        
         // 获取基础数据
         const items = await fetchAndProcess(basePath, params);
         
-        let filteredItems = items;
-        
         // 如果设置了最低评分要求，进行过滤
         if (minRating > 0) {
-            filteredItems = filteredItems.filter(item => {
+            const filteredItems = items.filter(item => {
                 const rating = parseFloat(item.rating) || 0;
                 return rating >= minRating;
             });
@@ -4161,61 +3664,15 @@ async function listAnime(params) {
             if(DEBUG_LOG) {
                 console.log(`[IMDb-v2 DEBUG] 动画评分过滤: 原始${items.length}项 -> 过滤后${filteredItems.length}项 (最低评分: ${minRating})`);
             }
-        }
-        
-        // 如果设置了年份筛选，进行过滤
-        if (year && year !== "") {
-            const targetYear = parseInt(year);
-            filteredItems = filteredItems.filter(item => {
-                // 检查年份信息（可能在title、description或releaseDate中）
-                const itemYear = extractYearFromItem(item);
-                return itemYear === targetYear;
-            });
             
-            console.log(`[IMDb-v2] 动画年份过滤: 原始${items.length}项 -> 过滤后${filteredItems.length}项 (年份: ${year})`);
+            return filteredItems;
         }
         
-        return filteredItems;
+        return items;
     } catch (error) {
         console.error(`[IMDb-v2 ERROR] 动画模块处理出错:`, error);
         throw error;
     }
-}
-
-// 从动画项目中提取年份信息
-function extractYearFromItem(item) {
-    // 1. 从标题中提取年份 (如 "动画名称 (2023)")
-    const titleMatch = (item.title || '').match(/\((\d{4})\)/);
-    if (titleMatch) {
-        return parseInt(titleMatch[1]);
-    }
-    
-    // 2. 从描述中提取年份
-    const descMatch = (item.description || '').match(/(\d{4})年/);
-    if (descMatch) {
-        return parseInt(descMatch[1]);
-    }
-    
-    // 3. 从发布日期中提取年份
-    if (item.releaseDate) {
-        const dateMatch = item.releaseDate.match(/^(\d{4})-/);
-        if (dateMatch) {
-            return parseInt(dateMatch[1]);
-        }
-    }
-    
-    // 4. 从其他可能包含年份的字段中提取
-    const allText = JSON.stringify(item).toLowerCase();
-    const yearMatch = allText.match(/(\d{4})/);
-    if (yearMatch) {
-        const year = parseInt(yearMatch[1]);
-        // 只返回合理的年份范围 (1990-2030)
-        if (year >= 1990 && year <= 2030) {
-            return year;
-        }
-    }
-    
-    return null;
 }
 
 // ===============TMDB横版海报工具集===============
@@ -4281,65 +3738,32 @@ async function batchProcessBackdrops(items, options = {}) {
     const {
         enableTitleOverlay = true,
         preferredSize = 'auto',
-        includeMetadata = true,
-        forceRegenerate = false,
-        maxConcurrent = 3
+        includeMetadata = true
     } = options;
     
-    console.log(`[横版海报] 开始批量处理 ${items.length} 项横版海报...`);
-    
-    const results = [];
-    
-    // 分批处理，避免并发过多
-    const batchSize = Math.ceil(items.length / maxConcurrent);
-    for (let i = 0; i < items.length; i += batchSize) {
-        const batch = items.slice(i, i + batchSize);
-        const batchPromises = batch.map(async (item) => {
-            try {
-                // 生成带标题的横版海报
-                const titlePoster = await createTitlePosterWithOverlay(item, {
-                    title: item.title || item.name,
-                    subtitle: item.genreTitle || item.genre_title || "",
-                    rating: item.vote_average || item.rating || 0,
-                    year: item.release_date ? item.release_date.substring(0, 4) : (item.first_air_date ? item.first_air_date.substring(0, 4) : ""),
-                    showRating: true,
-                    showYear: true,
-                    overlayOpacity: 0.7,
-                    textColor: "#FFFFFF",
-                    backgroundColor: "rgba(0, 0, 0, 0.6)"
-                });
-                
-                const result = {
-                    id: item.id,
-                    title: item.title || item.name,
-                    backdropUrl: createSmartBackdropUrl(item, preferredSize),
-                    titlePoster: titlePoster
-                };
-                
-                if (includeMetadata) {
-                    result.metadata = {
-                        title: item.title || item.name,
-                        year: item.release_date ? item.release_date.substring(0, 4) : (item.first_air_date ? item.first_air_date.substring(0, 4) : ""),
-                        rating: item.vote_average || item.rating || 0,
-                        mediaType: item.media_type || item.type
-                    };
-                }
-                
-                console.log(`[横版海报] 完成处理: ${result.title}`);
-                return result;
-                
-            } catch (error) {
-                console.error(`[横版海报] 处理项目失败: ${item.title || item.name}`, error);
-                return null;
-            }
-        });
+    return items.map(item => {
+        const result = {
+            id: item.id,
+            backdropUrl: createSmartBackdropUrl(item, preferredSize)
+        };
         
-        const batchResults = await Promise.all(batchPromises);
-        results.push(...batchResults.filter(result => result !== null));
-    }
-    
-    console.log(`[横版海报] 批量处理完成: ${results.length} 项成功`);
-    return results;
+        if (enableTitleOverlay) {
+            const overlay = generateBackdropWithTitleOverlay(item, options);
+            result.titleOverlay = overlay.titleOverlay;
+            result.cssClasses = overlay.cssClasses;
+        }
+        
+        if (includeMetadata) {
+            result.metadata = {
+                title: item.title,
+                year: item.year,
+                rating: item.rating,
+                mediaType: item.type
+            };
+        }
+        
+        return result;
+    });
 }
 
 // 横版海报缓存管理器
@@ -4502,73 +3926,6 @@ setInterval(() => {
   }
 }, 5 * 60 * 1000); // 5分钟
 
-// 12小时定时获取横版封面数据包
-setInterval(async () => {
-  try {
-    console.log("[定时任务] 开始12小时定时获取横版封面数据包...");
-    
-    // 获取最新数据包
-    const trendingData = await loadTmdbTrendingData();
-    
-    if (trendingData) {
-      console.log(`[定时任务] 成功获取数据包 - 今日热门: ${trendingData.today_global ? trendingData.today_global.length : 0}项`);
-      console.log(`[定时任务] 成功获取数据包 - 本周热门: ${trendingData.week_global_all ? trendingData.week_global_all.length : 0}项`);
-      console.log(`[定时任务] 成功获取数据包 - 热门电影: ${trendingData.popular_movies ? trendingData.popular_movies.length : 0}项`);
-      
-      // 缓存数据包
-      cacheTrendingData(trendingData);
-      console.log("[定时任务] 数据包已缓存");
-    } else {
-      console.log("[定时任务] 数据包获取失败");
-    }
-    
-    // 预加载横版封面
-    console.log("[定时任务] 开始预加载横版封面...");
-    if (trendingData && trendingData.today_global) {
-      const items = trendingData.today_global.slice(0, 30); // 预加载前30项（增加剧集数量）
-      console.log(`[定时任务] 准备处理 ${items.length} 项横版封面...`);
-      try {
-        const processedBackdrops = await batchProcessBackdrops(items, {
-          enableTitleOverlay: true,
-          preferredSize: 'w1280',
-          includeMetadata: true,
-          forceRegenerate: true, // 强制重新生成
-          maxConcurrent: 5 // 增加并发数加快生成速度
-        });
-        
-        // 缓存处理后的横版封面
-        processedBackdrops.forEach((backdrop, index) => {
-          if (backdrop && backdrop.id) {
-            cacheBackdrop(`backdrop_${backdrop.id}`, backdrop);
-            console.log(`[定时任务] 缓存横版封面 ${index + 1}: ${backdrop.title}`);
-          }
-        });
-        console.log(`[定时任务] 横版封面预加载完成: ${processedBackdrops.length}项`);
-      } catch (error) {
-        console.error("[定时任务] 横版封面预加载失败:", error);
-      }
-    }
-    
-    console.log("[定时任务] 12小时定时任务完成");
-  } catch (error) {
-    console.error("[定时任务] 12小时定时任务失败:", error);
-  }
-}, 12 * 60 * 60 * 1000); // 12小时
-
-// 立即执行一次数据包获取（启动时）
-setTimeout(async () => {
-  try {
-    console.log("[启动任务] 立即获取横版封面数据包...");
-    const trendingData = await loadTmdbTrendingData();
-    if (trendingData) {
-      cacheTrendingData(trendingData);
-      console.log("[启动任务] 数据包获取完成");
-    }
-  } catch (error) {
-    console.error("[启动任务] 数据包获取失败:", error);
-  }
-}, 5000); // 5秒后执行
-
 // 快速数据测试函数（可在控制台调用）
 async function quickDataTest() {
     try {
@@ -4588,52 +3945,6 @@ async function quickDataTest() {
         const titlePosterData = await loadTmdbTitlePosterTrending({ content_type: "today" });
         console.log(`标题海报功能: ${titlePosterData.length > 0 ? '✅ 成功' : '❌ 失败'}`);
         
-        // 测试横版标题海报功能
-        console.log("=== 测试横版标题海报功能 ===");
-        if (data && data.today_global && data.today_global.length > 0) {
-            const testItem = data.today_global[0];
-            console.log(`测试项目: ${testItem.title || testItem.name}`);
-            
-            // 测试创建横版标题海报
-            const titlePoster = await createTitlePosterWithOverlay(testItem, {
-                title: testItem.title || testItem.name,
-                subtitle: "测试副标题",
-                rating: testItem.vote_average || 0,
-                year: testItem.release_date ? testItem.release_date.substring(0, 4) : "",
-                showRating: true,
-                showYear: true
-            });
-            
-            if (titlePoster) {
-                console.log(`✅ 横版标题海报创建成功: ${titlePoster.title}`);
-                console.log(`   标题: ${titlePoster.title}`);
-                console.log(`   副标题: ${titlePoster.subtitle}`);
-                console.log(`   评分: ${titlePoster.rating}`);
-                console.log(`   年份: ${titlePoster.year}`);
-                console.log(`   图片URL: ${titlePoster.url}`);
-            } else {
-                console.log("❌ 横版标题海报创建失败");
-            }
-            
-            // 测试批量处理
-            const processedBackdrops = await batchProcessBackdrops([testItem], {
-                enableTitleOverlay: true,
-                includeMetadata: true
-            });
-            
-            if (processedBackdrops.length > 0) {
-                console.log(`✅ 批量处理成功: ${processedBackdrops.length}项`);
-                const processed = processedBackdrops[0];
-                console.log(`   项目标题: ${processed.title}`);
-                console.log(`   是否有标题海报: ${processed.titlePoster ? '是' : '否'}`);
-                if (processed.titlePoster) {
-                    console.log(`   标题海报标题: ${processed.titlePoster.title}`);
-                }
-            } else {
-                console.log("❌ 批量处理失败");
-            }
-        }
-        
         console.log("=== 快速数据测试完成 ===");
         return true;
     } catch (error) {
@@ -4652,7 +3963,6 @@ if (typeof global !== 'undefined') {
     global.fetchRealtimeData = fetchRealtimeData;
     global.createSimpleWidgetItem = createSimpleWidgetItem;
     global.performanceMonitor = performanceMonitor; // 导出性能监控器
-
 }
 
 // 全局错误处理
@@ -4999,77 +4309,6 @@ async function smartDelay(url) {
         await new Promise(resolve => setTimeout(resolve, delay));
     }
 }
-
-// 12小时定时获取横版封面数据包
-setInterval(async () => {
-  try {
-    console.log("[定时任务] 开始12小时定时获取横版封面数据包...");
-
-    // 获取最新数据包
-    const trendingData = await loadTmdbTrendingData();
-
-    if (trendingData) {
-      console.log(`[定时任务] 成功获取数据包 - 今日热门: ${trendingData.today_global ? trendingData.today_global.length : 0}项`);
-      console.log(`[定时任务] 成功获取数据包 - 本周热门: ${trendingData.week_global_all ? trendingData.week_global_all.length : 0}项`);
-      console.log(`[定时任务] 成功获取数据包 - 热门电影: ${trendingData.popular_movies ? trendingData.popular_movies.length : 0}项`);
-
-      // 缓存数据包
-      cacheTrendingData(trendingData);
-      console.log("[定时任务] 数据包已缓存");
-    } else {
-      console.log("[定时任务] 数据包获取失败");
-    }
-
-    // 预加载横版封面
-    console.log("[定时任务] 开始预加载横版封面...");
-    if (trendingData && trendingData.today_global) {
-      const items = trendingData.today_global.slice(0, 30); // 预加载前30项（增加剧集数量）
-      console.log(`[定时任务] 准备处理 ${items.length} 项横版封面...`);
-      
-      try {
-        const processedBackdrops = await batchProcessBackdrops(items, {
-          enableTitleOverlay: true,
-          preferredSize: 'w1280',
-          includeMetadata: true,
-          forceRegenerate: true, // 强制重新生成
-          maxConcurrent: 5 // 增加并发数加快生成速度
-        });
-        
-        // 缓存处理结果
-        processedBackdrops.forEach((backdrop, index) => {
-          if (backdrop && backdrop.id) {
-            cacheBackdrop(`backdrop_${backdrop.id}`, backdrop);
-            console.log(`[定时任务] 缓存横版封面 ${index + 1}: ${backdrop.title}`);
-          }
-        });
-        
-        console.log(`[定时任务] 横版封面预加载完成: ${processedBackdrops.length}项`);
-      } catch (error) {
-        console.error("[定时任务] 横版封面预加载失败:", error);
-      }
-    }
-
-    console.log("[定时任务] 12小时定时任务完成");
-  } catch (error) {
-    console.error("[定时任务] 12小时定时任务失败:", error);
-  }
-}, 12 * 60 * 60 * 1000); // 12小时
-
-// 立即执行一次数据包获取（启动时）
-setTimeout(async () => {
-  try {
-    console.log("[启动任务] 立即获取横版封面数据包...");
-    const trendingData = await loadTmdbTrendingData();
-    if (trendingData) {
-      cacheTrendingData(trendingData);
-      console.log("[启动任务] 数据包获取完成");
-    }
-  } catch (error) {
-    console.error("[启动任务] 数据包获取失败:", error);
-  }
-}, 5000); // 5秒后执行
-
-
 
 
 
