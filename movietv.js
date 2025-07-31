@@ -324,10 +324,14 @@ WidgetMetadata = {
             { title: "热门度↑", value: "popularity.asc" },
             { title: "评分↓", value: "vote_average.desc" },
             { title: "评分↑", value: "vote_average.asc" },
-            { title: "上映日期↓", value: "release_date.desc" },
-            { title: "上映日期↑", value: "release_date.asc" },
-            { title: "首播日期↓", value: "first_air_date.desc" },
-            { title: "首播日期↑", value: "first_air_date.asc" }
+            { title: "最新上映↓", value: "release_date.desc" },
+            { title: "最早上映↑", value: "release_date.asc" },
+            { title: "最新播出↓", value: "first_air_date.desc" },
+            { title: "最早播出↑", value: "first_air_date.asc" },
+            { title: "最新更新↓", value: "last_air_date.desc" },
+            { title: "最早更新↑", value: "last_air_date.asc" },
+            { title: "投票数↓", value: "vote_count.desc" },
+            { title: "投票数↑", value: "vote_count.asc" }
           ]
         },
         {
@@ -405,8 +409,10 @@ WidgetMetadata = {
             { title: "热门度↑", value: "popularity.asc" },
             { title: "评分↓", value: "vote_average.desc" },
             { title: "评分↑", value: "vote_average.asc" },
-            { title: "首播日期↓", value: "first_air_date.desc" },
-            { title: "首播日期↑", value: "first_air_date.asc" },
+            { title: "最新播出↓", value: "first_air_date.desc" },
+            { title: "最早播出↑", value: "first_air_date.asc" },
+            { title: "最新更新↓", value: "last_air_date.desc" },
+            { title: "最早更新↑", value: "last_air_date.asc" },
             { title: "投票数↓", value: "vote_count.desc" },
             { title: "投票数↑", value: "vote_count.asc" }
           ]
@@ -2902,6 +2908,7 @@ async function bangumiHotNewAnime(params = {}) {
   } = params;
 
   try {
+    console.log(`[Bangumi新番] 开始获取动画数据，排序: ${sort_by}`);
     const endpoint = "/discover/tv";
 
     // 构建查询参数 - 支持多类型动画
@@ -2912,6 +2919,7 @@ async function bangumiHotNewAnime(params = {}) {
       api_key: API_KEY,
       vote_count_gte: 10  // 新番投票较少，降低门槛
     };
+    
     // 动画类型筛选 - 确保只获取动画内容
     if (with_genres && with_genres !== "") {
       queryParams.with_genres = with_genres;
@@ -2922,31 +2930,69 @@ async function bangumiHotNewAnime(params = {}) {
     } else {
       queryParams.with_genres = "16"; // 默认动画
     }
+    
     // 添加制作地区
     if (with_origin_country) {
       queryParams.with_origin_country = with_origin_country;
+      console.log(`[Bangumi新番] 地区筛选: ${with_origin_country}`);
     }
+    
     // 添加最低评分要求
     if (vote_average_gte && vote_average_gte !== "0") {
       queryParams.vote_average_gte = vote_average_gte;
+      console.log(`[Bangumi新番] 最低评分: ${vote_average_gte}`);
     }
+    
     // 发起API请求
     const res = await Widget.tmdb.get(endpoint, {
       params: queryParams
     });
+    
+    console.log(`[Bangumi新番] 获取到 ${res.results.length} 项动画数据`);
+    
     const genreMap = await fetchTmdbGenres();
-    return res.results
+    let results = res.results
       .map(item => {
         const formattedItem = formatTmdbItem(item, genreMap);
         // 添加Bangumi新番标识
         formattedItem.type = "bangumi-new";
         formattedItem.source = "Bangumi热门新番";
         formattedItem.isNewAnime = true;
+        
+        // 优化日期显示
+        if (formattedItem.releaseDate) {
+          const date = new Date(formattedItem.releaseDate);
+          if (!isNaN(date.getTime())) {
+            formattedItem.airDate = formattedItem.releaseDate;
+            formattedItem.airYear = date.getFullYear();
+            formattedItem.isRecent = (new Date().getTime() - date.getTime()) < (365 * 24 * 60 * 60 * 1000); // 一年内
+          }
+        }
+        
         return formattedItem;
       })
-      .filter(item => item.posterPath); // Bangumi新番
+      .filter(item => item.posterPath);
+    
+    // 根据排序方式进一步优化结果
+    if (sort_by.includes("first_air_date") || sort_by.includes("last_air_date")) {
+      // 日期排序时，优先显示有播出日期的动画
+      results = results.sort((a, b) => {
+        const aDate = a.airDate ? new Date(a.airDate).getTime() : 0;
+        const bDate = b.airDate ? new Date(b.airDate).getTime() : 0;
+        
+        if (sort_by.includes("desc")) {
+          return bDate - aDate; // 最新在前
+        } else {
+          return aDate - bDate; // 最早在前
+        }
+      });
+      
+      console.log(`[Bangumi新番] 按播出日期排序完成，共 ${results.length} 项`);
+    }
+    
+    return results;
   } catch (error) {
-    console.error("Error fetching Bangumi hot new anime:", error);
+    console.error("[Bangumi新番] 获取动画数据失败:", error);
     return [];
   }
 }
