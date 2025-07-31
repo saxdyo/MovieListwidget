@@ -348,6 +348,31 @@ WidgetMetadata = {
             { title: "9.0分以上", value: "9.0" }
           ]
         },
+        {
+          name: "year",
+          title: "📅年份筛选",
+          type: "enumeration",
+          description: "按播出/上映年份筛选内容",
+          value: "",
+          enumOptions: [
+            { title: "全部年份", value: "" },
+            { title: "2024年", value: "2024" },
+            { title: "2023年", value: "2023" },
+            { title: "2022年", value: "2022" },
+            { title: "2021年", value: "2021" },
+            { title: "2020年", value: "2020" },
+            { title: "2019年", value: "2019" },
+            { title: "2018年", value: "2018" },
+            { title: "2017年", value: "2017" },
+            { title: "2016年", value: "2016" },
+            { title: "2015年", value: "2015" },
+            { title: "2014年", value: "2014" },
+            { title: "2013年", value: "2013" },
+            { title: "2012年", value: "2012" },
+            { title: "2011年", value: "2011" },
+            { title: "2010年", value: "2010" }
+          ]
+        },
         { name: "page", title: "页码", type: "page" },
         { name: "language", title: "语言", type: "language", value: "zh-CN" }
       ]
@@ -429,6 +454,31 @@ WidgetMetadata = {
             { title: "7.0分以上", value: "7.0" },
             { title: "8.0分以上", value: "8.0" },
             { title: "8.5分以上", value: "8.5" }
+          ]
+        },
+        {
+          name: "year",
+          title: "📅年份筛选",
+          type: "enumeration",
+          description: "按播出年份筛选动画",
+          value: "",
+          enumOptions: [
+            { title: "全部年份", value: "" },
+            { title: "2024年", value: "2024" },
+            { title: "2023年", value: "2023" },
+            { title: "2022年", value: "2022" },
+            { title: "2021年", value: "2021" },
+            { title: "2020年", value: "2020" },
+            { title: "2019年", value: "2019" },
+            { title: "2018年", value: "2018" },
+            { title: "2017年", value: "2017" },
+            { title: "2016年", value: "2016" },
+            { title: "2015年", value: "2015" },
+            { title: "2014年", value: "2014" },
+            { title: "2013年", value: "2013" },
+            { title: "2012年", value: "2012" },
+            { title: "2011年", value: "2011" },
+            { title: "2010年", value: "2010" }
           ]
         },
         { name: "page", title: "页码", type: "page" },
@@ -2915,7 +2965,8 @@ async function bangumiHotNewAnime(params = {}) {
     with_origin_country = "JP",
     with_genres = "16",
     sort_by = "popularity.desc",
-    vote_average_gte = "6.0"
+    vote_average_gte = "6.0",
+    year = ""
   } = params;
 
   try {
@@ -2952,6 +3003,16 @@ async function bangumiHotNewAnime(params = {}) {
     if (vote_average_gte && vote_average_gte !== "0") {
       queryParams.vote_average_gte = vote_average_gte;
       console.log(`[Bangumi新番] 最低评分: ${vote_average_gte}`);
+    }
+    
+    // 添加年份筛选
+    if (year && year !== "") {
+      // 设置年份范围，从该年1月1日到12月31日
+      const startDate = `${year}-01-01`;
+      const endDate = `${year}-12-31`;
+      queryParams.first_air_date_gte = startDate;
+      queryParams.first_air_date_lte = endDate;
+      console.log(`[Bangumi新番] 年份筛选: ${year}年 (${startDate} - ${endDate})`);
     }
     
     // 发起API请求
@@ -3017,7 +3078,8 @@ async function tmdbMediaRanking(params = {}) {
     with_origin_country,
     with_genres,
     sort_by = "popularity.desc",
-    vote_average_gte = "0"
+    vote_average_gte = "0",
+    year = ""
   } = params;
   
   try {
@@ -3049,6 +3111,24 @@ async function tmdbMediaRanking(params = {}) {
     // 添加最低评分要求
     if (vote_average_gte && vote_average_gte !== "0") {
       queryParams.vote_average_gte = vote_average_gte;
+    }
+    
+    // 添加年份筛选
+    if (year && year !== "") {
+      const startDate = `${year}-01-01`;
+      const endDate = `${year}-12-31`;
+      
+      if (media_type === "movie") {
+        // 电影使用 release_date
+        queryParams.release_date_gte = startDate;
+        queryParams.release_date_lte = endDate;
+        console.log(`[TMDB影视榜单] 电影年份筛选: ${year}年 (${startDate} - ${endDate})`);
+      } else {
+        // 剧集使用 first_air_date
+        queryParams.first_air_date_gte = startDate;
+        queryParams.first_air_date_lte = endDate;
+        console.log(`[TMDB影视榜单] 剧集年份筛选: ${year}年 (${startDate} - ${endDate})`);
+      }
     }
     
     // 根据媒体类型调整排序参数
