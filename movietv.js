@@ -532,6 +532,7 @@ WidgetMetadata = {
           description: "选择要筛选的内容类型",
           value: "movie",
           enumOptions: [
+            { title: "全部类型", value: "all" },
             { title: "电影", value: "movie" },
             { title: "剧集", value: "tv" }
           ]
@@ -2824,36 +2825,88 @@ async function tmdbDiscoverByNetwork(params = {}) {
 async function tmdbDiscoverByCompany(params = {}) {
   const { language = "zh-CN", page = 1, with_companies, type = "movie", with_genres, sort_by = "popularity.desc" } = params;
   try {
-    // 构建API端点
-    const endpoint = type === "movie" ? "/discover/movie" : "/discover/tv";
+    let results = [];
     
-    // 构建查询参数
-    const queryParams = { 
-      language, 
-      page, 
-      sort_by,
-      api_key: API_KEY
-    };
-    
-    // 添加出品公司过滤器
-    if (with_companies) {
-      queryParams.with_companies = with_companies;
+    // 如果选择全部类型，同时获取电影和剧集
+    if (type === "all") {
+      console.log("获取全部类型内容（电影+剧集）");
+      
+      // 并行获取电影和剧集数据
+      const [movieRes, tvRes] = await Promise.all([
+        Widget.tmdb.get("/discover/movie", {
+          params: {
+            language,
+            page,
+            sort_by,
+            api_key: API_KEY,
+            ...(with_companies && { with_companies }),
+            ...(with_genres && { with_genres })
+          }
+        }),
+        Widget.tmdb.get("/discover/tv", {
+          params: {
+            language,
+            page,
+            sort_by,
+            api_key: API_KEY,
+            ...(with_companies && { with_companies }),
+            ...(with_genres && { with_genres })
+          }
+        })
+      ]);
+      
+      const genreMap = await fetchTmdbGenres();
+      
+      // 合并电影和剧集结果，按热门度排序
+      const movieResults = movieRes.results
+        .map(item => formatTmdbItem(item, genreMap.movie))
+        .filter(item => item.posterPath);
+        
+      const tvResults = tvRes.results
+        .map(item => formatTmdbItem(item, genreMap.tv))
+        .filter(item => item.posterPath);
+      
+      // 合并并排序（按热门度）
+      results = [...movieResults, ...tvResults]
+        .sort((a, b) => (b.popularity || 0) - (a.popularity || 0))
+        .slice(0, 20); // 限制总数量
+      
+      console.log(`全部类型获取完成: 电影${movieResults.length}项, 剧集${tvResults.length}项, 合并后${results.length}项`);
+      
+    } else {
+      // 构建API端点
+      const endpoint = type === "movie" ? "/discover/movie" : "/discover/tv";
+      
+      // 构建查询参数
+      const queryParams = { 
+        language, 
+        page, 
+        sort_by,
+        api_key: API_KEY
+      };
+      
+      // 添加出品公司过滤器
+      if (with_companies) {
+        queryParams.with_companies = with_companies;
+      }
+      
+      // 添加题材类型过滤器
+      if (with_genres) {
+        queryParams.with_genres = with_genres;
+      }
+      
+      // 发起API请求
+      const res = await Widget.tmdb.get(endpoint, {
+        params: queryParams
+      });
+      
+      const genreMap = await fetchTmdbGenres();
+      results = res.results
+        .map(item => formatTmdbItem(item, genreMap[type]))
+        .filter(item => item.posterPath);
     }
     
-    // 添加题材类型过滤器
-    if (with_genres) {
-      queryParams.with_genres = with_genres;
-    }
-    
-    // 发起API请求
-    const res = await Widget.tmdb.get(endpoint, {
-      params: queryParams
-    });
-    
-    const genreMap = await fetchTmdbGenres();
-    return res.results
-      .map(item => formatTmdbItem(item, genreMap[type]))
-      .filter(item => item.posterPath); // 出品公司
+    return results;
   } catch (error) {
     console.error("Error fetching discover by company:", error);
     return [];
