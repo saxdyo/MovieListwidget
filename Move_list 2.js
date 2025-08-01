@@ -3072,6 +3072,12 @@ async function tmdbDiscoverByCompany(params = {}) {
     if (type === "all") {
       logger.log("获取全部类型内容（电影+剧集）", 'info', 'COMPANY');
       
+      // 强制清理缓存，确保获取最新数据
+      if (globalCache.trending) {
+        globalCache.trending.clear();
+        logger.log("已清理缓存，强制获取最新数据", 'debug', 'COMPANY');
+      }
+      
       // 并行获取电影和剧集数据
       const [movieRes, tvRes] = await Promise.all([
         Widget.tmdb.get("/discover/movie", {
@@ -3105,17 +3111,23 @@ async function tmdbDiscoverByCompany(params = {}) {
       // 合并电影和剧集结果，按热门度排序
       const movieResults = movieRes.results
         .map(item => {
-          // 为电影数据明确设置media_type
-          item.media_type = "movie";
-          return formatTmdbItem(item, genreMap.movie);
+          // 为电影数据明确设置media_type，并确保所有相关字段都正确
+          const movieItem = { ...item, media_type: "movie" };
+          const formatted = formatTmdbItem(movieItem, genreMap.movie);
+          // 确保mediaType字段正确设置
+          formatted.mediaType = "movie";
+          return formatted;
         })
         .filter(item => item.posterPath);
         
       const tvResults = tvRes.results
         .map(item => {
-          // 为剧集数据明确设置media_type
-          item.media_type = "tv";
-          return formatTmdbItem(item, genreMap.tv);
+          // 为剧集数据明确设置media_type，并确保所有相关字段都正确
+          const tvItem = { ...item, media_type: "tv" };
+          const formatted = formatTmdbItem(tvItem, genreMap.tv);
+          // 确保mediaType字段正确设置
+          formatted.mediaType = "tv";
+          return formatted;
         })
         .filter(item => item.posterPath);
       
@@ -3133,10 +3145,22 @@ async function tmdbDiscoverByCompany(params = {}) {
       // 调试信息：显示前几个项目的详细信息
       if (movieResults.length > 0) {
         logger.log(`电影示例: ${movieResults[0].title} (${movieResults[0].mediaType})`, 'debug', 'COMPANY');
+        logger.log(`电影数据结构: ${JSON.stringify(movieResults[0], null, 2)}`, 'debug', 'COMPANY');
       }
       if (tvResults.length > 0) {
         logger.log(`剧集示例: ${tvResults[0].title} (${tvResults[0].mediaType})`, 'debug', 'COMPANY');
+        logger.log(`剧集数据结构: ${JSON.stringify(tvResults[0], null, 2)}`, 'debug', 'COMPANY');
       }
+      
+      // 检查最终结果的媒体类型分布
+      const movieCount = results.filter(item => item.mediaType === 'movie').length;
+      const tvCount = results.filter(item => item.mediaType === 'tv').length;
+      logger.log(`最终结果分布: 电影${movieCount}项, 剧集${tvCount}项`, 'debug', 'COMPANY');
+      
+      // 详细检查每个项目的mediaType
+      results.forEach((item, index) => {
+        logger.log(`项目${index + 1}: ${item.title} - mediaType: ${item.mediaType}`, 'debug', 'COMPANY');
+      });
       
     } else {
       // 构建API端点

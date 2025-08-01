@@ -2860,17 +2860,23 @@ async function tmdbDiscoverByCompany(params = {}) {
       // 合并电影和剧集结果，按热门度排序
       const movieResults = movieRes.results
         .map(item => {
-          // 为电影数据明确设置media_type
-          item.media_type = "movie";
-          return formatTmdbItem(item, genreMap.movie);
+          // 为电影数据明确设置media_type，并确保所有相关字段都正确
+          const movieItem = { ...item, media_type: "movie" };
+          const formatted = formatTmdbItem(movieItem, genreMap.movie);
+          // 确保mediaType字段正确设置
+          formatted.mediaType = "movie";
+          return formatted;
         })
         .filter(item => item.posterPath);
         
       const tvResults = tvRes.results
         .map(item => {
-          // 为剧集数据明确设置media_type
-          item.media_type = "tv";
-          return formatTmdbItem(item, genreMap.tv);
+          // 为剧集数据明确设置media_type，并确保所有相关字段都正确
+          const tvItem = { ...item, media_type: "tv" };
+          const formatted = formatTmdbItem(tvItem, genreMap.tv);
+          // 确保mediaType字段正确设置
+          formatted.mediaType = "tv";
+          return formatted;
         })
         .filter(item => item.posterPath);
       
