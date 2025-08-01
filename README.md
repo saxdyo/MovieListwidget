@@ -24,25 +24,25 @@ icons/
 
 ### 完整图标库
 ```
-https://raw.githubusercontent.com/[你的用户名]/icon-library/main/icons/json/all-icons.json
+https://raw.githubusercontent.com/saxdyo/icon-library/main/icons/json/all-icons.json
 ```
 
 ### 分类订阅
-- **社交媒体**: `https://raw.githubusercontent.com/[你的用户名]/icon-library/main/icons/json/social.json`
-- **技术相关**: `https://raw.githubusercontent.com/[你的用户名]/icon-library/main/icons/json/tech.json`
-- **商业相关**: `https://raw.githubusercontent.com/[你的用户名]/icon-library/main/icons/json/business.json`
-- **娱乐相关**: `https://raw.githubusercontent.com/[你的用户名]/icon-library/main/icons/json/entertainment.json`
+- **社交媒体**: `https://raw.githubusercontent.com/saxdyo/icon-library/main/icons/json/social.json`
+- **技术相关**: `https://raw.githubusercontent.com/saxdyo/icon-library/main/icons/json/tech.json`
+- **商业相关**: `https://raw.githubusercontent.com/saxdyo/icon-library/main/icons/json/business.json`
+- **娱乐相关**: `https://raw.githubusercontent.com/saxdyo/icon-library/main/icons/json/entertainment.json`
 
 ## 📦 使用方法
 
 ### 1. 直接访问图标
 ```
-https://raw.githubusercontent.com/[你的用户名]/icon-library/main/icons/svg/social/facebook.svg
+https://raw.githubusercontent.com/saxdyo/icon-library/main/icons/svg/social/facebook.svg
 ```
 
 ### 2. 通过JSON订阅获取图标列表
 ```javascript
-fetch('https://raw.githubusercontent.com/[你的用户名]/icon-library/main/icons/json/all-icons.json')
+fetch('https://raw.githubusercontent.com/saxdyo/icon-library/main/icons/json/all-icons.json')
   .then(response => response.json())
   .then(data => {
     console.log(data.icons);
@@ -77,7 +77,7 @@ fetch('https://raw.githubusercontent.com/[你的用户名]/icon-library/main/ico
 
 1. 克隆仓库
 ```bash
-git clone https://github.com/[你的用户名]/icon-library.git
+git clone https://github.com/saxdyo/icon-library.git
 ```
 
 2. 添加新图标
