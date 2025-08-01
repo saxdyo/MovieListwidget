@@ -1058,7 +1058,7 @@ const performanceMonitor = {
   }
 };
 
-const API_KEY = (typeof process !== 'undefined' && process.env.TMDB_API_KEY) ? process.env.TMDB_API_KEY : 'f3ae69ddca232b56265600eb919d46ab'; // 优先环境变量
+const API_KEY = (typeof process !== 'undefined' && process.env.TMDB_API_KEY) ? process.env.TMDB_API_KEY : ''; // 优先环境变量
 
 // TMDB类型缓存
 let tmdbGenresCache = null;
