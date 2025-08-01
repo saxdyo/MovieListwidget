@@ -686,7 +686,9 @@ WidgetMetadata = {
             { title: "上映日期↓", value: "release_date.desc" },
             { title: "上映日期↑", value: "release_date.asc" },
             { title: "首播日期↓", value: "first_air_date.desc" },
-            { title: "首播日期↑", value: "first_air_date.asc" }
+            { title: "首播日期↑", value: "first_air_date.asc" },
+            { title: "仅电影", value: "only_movie" },
+            { title: "仅剧集", value: "only_tv" }
           ]
         },
         { name: "page", title: "页码", type: "page" },
@@ -1204,7 +1206,6 @@ function getBeijingDate() {
   const beijingDate = new Date(beijingTime);
   return `${beijingDate.getUTCFullYear()}-${String(beijingDate.getUTCMonth() + 1).padStart(2, '0')}-${String(beijingDate.getUTCDate()).padStart(2, '0')}`;
 }
-
 // 获取TMDB类型标题（中文）
 function getTmdbGenreTitles(genreIds, mediaType) {
   if (!Array.isArray(genreIds) || genreIds.length === 0) {
@@ -1973,7 +1974,6 @@ async function fetchFromBackupSources() {
     
     return null;
 }
-
 // 智能缓存管理
 const trendingDataCache = new Map();
 const CACHE_DURATION = 30 * 60 * 1000; // 30分钟缓存
@@ -2753,7 +2753,6 @@ function createSmartImageUrl(path, type = 'poster', size = 'w500') {
     const selectedCDN = selectBestCDN(size, type);
     return `${selectedCDN.baseUrl}${size}${path}`;
 }
-
 // 处理媒体项目数据（优先中文）- 保留原函数作为降级选项
 async function processMediaItems(items, genreMap, forceType = null) {
     return items
@@ -4661,7 +4660,7 @@ async function fetchPagedData(shardPath) {
         // 发起网络请求，超时时间可以短一些，因为文件很小
         response = await Widget.http.get(encodedUrl, { timeout: 15000, headers: {'User-Agent': 'ForwardWidget/IMDb-v2'} }); 
     } catch (e) { 
-        console.error(`[IMDb-v2 ERROR] 网络请求失败 ${encodedUrl}: ${e.message}`); 
+        console.error(`[IMDb-v2 ERROR] 网络请求失败 ${encodedUrl}: ${e.message}`);
         // 如果是 404 错误，可能是页码超出范围，返回空
         if (e.message.includes('404')) {
             if(DEBUG_LOG) console.log(`[IMDb-v2 INFO] 数据未找到 (404)，可能页码超出范围: ${encodedUrl}`);

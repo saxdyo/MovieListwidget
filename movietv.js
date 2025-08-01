@@ -363,7 +363,7 @@ WidgetMetadata = {
             { title: "热门电影", value: "popular" },
             { title: "高分内容", value: "top_rated" }
           ]
-        },
+        }, 
         { 
           name: "media_type", 
           title: "🎭媒体类型", 
@@ -527,33 +527,6 @@ WidgetMetadata = {
         },
 
         {
-          name: "with_genres",
-          title: "🎬题材类型",
-          type: "enumeration",
-          description: "选择要筛选的题材类型（可选）",
-          value: "",
-          enumOptions: [
-            { title: "全部类型", value: "" },
-            { title: "动作", value: "28" },
-            { title: "冒险", value: "12" },
-            { title: "动画", value: "16" },
-            { title: "喜剧", value: "35" },
-            { title: "犯罪", value: "80" },
-            { title: "剧情", value: "18" },
-            { title: "家庭", value: "10751" },
-            { title: "奇幻", value: "14" },
-            { title: "历史", value: "36" },
-            { title: "恐怖", value: "27" },
-            { title: "音乐", value: "10402" },
-            { title: "悬疑", value: "9648" },
-            { title: "爱情", value: "10749" },
-            { title: "科幻", value: "878" },
-            { title: "惊悚", value: "53" },
-            { title: "战争", value: "10752" },
-            { title: "西部", value: "37" }
-          ]
-        },
-        {
           name: "sort_by",
           title: "📊排序方式",
           type: "enumeration",
@@ -567,7 +540,9 @@ WidgetMetadata = {
             { title: "上映日期↓", value: "release_date.desc" },
             { title: "上映日期↑", value: "release_date.asc" },
             { title: "首播日期↓", value: "first_air_date.desc" },
-            { title: "首播日期↑", value: "first_air_date.asc" }
+            { title: "首播日期↑", value: "first_air_date.asc" },
+            { title: "仅电影", value: "only_movie" },
+            { title: "仅剧集", value: "only_tv" }
           ]
         },
         { name: "page", title: "页码", type: "page" },
@@ -1465,7 +1440,6 @@ async function fetchRealtimeData() {
         return null;
     }
 }
-
 // 横版标题海报加载器
 async function loadTitlePosterWithBackdrops(items, maxItems = 30) {
     // 尝试获取缓存的横版标题海报
@@ -1579,7 +1553,6 @@ async function loadEnhancedTitlePosterWithBackdrops(items, maxItems = 30, conten
         }
     }
 }
-
 // 简化的组件项目创建器
 function createSimpleWidgetItem(item) {
     return {
@@ -2199,7 +2172,6 @@ async function createTitlePosterWithOverlay(item, options = {}) {
         return null;
     }
 }
-
 // 增强的TMDB热门数据生成器（支持高质量横版海报和智能缓存）
 async function generateEnhancedTrendingData() {
     // 智能缓存检查
@@ -2351,7 +2323,6 @@ function pickChineseContent(primaryCN, secondaryCN, primaryEN, secondaryEN, fall
     if (secondaryEN && secondaryEN.trim()) return secondaryEN;
     return fallback;
 }
-
 // 增强的媒体项目处理器（支持多种尺寸横版海报和标题覆盖）
 async function processEnhancedMediaItems(items, genreMap, forceType = null) {
     return items
@@ -2903,9 +2874,6 @@ async function tmdbDiscoverByCompany(params = {}) {
     return [];
   }
 }
-      
-
-
 // TMDB热门内容合并模块 - 整合今日热门、本周热门、热门电影、高分内容
 async function loadTmdbTrendingCombined(params = {}) {
   const { 
@@ -3658,7 +3626,6 @@ async function tmdbPopularTVShows(params = {}) {
     media_type: "tv"
   });
 }
-
 // TMDB剧集时间榜 - 按时间和地区筛选的剧集内容
 async function tmdbTVShowsByTime(params = {}) {
   const { 
@@ -4327,7 +4294,7 @@ async function classifyByGenre(params = {}) {
         const showKeywords = ['综艺', '真人秀', '脱口秀', '访谈', '节目', '纪录片', '新闻'];
         if (showKeywords.some(k => lowerTitle.includes(k) || lowerDesc.includes(k))) return false;
         if (lowerTitle.includes('短剧') || lowerDesc.includes('短剧')) return false;
-        const adultKeywords = ['19禁', '성인', '成人', '情色', '色情', 'AV', '에로', '야동'];
+        const adultKeywords = ['19禁', '性人', '成人', '情色', '色情', 'AV', '에로', '야동'];
         if (adultKeywords.some(k => lowerTitle.includes(k) || lowerDesc.includes(k) || (item.genreTitle && item.genreTitle.includes(k)))) return false;
         return true;
       });
@@ -4438,7 +4405,6 @@ async function fetchPagedData(shardPath) {
     cachedData[encodedUrl] = data;
     return data;
 }
-
 // 将数据源格式映射为小组件格式
 function mapToWidgetItem(item) {
     // 数据源字段：id, t(title), p(poster), b(backdrop), r(rating), y(year), rd(release_date), mt(mediaType), o(overview)
@@ -5177,7 +5143,6 @@ function createSmartImageUrlWithCache(path, type = 'poster', size = 'w500') {
     
     return url;
 }
-
 // 并发图片加载管理器
 class ImageLoadManager {
     constructor() {
@@ -5973,7 +5938,6 @@ function selectBestCDN(size = 'w500', type = 'poster') {
   
   return selectedCDN;
 }
-
 // 网络条件检测
 function detectNetworkCondition() {
   // 简单的网络条件检测
@@ -6289,12 +6253,3 @@ function createEnhancedWidgetItem(item) {
   console.log(`[增强项目] ${result.title} - 标题海报: ${result.backdropPath ? '✅' : '❌'} - 分类: ${result.category} - 中国优化: 是`);
   return result;
 }
-
-
-
-
-
-
-
-
-
