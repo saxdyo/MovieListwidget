@@ -87,6 +87,17 @@ class SmartCache {
       this.cache.set(key, item);
       
       this.hits++;
+      
+      // 解压数据（如果被压缩）
+      if (item.compressed && this.compressionEnabled) {
+        try {
+          return this.decompressData(item.data);
+        } catch (error) {
+          log(`[智能缓存] 数据解压失败: ${key}`, 'warn');
+          return item.data; // 返回原始数据
+        }
+      }
+      
       return item.data;
     } else {
       this.misses++;
@@ -105,10 +116,19 @@ class SmartCache {
     }
     
     // 压缩数据（如果启用）
-    const processedData = this.compressionEnabled ? this.compressData(value) : value;
+    let processedData, isCompressed = false;
+    if (this.compressionEnabled) {
+      const compressionResult = this.compressData(value);
+      processedData = compressionResult.data;
+      isCompressed = compressionResult.compressed;
+    } else {
+      processedData = value;
+      isCompressed = false;
+    }
     
     const item = {
       data: processedData,
+      compressed: isCompressed,
       timestamp: now,
       lastAccess: now,
       accessCount: 1,
@@ -136,9 +156,26 @@ class SmartCache {
     try {
       const jsonStr = JSON.stringify(data);
       // 简单的压缩：移除多余空格
-      return JSON.parse(jsonStr.replace(/\s+/g, ' '));
+      const compressed = JSON.parse(jsonStr.replace(/\s+/g, ' '));
+      return {
+        data: compressed,
+        compressed: true
+      };
     } catch {
-      return data;
+      return {
+        data: data,
+        compressed: false
+      };
+    }
+  }
+  
+  // 解压数据
+  decompressData(compressedData) {
+    try {
+      // 对于简单压缩，直接返回数据
+      return compressedData;
+    } catch {
+      return compressedData;
     }
   }
   
@@ -291,21 +328,49 @@ const genreCache = new SmartCache(10, {
   preload: true
 });
 
-// 优化的缓存函数
+// 优化的缓存函数（带安全回退）
 function getCachedBackdrop(key) { 
-  return backdropCache.get(key, 30 * 60 * 1000); // 30分钟过期
+  try {
+    const cached = backdropCache.get(key, 30 * 60 * 1000); // 30分钟过期
+    if (cached) {
+      log(`[缓存] 命中横版海报缓存: ${key}`, 'debug');
+    }
+    return cached;
+  } catch (error) {
+    log(`[缓存] 获取横版海报缓存失败: ${key} - ${error.message}`, 'warn');
+    return undefined;
+  }
 }
 
 function cacheBackdrop(key, data) { 
-  backdropCache.set(key, data, 2, 30 * 60 * 1000); // 优先级2，30分钟过期
+  try {
+    backdropCache.set(key, data, 2, 30 * 60 * 1000); // 优先级2，30分钟过期
+    log(`[缓存] 缓存横版海报: ${key}`, 'debug');
+  } catch (error) {
+    log(`[缓存] 缓存横版海报失败: ${key} - ${error.message}`, 'warn');
+  }
 }
 
 function getCachedTrendingData() { 
-  return trendingDataCache.get('trending_data', 60 * 60 * 1000); // 1小时过期
+  try {
+    const cached = trendingDataCache.get('trending_data', 60 * 60 * 1000); // 1小时过期
+    if (cached) {
+      log(`[缓存] 命中热门数据缓存`, 'debug');
+    }
+    return cached;
+  } catch (error) {
+    log(`[缓存] 获取热门数据缓存失败: ${error.message}`, 'warn');
+    return undefined;
+  }
 }
 
 function cacheTrendingData(data) { 
-  trendingDataCache.set('trending_data', data, 3, 60 * 60 * 1000); // 优先级3，1小时过期
+  try {
+    trendingDataCache.set('trending_data', data, 3, 60 * 60 * 1000); // 优先级3，1小时过期
+    log(`[缓存] 缓存热门数据`, 'debug');
+  } catch (error) {
+    log(`[缓存] 缓存热门数据失败: ${error.message}`, 'warn');
+  }
 }
 
 function getCachedImage(key) {
@@ -1602,7 +1667,7 @@ async function fetchTmdbDataFromApi() {
     }
 }
 
-// 优化的TMDB数据获取函数 - 使用智能缓存系统
+// 优化的TMDB数据获取函数 - 使用智能缓存系统（带数据恢复）
 async function loadTmdbTrendingData() {
     try {
         log("[智能缓存] 开始获取TMDB热门数据...", 'info');
@@ -1633,7 +1698,23 @@ async function loadTmdbTrendingData() {
             return realtimeData;
         }
         
-        // 4. 最后的备用方案：返回空数据结构
+        // 4. 数据恢复机制：尝试从备用缓存获取
+        log("[智能缓存] 尝试数据恢复...", 'warn');
+        const recoveredData = await recoverDataFromBackup();
+        if (recoveredData) {
+            log("[智能缓存] 数据恢复成功", 'info');
+            return recoveredData;
+        }
+        
+        // 5. 紧急数据获取
+        log("[智能缓存] 尝试紧急数据获取...", 'warn');
+        const emergencyData = await emergencyDataFetch();
+        if (emergencyData && !emergencyData.error) {
+            log("[智能缓存] 紧急数据获取成功", 'info');
+            return emergencyData;
+        }
+        
+        // 6. 最后的备用方案：返回空数据结构
         log("[智能缓存] 所有数据源都失败，返回空数据结构", 'warn');
         return {
             today_global: [],
@@ -1643,11 +1724,97 @@ async function loadTmdbTrendingData() {
         
     } catch (error) {
         console.error("[智能缓存] 数据获取失败:", error);
+        
+        // 尝试数据恢复
+        try {
+            const recoveredData = await recoverDataFromBackup();
+            if (recoveredData) {
+                log("[智能缓存] 异常后数据恢复成功", 'info');
+                return recoveredData;
+            }
+        } catch (recoveryError) {
+            log(`[智能缓存] 数据恢复失败: ${recoveryError.message}`, 'error');
+        }
+        
         // 返回空数据结构而不是null
         return {
             today_global: [],
             week_global_all: [],
             popular_movies: []
+        };
+    }
+}
+
+// 数据恢复机制
+async function recoverDataFromBackup() {
+    try {
+        // 尝试从多个备用源获取数据
+        const backupSources = [
+            () => fetchRealtimeData(),
+            () => fetchSimpleData(),
+            () => generateSimpleTrendingData()
+        ];
+        
+        for (let i = 0; i < backupSources.length; i++) {
+            try {
+                const data = await backupSources[i]();
+                if (data && isValidTmdbData(data)) {
+                    log(`[数据恢复] 从备用源${i + 1}恢复数据成功`, 'info');
+                    return data;
+                }
+            } catch (error) {
+                log(`[数据恢复] 备用源${i + 1}失败: ${error.message}`, 'warn');
+            }
+        }
+        
+        return null;
+    } catch (error) {
+        log(`[数据恢复] 数据恢复过程失败: ${error.message}`, 'error');
+        return null;
+    }
+}
+
+// 紧急数据获取（当所有缓存和备用源都失败时）
+async function emergencyDataFetch() {
+    try {
+        log('[紧急数据] 开始紧急数据获取...', 'warn');
+        
+        // 清理所有缓存，重新开始
+        cacheManager.clearAll();
+        
+        // 直接调用API获取数据
+        const emergencyData = await fetchRealtimeData();
+        if (emergencyData && isValidTmdbData(emergencyData)) {
+            log('[紧急数据] 紧急数据获取成功', 'info');
+            // 重新缓存数据
+            cacheTrendingData(emergencyData);
+            return emergencyData;
+        }
+        
+        // 如果还是失败，返回模拟数据
+        log('[紧急数据] 返回模拟数据', 'warn');
+        return {
+            today_global: [
+                {
+                    id: 'emergency-1',
+                    title: '数据加载中...',
+                    poster_path: null,
+                    vote_average: 0,
+                    overview: '正在尝试恢复数据连接'
+                }
+            ],
+            week_global_all: [],
+            popular_movies: [],
+            is_emergency: true
+        };
+        
+    } catch (error) {
+        log(`[紧急数据] 紧急数据获取失败: ${error.message}`, 'error');
+        return {
+            today_global: [],
+            week_global_all: [],
+            popular_movies: [],
+            error: error.message
         };
     }
 }
@@ -6638,11 +6805,52 @@ function createEnhancedWidgetItem(item) {
   return result;
 }
 
+// 缓存诊断功能
+function diagnoseCacheIssues() {
+  const issues = [];
+  
+  // 检查缓存状态
+  const caches = {
+    backdrop: backdropCache,
+    trending: trendingDataCache,
+    image: imageCache,
+    genre: genreCache
+  };
+  
+  for (const [name, cache] of Object.entries(caches)) {
+    const stats = cache.stats();
+    const health = cache.healthCheck();
+    
+    if (!health.healthy) {
+      issues.push(`缓存${name}不健康: 命中率${health.hitRate}%, 内存${health.memoryUsage}`);
+    }
+    
+    if (parseFloat(stats.hitRate) < 30) {
+      issues.push(`缓存${name}命中率过低: ${stats.hitRate}%`);
+    }
+  }
+  
+  if (issues.length > 0) {
+    log(`[缓存诊断] 发现${issues.length}个问题:`, 'warn');
+    issues.forEach(issue => log(`  - ${issue}`, 'warn'));
+  } else {
+    log('[缓存诊断] 所有缓存状态正常', 'info');
+  }
+  
+  return issues;
+}
+
 // 初始化智能缓存系统
 (async function initializeCacheSystem() {
   try {
     log('[系统] 启动智能缓存系统...', 'info');
     await cacheManager.initialize();
+    
+    // 启动后诊断
+    setTimeout(() => {
+      diagnoseCacheIssues();
+    }, 5000);
+    
     log('[系统] 智能缓存系统启动完成', 'info');
   } catch (error) {
     log(`[系统] 缓存系统启动失败: ${error.message}`, 'error');
