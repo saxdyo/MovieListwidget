@@ -25,13 +25,14 @@ function scanIcons() {
   const categories = ['social', 'tech', 'business', 'entertainment', 'misc'];
   
   categories.forEach(category => {
-    const categoryPath = path.join(ICONS_DIR, 'svg', category);
-    if (fs.existsSync(categoryPath)) {
-      const files = fs.readdirSync(categoryPath);
-      files.forEach(file => {
+    // 扫描SVG文件
+    const svgPath = path.join(ICONS_DIR, 'svg', category);
+    if (fs.existsSync(svgPath)) {
+      const svgFiles = fs.readdirSync(svgPath);
+      svgFiles.forEach(file => {
         if (file.endsWith('.svg')) {
           const name = path.basename(file, '.svg');
-          icons.push({
+          const icon = {
             name,
             category,
             tags: [category, name],
@@ -42,7 +43,44 @@ function scanIcons() {
             description: `${name}图标`,
             author: 'Icon Library',
             license: 'MIT'
-          });
+          };
+          
+          // 检查是否有对应的PNG文件
+          const pngPath = path.join(ICONS_DIR, 'png', category, `${name}.png`);
+          if (fs.existsSync(pngPath)) {
+            icon.formats.push('png');
+            icon.urls.png = `${BASE_URL}/png/${category}/${name}.png`;
+          }
+          
+          icons.push(icon);
+        }
+      });
+    }
+    
+    // 扫描PNG文件（只扫描没有对应SVG的PNG）
+    const pngPath = path.join(ICONS_DIR, 'png', category);
+    if (fs.existsSync(pngPath)) {
+      const pngFiles = fs.readdirSync(pngPath);
+      pngFiles.forEach(file => {
+        if (file.endsWith('.png')) {
+          const name = path.basename(file, '.png');
+          
+          // 检查是否已经有对应的SVG
+          const existingIcon = icons.find(icon => icon.name === name && icon.category === category);
+          if (!existingIcon) {
+            icons.push({
+              name,
+              category,
+              tags: [category, name],
+              formats: ['png'],
+              urls: {
+                png: `${BASE_URL}/png/${category}/${file}`
+              },
+              description: `${name}图标`,
+              author: 'Icon Library',
+              license: 'MIT'
+            });
+          }
         }
       });
     }
