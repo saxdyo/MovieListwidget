@@ -5718,7 +5718,10 @@ class HighPerformanceTMDBLoaderV2 {
   startBackgroundServices() {
     // 预加载服务
     setTimeout(() => {
-      this.preloadData();
+      // 预加载数据
+      this.getFastTrendingData().catch(() => {
+        console.log("[后台服务] 预加载失败，但不影响正常使用");
+      });
       
       // 定期后台更新
       setInterval(() => {
