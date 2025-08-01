@@ -3096,16 +3096,32 @@ async function tmdbDiscoverByCompany(params = {}) {
         })
       ]);
       
+      // 调试：检查原始API响应
+      logger.log(`电影API响应: ${movieRes.results?.length || 0}项`, 'debug', 'COMPANY');
+      logger.log(`剧集API响应: ${tvRes.results?.length || 0}项`, 'debug', 'COMPANY');
+      
       const genreMap = await fetchTmdbGenres();
       
       // 合并电影和剧集结果，按热门度排序
       const movieResults = movieRes.results
-        .map(item => formatTmdbItem(item, genreMap.movie))
+        .map(item => {
+          // 为电影数据明确设置media_type
+          item.media_type = "movie";
+          return formatTmdbItem(item, genreMap.movie);
+        })
         .filter(item => item.posterPath);
         
       const tvResults = tvRes.results
-        .map(item => formatTmdbItem(item, genreMap.tv))
+        .map(item => {
+          // 为剧集数据明确设置media_type
+          item.media_type = "tv";
+          return formatTmdbItem(item, genreMap.tv);
+        })
         .filter(item => item.posterPath);
+      
+      // 调试：检查格式化后的结果
+      logger.log(`格式化后电影: ${movieResults.length}项`, 'debug', 'COMPANY');
+      logger.log(`格式化后剧集: ${tvResults.length}项`, 'debug', 'COMPANY');
       
       // 合并并排序（按热门度）
       results = [...movieResults, ...tvResults]
@@ -3113,6 +3129,14 @@ async function tmdbDiscoverByCompany(params = {}) {
         .slice(0, 20); // 限制总数量
       
       logger.log(`全部类型获取完成: 电影${movieResults.length}项, 剧集${tvResults.length}项, 合并后${results.length}项`, 'info', 'COMPANY');
+      
+      // 调试信息：显示前几个项目的详细信息
+      if (movieResults.length > 0) {
+        logger.log(`电影示例: ${movieResults[0].title} (${movieResults[0].mediaType})`, 'debug', 'COMPANY');
+      }
+      if (tvResults.length > 0) {
+        logger.log(`剧集示例: ${tvResults[0].title} (${tvResults[0].mediaType})`, 'debug', 'COMPANY');
+      }
       
     } else {
       // 构建API端点

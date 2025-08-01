@@ -2859,11 +2859,19 @@ async function tmdbDiscoverByCompany(params = {}) {
       
       // 合并电影和剧集结果，按热门度排序
       const movieResults = movieRes.results
-        .map(item => formatTmdbItem(item, genreMap.movie))
+        .map(item => {
+          // 为电影数据明确设置media_type
+          item.media_type = "movie";
+          return formatTmdbItem(item, genreMap.movie);
+        })
         .filter(item => item.posterPath);
         
       const tvResults = tvRes.results
-        .map(item => formatTmdbItem(item, genreMap.tv))
+        .map(item => {
+          // 为剧集数据明确设置media_type
+          item.media_type = "tv";
+          return formatTmdbItem(item, genreMap.tv);
+        })
         .filter(item => item.posterPath);
       
       // 合并并排序（按热门度）
