@@ -1,5 +1,215 @@
 // ========== 优化工具与结构集成（见注释区分，原有业务逻辑保留） ==========
 
+// ========== TVB播出平台优化模块 ==========
+
+// TVB专用缓存系统
+class TvbCache {
+  constructor(maxSize = 50) {
+    this.maxSize = maxSize;
+    this.cache = new Map();
+    this.hits = 0;
+    this.misses = 0;
+    this.lastCleanup = Date.now();
+  }
+
+  get(key) {
+    const item = this.cache.get(key);
+    if (item && Date.now() - item.timestamp < item.ttl) {
+      this.hits++;
+      return item.data;
+    }
+    if (item) {
+      this.cache.delete(key);
+    }
+    this.misses++;
+    return null;
+  }
+
+  set(key, data, ttl = 30 * 60 * 1000) {
+    if (this.cache.size >= this.maxSize) {
+      const firstKey = this.cache.keys().next().value;
+      this.cache.delete(firstKey);
+    }
+    this.cache.set(key, {
+      data,
+      timestamp: Date.now(),
+      ttl
+    });
+  }
+
+  stats() {
+    const total = this.hits + this.misses;
+    return {
+      size: this.cache.size,
+      hits: this.hits,
+      misses: this.misses,
+      hitRate: total > 0 ? ((this.hits / total) * 100).toFixed(2) : '0.00'
+    };
+  }
+}
+
+// TVB性能监控
+class TvbPerformanceMonitor {
+  constructor() {
+    this.requests = 0;
+    this.successes = 0;
+    this.errors = 0;
+    this.responseTimes = [];
+    this.lastReset = Date.now();
+  }
+
+  recordRequest(success, responseTime = 0) {
+    this.requests++;
+    if (success) {
+      this.successes++;
+    } else {
+      this.errors++;
+    }
+    if (responseTime > 0) {
+      this.responseTimes.push(responseTime);
+      if (this.responseTimes.length > 100) {
+        this.responseTimes.shift();
+      }
+    }
+  }
+
+  getStats() {
+    const uptime = Date.now() - this.lastReset;
+    const avgResponseTime = this.responseTimes.length > 0 
+      ? (this.responseTimes.reduce((a, b) => a + b, 0) / this.responseTimes.length).toFixed(2)
+      : 0;
+    
+    return {
+      uptime: Math.floor(uptime / 1000),
+      requests: this.requests,
+      successRate: this.requests > 0 ? ((this.successes / this.requests) * 100).toFixed(2) : '0.00',
+      avgResponseTime: `${avgResponseTime}ms`,
+      errors: this.errors
+    };
+  }
+}
+
+// 初始化TVB优化组件
+const tvbCache = new TvbCache(30);
+const tvbPerformanceMonitor = new TvbPerformanceMonitor();
+
+// 智能重试函数
+async function tvbSmartRetry(fn, maxRetries = 3, baseDelay = 1000) {
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      const startTime = Date.now();
+      const result = await fn();
+      const responseTime = Date.now() - startTime;
+      
+      tvbPerformanceMonitor.recordRequest(true, responseTime);
+      return result;
+    } catch (error) {
+      tvbPerformanceMonitor.recordRequest(false);
+      console.warn(`[TVB优化] 第${attempt + 1}次尝试失败: ${error.message}`);
+      
+      if (attempt === maxRetries - 1) {
+        throw error;
+      }
+      
+      const delay = baseDelay * Math.pow(2, attempt);
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+  }
+}
+
+// 增强的TVB数据获取函数
+async function tmdbDiscoverByNetworkEnhanced(params = {}) {
+  const { 
+    language = "zh-CN", 
+    page = 1, 
+    with_networks, 
+    with_genres,
+    air_status = "released",
+    sort_by = "first_air_date.desc" 
+  } = params;
+
+  // 生成缓存键
+  const cacheKey = `tvb_${with_networks}_${with_genres}_${air_status}_${sort_by}_${page}_${language}`;
+  
+  // 检查缓存
+  const cachedData = tvbCache.get(cacheKey);
+  if (cachedData) {
+    console.log(`[TVB优化] 使用缓存数据，命中率: ${tvbCache.stats().hitRate}%`);
+    return cachedData;
+  }
+
+  try {
+    console.log(`[TVB优化] 开始获取TVB数据，参数:`, params);
+    
+    const fetchData = async () => {
+      const beijingDate = getBeijingDate();
+      const discoverParams = {
+        language,
+        page,
+        sort_by,
+        api_key: API_KEY
+      };
+
+      if (with_networks) {
+        discoverParams.with_networks = with_networks;
+      }
+
+      if (with_genres) {
+        discoverParams.with_genres = with_genres;
+      }
+
+      if (air_status === 'released') {
+        discoverParams['first_air_date.lte'] = beijingDate;
+      } else if (air_status === 'upcoming') {
+        discoverParams['first_air_date.gte'] = beijingDate;
+      }
+
+      const res = await Widget.tmdb.get("/discover/tv", {
+        params: discoverParams
+      });
+
+      const genreMap = await fetchTmdbGenres();
+      const processedData = res.results
+        .map(item => formatTmdbItem(item, genreMap))
+        .filter(Boolean)
+        .map(item => ({ ...item, isTvbOptimized: true }));
+
+      return processedData;
+    };
+
+    const processedData = await tvbSmartRetry(fetchData, 3, 1000);
+    
+    // 缓存结果
+    tvbCache.set(cacheKey, processedData, 30 * 60 * 1000); // 30分钟缓存
+    
+    console.log(`[TVB优化] 成功获取${processedData.length}条TVB数据`);
+    return processedData;
+  } catch (error) {
+    console.error(`[TVB优化] 数据获取失败: ${error.message}`);
+    
+    // 返回错误项
+    return [{
+      id: 'tvb-error',
+      type: 'error',
+      title: 'TVB数据获取失败',
+      description: '网络连接或API服务暂时不可用，请稍后重试',
+      isTvbOptimized: true
+    }];
+  }
+}
+
+// 集中配置区
+const CONFIG = {
+  CACHE_DURATION: 30 * 60 * 1000, // 30分钟缓存
+  FRESH_DATA_DURATION: 2 * 60 * 60 * 1000, // 2小时内数据新鲜
+  MAX_ITEMS: 30, // 横版标题海报最大条数
+  MAX_CONCURRENT: typeof process !== 'undefined' && process.env.MAX_CONCURRENT ?
+ parseInt(process.env.MAX_CONCURRENT) : 5, // 并发数支持环境变量
+  LOG_LEVEL: typeof process !== 'undefined' && process.env.LOG_LEVEL ? 
+process.env.LOG_LEVEL : 'info',
+  LRU_CACHE_SIZE: 100 // LRU缓存最大容量
+};
+
 // 日志工具
 function log(msg, level = 'info') {
   const levels = { error: 0, warn: 1, info: 2, debug: 3 };
