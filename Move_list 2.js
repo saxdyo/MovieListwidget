@@ -2238,7 +2238,7 @@ async function processItemsWithTitlePosters(items, category) {
                 title: pickEnhancedChineseTitle(item),
                 subtitle: item.genreTitle || item.genre_title || "",
                 rating: item.rating || item.vote_average || 0,
-                year: item.year || (item.release_date ? item.release_date.substring(0, 4) : ""),
+                year: item.year || (item.release_date ? item.release_date.substring(0, 4) : "") || (item.first_air_date ? item.first_air_date.substring(0, 4) : ""),
                 showRating: true,
                 showYear: true
             });
@@ -3196,7 +3196,9 @@ async function loadTmdbTrendingCombined(params = {}) {
         // 尝试多个数据源
         const todayData = await loadTmdbTrendingData();
         if (todayData && todayData.today_global && todayData.today_global.length > 0) {
-          results = todayData.today_global.map(item => createEnhancedWidgetItem(item));
+          // 为数据添加标题海报功能
+          const enhancedData = await enhanceDataWithTitlePosters(todayData);
+          results = enhancedData.today_global.map(item => createEnhancedWidgetItem(item));
           console.log(`[TMDB热门内容] 从缓存获取今日热门: ${results.length}项`);
         }
         
@@ -3245,7 +3247,9 @@ async function loadTmdbTrendingCombined(params = {}) {
         
         const weekData = await loadTmdbTrendingData();
         if (weekData && weekData.week_global_all && weekData.week_global_all.length > 0) {
-          results = weekData.week_global_all.map(item => createEnhancedWidgetItem(item));
+          // 为数据添加标题海报功能
+          const enhancedData = await enhanceDataWithTitlePosters(weekData);
+          results = enhancedData.week_global_all.map(item => createEnhancedWidgetItem(item));
           console.log(`[TMDB热门内容] 从缓存获取本周热门: ${results.length}项`);
         }
         
@@ -6706,3 +6710,100 @@ async function debugTVShowTitlePoster() {
 
 // 暴露剧集调试函数到全局
 global.debugTVShowTitlePoster = debugTVShowTitlePoster;
+
+// 调试热门内容模块标题海报
+async function debugHotContentTitlePoster() {
+    console.log("=== 调试热门内容模块标题海报 ===");
+    
+    try {
+        // 1. 检查热门内容数据
+        console.log("1. 获取热门内容数据...");
+        const trendingData = await loadTmdbTrendingData();
+        
+        if (trendingData) {
+            console.log("热门数据获取成功");
+            
+            // 检查今日热门
+            if (trendingData.today_global) {
+                console.log(`今日热门项目数量: ${trendingData.today_global.length}`);
+                
+                // 分析前3个项目
+                const sampleItems = trendingData.today_global.slice(0, 3);
+                sampleItems.forEach((item, index) => {
+                    console.log(`\n项目 ${index + 1}: ${item.title || item.name}`);
+                    console.log(`  媒体类型: ${item.media_type || '未知'}`);
+                    console.log(`  标题字段: title=${item.title}, name=${item.name}`);
+                    console.log(`  日期字段: release_date=${item.release_date}, first_air_date=${item.first_air_date}`);
+                    console.log(`  背景路径: ${item.backdrop_path || '无'}`);
+                    console.log(`  海报路径: ${item.poster_path || '无'}`);
+                    console.log(`  是否有标题海报: ${item.title_backdrop ? '是' : '否'}`);
+                });
+            }
+            
+            // 2. 测试标题海报生成
+            console.log("\n2. 测试标题海报生成...");
+            if (trendingData.today_global && trendingData.today_global.length > 0) {
+                const testItem = trendingData.today_global[0];
+                console.log(`测试项目: ${testItem.title || testItem.name}`);
+                
+                const titlePoster = await createTitlePosterWithOverlay(testItem, {
+                    forceGenerate: true
+                });
+                
+                if (titlePoster) {
+                    console.log("✅ 标题海报生成成功");
+                    console.log(`   标题: ${titlePoster.title}`);
+                    console.log(`   年份: ${titlePoster.year}`);
+                    console.log(`   URL: ${titlePoster.url}`);
+                } else {
+                    console.log("❌ 标题海报生成失败");
+                }
+            }
+            
+            // 3. 测试增强数据功能
+            console.log("\n3. 测试增强数据功能...");
+            const enhancedData = await enhanceDataWithTitlePosters(trendingData);
+            
+            if (enhancedData && enhancedData.today_global) {
+                console.log(`增强后项目数量: ${enhancedData.today_global.length}`);
+                
+                const enhancedItems = enhancedData.today_global.slice(0, 3);
+                enhancedItems.forEach((item, index) => {
+                    console.log(`\n增强项目 ${index + 1}: ${item.title || item.name}`);
+                    console.log(`  媒体类型: ${item.media_type || '未知'}`);
+                    console.log(`  是否有标题海报: ${item.title_backdrop ? '是' : '否'}`);
+                    console.log(`  标题海报类型: ${item.title_backdrop ? item.title_backdrop.type : '无'}`);
+                    if (item.title_backdrop) {
+                        console.log(`  标题海报URL: ${item.title_backdrop.url}`);
+                    }
+                });
+            }
+        } else {
+            console.log("❌ 无法获取热门数据");
+        }
+        
+        // 4. 检查数据包
+        console.log("\n4. 检查数据包...");
+        try {
+            const dataPackage = await fetchFromPrimarySource();
+            if (dataPackage && dataPackage.today_global) {
+                console.log(`数据包今日热门数量: ${dataPackage.today_global.length}`);
+                
+                const packageItems = dataPackage.today_global.slice(0, 3);
+                packageItems.forEach((item, index) => {
+                    console.log(`\n数据包项目 ${index + 1}: ${item.title || item.name}`);
+                    console.log(`  媒体类型: ${item.media_type || '未知'}`);
+                    console.log(`  日期字段: release_date=${item.release_date}, first_air_date=${item.first_air_date}`);
+                });
+            }
+        } catch (error) {
+            console.error("数据包检查失败:", error);
+        }
+        
+    } catch (error) {
+        console.error("调试热门内容标题海报时出错:", error);
+    }
+}
+
+// 暴露热门内容调试函数到全局
+global.debugHotContentTitlePoster = debugHotContentTitlePoster;

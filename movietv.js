@@ -2238,7 +2238,7 @@ async function processItemsWithTitlePosters(items, category) {
                 title: pickEnhancedChineseTitle(item),
                 subtitle: item.genreTitle || item.genre_title || "",
                 rating: item.rating || item.vote_average || 0,
-                year: item.year || (item.release_date ? item.release_date.substring(0, 4) : ""),
+                year: item.year || (item.release_date ? item.release_date.substring(0, 4) : "") || (item.first_air_date ? item.first_air_date.substring(0, 4) : ""),
                 showRating: true,
                 showYear: true
             });
@@ -3196,7 +3196,9 @@ async function loadTmdbTrendingCombined(params = {}) {
         // 尝试多个数据源
         const todayData = await loadTmdbTrendingData();
         if (todayData && todayData.today_global && todayData.today_global.length > 0) {
-          results = todayData.today_global.map(item => createEnhancedWidgetItem(item));
+          // 为数据添加标题海报功能
+          const enhancedData = await enhanceDataWithTitlePosters(todayData);
+          results = enhancedData.today_global.map(item => createEnhancedWidgetItem(item));
           console.log(`[TMDB热门内容] 从缓存获取今日热门: ${results.length}项`);
         }
         
@@ -3245,7 +3247,9 @@ async function loadTmdbTrendingCombined(params = {}) {
         
         const weekData = await loadTmdbTrendingData();
         if (weekData && weekData.week_global_all && weekData.week_global_all.length > 0) {
-          results = weekData.week_global_all.map(item => createEnhancedWidgetItem(item));
+          // 为数据添加标题海报功能
+          const enhancedData = await enhanceDataWithTitlePosters(weekData);
+          results = enhancedData.week_global_all.map(item => createEnhancedWidgetItem(item));
           console.log(`[TMDB热门内容] 从缓存获取本周热门: ${results.length}项`);
         }
         
