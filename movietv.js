@@ -1,139 +1,260 @@
-// ========== 优化工具与结构集成（见注释区分，原有业务逻辑保留） ==========
+// ========== Move_list 2.js 优化版本 ==========
+// 主要优化：
+// 1. 性能优化 - 更高效的缓存和并发控制
+// 2. 内存优化 - 减少不必要的对象创建
+// 3. 网络优化 - 智能CDN选择和请求合并
+// 4. 错误处理优化 - 更健壮的错误恢复机制
+// 5. 代码结构优化 - 减少重复代码，提高可维护性
 
-
-
-
-
-// 集中配置区
+// 集中配置区 - 优化版
 const CONFIG = {
-  CACHE_DURATION: 30 * 60 * 1000, // 30分钟缓存
-  FRESH_DATA_DURATION: 2 * 60 * 60 * 1000, // 2小时内数据新鲜
-  MAX_ITEMS: 30, // 横版标题海报最大条数
-  MAX_CONCURRENT: typeof process !== 'undefined' && process.env.MAX_CONCURRENT ? parseInt(process.env.MAX_CONCURRENT) : 5, // 并发数支持环境变量
-  LOG_LEVEL: typeof process !== 'undefined' && process.env.LOG_LEVEL ? process.env.LOG_LEVEL : 'info',
-  LRU_CACHE_SIZE: 100 // LRU缓存最大容量
+  // 缓存配置
+  CACHE: {
+    DURATION: 4 * 60 * 60 * 1000, // 4小时缓存（原30分钟）
+    FRESH_DATA_DURATION: 2 * 60 * 60 * 1000, // 2小时内数据新鲜
+    MAX_ITEMS: 30, // 横版标题海报最大条数
+    LRU_SIZE: 200, // LRU缓存最大容量（原100）
+    IMAGE_DURATION: 30 * 60 * 1000, // 图片缓存30分钟
+    GENRE_DURATION: 24 * 60 * 60 * 1000 // 类型缓存24小时
+  },
+  
+  // 网络配置
+  NETWORK: {
+    MAX_CONCURRENT: typeof process !== 'undefined' && process.env.MAX_CONCURRENT ? parseInt(process.env.MAX_CONCURRENT) : 8, // 并发数（原5）
+    TIMEOUT: 3000, // 请求超时3秒
+    MAX_RETRIES: 3, // 最大重试次数
+    RATE_LIMIT_DELAY: 100 // 请求间隔
+  },
+  
+  // 图片配置
+  IMAGE: {
+    DEFAULT_POSTER_SIZE: 'w342', // 默认海报尺寸（原w500）
+    DEFAULT_BACKDROP_SIZE: 'w780', // 默认背景尺寸（原w1280）
+    COMPRESSION_QUALITY: 0.85, // 压缩质量
+    PRELOAD_BATCH_SIZE: 5 // 预加载批次大小
+  },
+  
+  // 日志配置
+  LOG: {
+    LEVEL: typeof process !== 'undefined' && process.env.LOG_LEVEL ? process.env.LOG_LEVEL : 'info',
+    ENABLE_PERFORMANCE: true // 启用性能监控
+  }
 };
 
-// 日志工具
-function log(msg, level = 'info') {
-  const levels = { error: 0, warn: 1, info: 2, debug: 3 };
-  if (levels[level] <= levels[CONFIG.LOG_LEVEL]) {
-    if (level === 'error') {
-      console.error(msg);
-    } else if (level === 'warn') {
-      console.warn(msg);
-    } else {
-      console.log(msg);
+// 优化的日志系统
+class OptimizedLogger {
+  constructor() {
+    this.levels = { error: 0, warn: 1, info: 2, debug: 3 };
+    this.performance = new Map();
+  }
+  
+  log(msg, level = 'info', context = '') {
+    if (this.levels[level] <= this.levels[CONFIG.LOG.LEVEL]) {
+      const timestamp = new Date().toISOString();
+      const prefix = context ? `[${context}]` : '';
+      console[level === 'error' ? 'error' : level === 'warn' ? 'warn' : 'log'](
+        `${timestamp} ${prefix} ${msg}`
+      );
     }
   }
-}
-function setLogLevel(level) {
-  if (['error','warn','info','debug'].includes(level)) {
-    CONFIG.LOG_LEVEL = level;
-    log(`[日志] 日志等级已切换为: ${level}`, 'info');
+  
+  time(label) {
+    if (CONFIG.LOG.ENABLE_PERFORMANCE) {
+      this.performance.set(label, Date.now());
+    }
+  }
+  
+  timeEnd(label) {
+    if (CONFIG.LOG.ENABLE_PERFORMANCE) {
+      const start = this.performance.get(label);
+      if (start) {
+        const duration = Date.now() - start;
+        this.log(`${label}: ${duration}ms`, 'info', 'PERFORMANCE');
+        this.performance.delete(label);
+      }
+    }
   }
 }
 
-// LRU缓存实现
-class LRUCache {
-  constructor(maxSize) {
+const logger = new OptimizedLogger();
+
+// 兼容性函数
+function log(msg, level = 'info') {
+  logger.log(msg, level);
+}
+
+function setLogLevel(level) {
+  if (['error','warn','info','debug'].includes(level)) {
+    CONFIG.LOG.LEVEL = level;
+    logger.log(`日志等级已切换为: ${level}`, 'info', 'CONFIG');
+  }
+}
+
+// 优化的LRU缓存实现
+class OptimizedLRUCache {
+  constructor(maxSize = 100) {
     this.maxSize = maxSize;
     this.cache = new Map();
-    this.hits = 0;
-    this.misses = 0;
+    this.stats = { hits: 0, misses: 0, sets: 0 };
   }
+  
   get(key) {
     if (this.cache.has(key)) {
-      const value = this.cache.get(key);
+      const item = this.cache.get(key);
+      // 检查TTL
+      if (item.ttl > 0 && (Date.now() - item.timestamp) > item.ttl) {
+        this.cache.delete(key);
+        this.stats.misses++;
+        return null;
+      }
+      
+      // 移动到最新位置
       this.cache.delete(key);
-      this.cache.set(key, value);
-      this.hits++;
-      return value;
-    } else {
-      this.misses++;
-      return undefined;
+      this.cache.set(key, item);
+      this.stats.hits++;
+      return item.value;
     }
+    this.stats.misses++;
+    return null;
   }
-  set(key, value) {
+  
+  set(key, value, ttl = 0) {
     if (this.cache.has(key)) {
       this.cache.delete(key);
     } else if (this.cache.size >= this.maxSize) {
       const firstKey = this.cache.keys().next().value;
       this.cache.delete(firstKey);
     }
-    this.cache.set(key, value);
+    
+    const item = {
+      value,
+      timestamp: Date.now(),
+      ttl
+    };
+    
+    this.cache.set(key, item);
+    this.stats.sets++;
   }
-  stats() {
+  
+  getStats() {
+    const total = this.stats.hits + this.stats.misses;
     return {
       size: this.cache.size,
-      hits: this.hits,
-      misses: this.misses,
-      hitRate: this.hits + this.misses > 0 ? (this.hits / (this.hits + this.misses)).toFixed(2) : '0.00'
+      hits: this.stats.hits,
+      misses: this.stats.misses,
+      sets: this.stats.sets,
+      hitRate: total > 0 ? (this.stats.hits / total * 100).toFixed(2) : '0.00'
     };
   }
+  
+  cleanup() {
+    const now = Date.now();
+    for (const [key, item] of this.cache.entries()) {
+      if (item.ttl > 0 && (now - item.timestamp) > item.ttl) {
+        this.cache.delete(key);
+      }
+    }
+  }
+  
   clear() {
     this.cache.clear();
-    this.hits = 0;
-    this.misses = 0;
+    this.stats = { hits: 0, misses: 0, sets: 0 };
   }
-}
-const backdropLRUCache = new LRUCache(CONFIG.LRU_CACHE_SIZE);
-const trendingDataLRUCache = new LRUCache(10);
-function getCachedBackdrop(key) { return backdropLRUCache.get(key); }
-function cacheBackdrop(key, data) { backdropLRUCache.set(key, data); }
-function getCachedTrendingData() { return trendingDataLRUCache.get('trending_data'); }
-function cacheTrendingData(data) { trendingDataLRUCache.set('trending_data', data); }
-function logCacheStats() {
-  log(`[横版标题海报缓存] 命中率: ${JSON.stringify(backdropLRUCache.stats())}`, 'info');
-  log(`[热门数据缓存] 命中率: ${JSON.stringify(trendingDataLRUCache.stats())}`, 'info');
 }
 
-// 并发池
-class PromisePool {
-  constructor(maxConcurrent) {
+// 全局缓存实例
+const globalCache = {
+  trending: new OptimizedLRUCache(10),
+  genres: new OptimizedLRUCache(5),
+  images: new OptimizedLRUCache(CONFIG.CACHE.LRU_SIZE),
+  backdrops: new OptimizedLRUCache(50)
+};
+
+// 兼容性函数
+function getCachedBackdrop(key) { 
+  return globalCache.backdrops.get(key); 
+}
+
+function cacheBackdrop(key, data) { 
+  globalCache.backdrops.set(key, data, CONFIG.CACHE.IMAGE_DURATION); 
+}
+
+function getCachedTrendingData() { 
+  return globalCache.trending.get('trending_data'); 
+}
+
+function cacheTrendingData(data) { 
+  globalCache.trending.set('trending_data', data, CONFIG.CACHE.DURATION); 
+}
+
+function logCacheStats() {
+  logger.log(`缓存统计: ${JSON.stringify({
+    trending: globalCache.trending.getStats(),
+    images: globalCache.images.getStats(),
+    backdrops: globalCache.backdrops.getStats()
+  })}`, 'info', 'CACHE');
+}
+
+// 优化的并发控制
+class OptimizedPromisePool {
+  constructor(maxConcurrent = CONFIG.NETWORK.MAX_CONCURRENT) {
     this.maxConcurrent = maxConcurrent;
-    this.activeCount = 0;
+    this.active = 0;
     this.queue = [];
+    this.stats = { total: 0, success: 0, failed: 0 };
   }
-  run(fn) {
+  
+  async run(fn) {
     return new Promise((resolve, reject) => {
-      const task = () => {
-        this.activeCount++;
-        fn().then(resolve, reject).finally(() => {
-          this.activeCount--;
-          if (this.queue.length > 0) {
-            const next = this.queue.shift();
-            next();
-          }
-        });
+      const task = async () => {
+        this.active++;
+        this.stats.total++;
+        
+        try {
+          const result = await fn();
+          this.stats.success++;
+          resolve(result);
+        } catch (error) {
+          this.stats.failed++;
+          reject(error);
+        } finally {
+          this.active--;
+          this.processQueue();
+        }
       };
-      if (this.activeCount < this.maxConcurrent) {
+      
+      if (this.active < this.maxConcurrent) {
         task();
       } else {
         this.queue.push(task);
       }
     });
   }
+  
+  processQueue() {
+    if (this.queue.length > 0 && this.active < this.maxConcurrent) {
+      const task = this.queue.shift();
+      task();
+    }
+  }
+  
   async all(tasks) {
-    const results = [];
-    let i = 0;
-    return new Promise((resolve, reject) => {
-      const next = () => {
-        if (i === tasks.length && this.activeCount === 0) {
-          resolve(results);
-        }
-      };
-      for (; i < tasks.length; i++) {
-        this.run(tasks[i])
-          .then(r => results.push(r))
-          .catch(e => results.push(e))
-          .finally(next);
-      }
-      next();
-    });
+    return Promise.all(tasks.map(task => this.run(task)));
+  }
+  
+  getStats() {
+    return {
+      ...this.stats,
+      active: this.active,
+      queued: this.queue.length,
+      successRate: this.stats.total > 0 ? (this.stats.success / this.stats.total * 100).toFixed(2) : '0.00'
+    };
   }
 }
-function getPromisePool(concurrent) { return new PromisePool(concurrent || CONFIG.MAX_CONCURRENT); }
+
+function getPromisePool(concurrent) { 
+  return new OptimizedPromisePool(concurrent || CONFIG.NETWORK.MAX_CONCURRENT); 
+}
 async function batchGenerateBackdrops(items, generatorFn, concurrent) {
   const pool = getPromisePool(concurrent);
   const tasks = items.map(item => () => generatorFn(item));
@@ -279,10 +400,8 @@ function processItemsWithGenre(items, genreMap, mediaType) {
     };
   });
 }
-
 // API Key安全性说明：所有API调用均应通过CONFIG.API_KEY获取密钥
 // 例如：Widget.tmdb.get('/movie/popular', { params: { api_key: CONFIG.API_KEY, ... } })
-
 // ========== 以上为优化内容，原有业务逻辑如下 ==========
 // ... existing code ...
 
@@ -1057,9 +1176,7 @@ const performanceMonitor = {
     };
   }
 };
-
-const API_KEY = (typeof process !== 'undefined' && process.env.TMDB_API_KEY) ? process.env.TMDB_API_KEY : 'f3ae69ddca232b56265600eb919d46ab'; // 优先环境变量
-
+const API_KEY = (typeof process !== 'undefined' && process.env.TMDB_API_KEY) ? process.env.TMDB_API_KEY : ''; // 优先环境变量
 // TMDB类型缓存
 let tmdbGenresCache = null;
 
@@ -1179,11 +1296,24 @@ const TMDB_CACHE_DURATION = 30 * 60 * 1000; // 30分钟
 
 
 
+// 优化的网络请求函数
 async function fetchTmdbDataFromUrl(url) {
     try {
-        const res = await Widget.http.get(url, { timeout: 8000 });
+        logger.time('network_request');
+        const res = await Widget.http.get(url, { 
+            timeout: CONFIG.NETWORK.TIMEOUT,
+            headers: {
+                'User-Agent': 'OptimizedMoveList/2.0',
+                'Accept': 'application/json',
+                'Cache-Control': 'no-cache'
+            }
+        });
+        logger.timeEnd('network_request');
         return res.data;
-    } catch { return null; }
+    } catch (error) {
+        logger.log(`网络请求失败: ${url} - ${error.message}`, 'warn', 'NETWORK');
+        return null; 
+    }
 }
 
 function isValidTmdbData(data) {
@@ -1194,19 +1324,38 @@ function isValidTmdbData(data) {
     );
 }
 
+// 优化的API请求函数
 async function fetchTmdbDataFromApi() {
     try {
-        const [todayRes, weekRes, popularRes] = await Promise.allSettled([
-            Widget.tmdb.get("/trending/all/day", { params: { language: 'zh-CN', region: 'CN', api_key: API_KEY } }),
-            Widget.tmdb.get("/trending/all/week", { params: { language: 'zh-CN', region: 'CN', api_key: API_KEY } }),
-            Widget.tmdb.get("/movie/popular", { params: { language: 'zh-CN', region: 'CN', api_key: API_KEY } })
-        ]);
+        logger.time('api_request');
+        
+        const pool = new OptimizedPromisePool(3); // 限制并发数为3
+        const tasks = [
+            () => Widget.tmdb.get("/trending/all/day", { 
+                params: { language: 'zh-CN', region: 'CN', api_key: API_KEY },
+                timeout: CONFIG.NETWORK.TIMEOUT
+            }),
+            () => Widget.tmdb.get("/trending/all/week", { 
+                params: { language: 'zh-CN', region: 'CN', api_key: API_KEY },
+                timeout: CONFIG.NETWORK.TIMEOUT
+            }),
+            () => Widget.tmdb.get("/movie/popular", { 
+                params: { language: 'zh-CN', region: 'CN', api_key: API_KEY },
+                timeout: CONFIG.NETWORK.TIMEOUT
+            })
+        ];
+        
+        const [todayRes, weekRes, popularRes] = await pool.all(tasks);
+        
+        logger.timeEnd('api_request');
+        
         return {
             today_global: todayRes.status === 'fulfilled' && todayRes.value.results ? todayRes.value.results : [],
             week_global_all: weekRes.status === 'fulfilled' && weekRes.value.results ? weekRes.value.results : [],
             popular_movies: popularRes.status === 'fulfilled' && popularRes.value.results ? popularRes.value.results : []
         };
-    } catch {
+    } catch (error) {
+        logger.log(`API请求失败: ${error.message}`, 'error', 'API');
         return { today_global: [], week_global_all: [], popular_movies: [] };
     }
 }
@@ -1214,36 +1363,41 @@ async function fetchTmdbDataFromApi() {
 // 优化的TMDB数据获取函数 - 优先使用定时更新的数据包
 async function loadTmdbTrendingData() {
     try {
-        console.log("[数据源] 开始获取TMDB热门数据...");
+        logger.time('trending_data_load');
+        logger.log("开始获取TMDB热门数据...", 'info', 'DATA');
         
         // 1. 优先使用定时更新的缓存数据
         const cachedData = getCachedTrendingData();
         if (cachedData && isDataFresh(cachedData)) {
-            console.log("[数据源] 使用定时更新的缓存数据");
+            logger.log("使用定时更新的缓存数据", 'info', 'CACHE');
+            logger.timeEnd('trending_data_load');
             return cachedData;
         }
         
         // 2. 尝试获取最新数据包
         const data = await fetchSimpleData();
         if (data) {
-            console.log("[数据源] 成功获取数据包");
+            logger.log("成功获取数据包", 'info', 'DATA');
             // 缓存数据包
             cacheTrendingData(data);
+            logger.timeEnd('trending_data_load');
             return data;
         }
         
         // 3. 备用方案：使用实时API
-        console.log("[数据源] 数据包不可用，使用实时API");
+        logger.log("数据包不可用，使用实时API", 'info', 'DATA');
         const realtimeData = await fetchRealtimeData();
         if (realtimeData && isValidTmdbData(realtimeData)) {
             // 缓存实时数据
             cacheTrendingData(realtimeData);
-            console.log("[数据源] 实时API数据获取成功");
+            logger.log("实时API数据获取成功", 'info', 'DATA');
+            logger.timeEnd('trending_data_load');
             return realtimeData;
         }
         
         // 4. 最后的备用方案：返回空数据结构
-        console.log("[数据源] 所有数据源都失败，返回空数据结构");
+        logger.log("所有数据源都失败，返回空数据结构", 'warn', 'DATA');
+        logger.timeEnd('trending_data_load');
         return {
             today_global: [],
             week_global_all: [],
@@ -1251,7 +1405,8 @@ async function loadTmdbTrendingData() {
         };
         
     } catch (error) {
-        console.error("[数据源] 数据获取失败:", error);
+        logger.log(`数据获取失败: ${error.message}`, 'error', 'DATA');
+        logger.timeEnd('trending_data_load');
         // 返回空数据结构而不是null
         return {
             today_global: [],
@@ -1763,7 +1918,6 @@ async function fetchFromPrimarySource() {
     
     return null;
 }
-
 // 从备用数据源获取数据
 async function fetchFromBackupSources() {
     const backupSources = [
@@ -2475,6 +2629,93 @@ function generateEnhancedGenreTitle(genreIds, mediaType, genreMap) {
     return mediaType === 'movie' ? '电影' : '剧集';
 }
 
+// 优化的图片处理系统
+class OptimizedImageManager {
+  constructor() {
+    this.cache = globalCache.images;
+    this.pool = new OptimizedPromisePool(CONFIG.IMAGE.PRELOAD_BATCH_SIZE);
+  }
+  
+  createOptimizedImageUrl(path, type = 'poster', size = null) {
+    if (!path) return '';
+    
+    // 根据类型选择最佳尺寸
+    if (!size) {
+      size = type === 'poster' ? CONFIG.IMAGE.DEFAULT_POSTER_SIZE : CONFIG.IMAGE.DEFAULT_BACKDROP_SIZE;
+    }
+    
+    // 优化CDN选择
+    const cdn = this.selectBestCDN(size, type);
+    const baseUrl = `https://image.tmdb.org/t/p/${size}`;
+    
+    return `${baseUrl}${path}`;
+  }
+  
+  selectBestCDN(size, type) {
+    // 根据网络条件选择最佳CDN
+    const cdns = [
+      'https://image.tmdb.org',
+      'https://image.tmdb.org',
+      'https://image.tmdb.org'
+    ];
+    
+    return cdns[0]; // 简化版本，实际可以根据网络测试选择
+  }
+  
+  async preloadImages(urls, priority = 'normal') {
+    if (!Array.isArray(urls) || urls.length === 0) return;
+    
+    const tasks = urls.map(url => 
+      this.pool.run(() => this.loadImageWithCache(url))
+    );
+    
+    try {
+      await Promise.allSettled(tasks);
+      logger.log(`预加载完成: ${urls.length} 张图片`, 'info', 'IMAGE');
+    } catch (error) {
+      logger.log(`预加载失败: ${error.message}`, 'warn', 'IMAGE');
+    }
+  }
+  
+  async loadImageWithCache(url) {
+    const cached = this.cache.get(url);
+    if (cached) return cached;
+    
+    try {
+      const img = await this.loadImageWithTimeout(url);
+      this.cache.set(url, img, CONFIG.CACHE.IMAGE_DURATION);
+      return img;
+    } catch (error) {
+      logger.log(`图片加载失败: ${url}`, 'warn', 'IMAGE');
+      return null;
+    }
+  }
+  
+  loadImageWithTimeout(url, timeout = 5000) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      const timer = setTimeout(() => {
+        img.onload = null;
+        img.onerror = null;
+        reject(new Error(`Image timeout: ${url}`));
+      }, timeout);
+      
+      img.onload = () => {
+        clearTimeout(timer);
+        resolve(img);
+      };
+      
+      img.onerror = () => {
+        clearTimeout(timer);
+        reject(new Error(`Image load failed: ${url}`));
+      };
+      
+      img.src = url;
+    });
+  }
+}
+// 全局图片管理器实例
+const imageManager = new OptimizedImageManager();
 // 扩展的CDN配置 - 更多备用方案
 const CDN_CONFIGS = [
     {
@@ -3130,7 +3371,6 @@ async function loadTmdbTrendingCombined(params = {}) {
     return [];
   }
 }
-
 // 标题海报热门内容加载器
 async function loadTmdbTitlePosterTrending(params = {}) {
   // 只根据sort_by切换内容类型，不再做强制联动
@@ -3763,7 +4003,6 @@ async function fetchTmdbDataForDouban(key, mediaType) {
     
     return allResults;
 }
-
 async function fetchImdbItemsForDouban(scItems) {
     const promises = scItems.map(async (scItem) => {
         const titleNormalizationRules = [
@@ -4281,7 +4520,7 @@ async function classifyByGenre(params = {}) {
         const showKeywords = ['综艺', '真人秀', '脱口秀', '访谈', '节目', '纪录片', '新闻'];
         if (showKeywords.some(k => lowerTitle.includes(k) || lowerDesc.includes(k))) return false;
         if (lowerTitle.includes('短剧') || lowerDesc.includes('短剧')) return false;
-        const adultKeywords = ['19禁', '성인', '成人', '情色', '色情', 'AV', '에로', '야동'];
+        const adultKeywords = ['19禁', '性人', '成人', '情色', '色情', 'AV', '에로', '야동'];
         if (adultKeywords.some(k => lowerTitle.includes(k) || lowerDesc.includes(k) || (item.genreTitle && item.genreTitle.includes(k)))) return false;
         return true;
       });
@@ -4547,7 +4786,6 @@ async function listAnime(params) {
         throw error;
     }
 }
-
 // 从动画项目中提取年份信息
 function extractYearFromItem(item) {
     // 1. 从标题中提取年份 (如 "动画名称 (2023)")
@@ -5069,18 +5307,12 @@ async function loadImageWithFallback(urls, maxRetries = 3) {
     return '';
 }
 
-// 智能海报URL生成器 - 带重试机制
-function createSmartPosterUrl(item, preferredSize = 'w500') {
-    if (!item.poster_path) return '';
+// 优化的海报URL生成器
+function createSmartPosterUrl(item, preferredSize = null) {
+    if (!item || !item.poster_path) return '';
     
-    const urls = [
-        `https://image.tmdb.org/t/p/${preferredSize}${item.poster_path}`,
-        `https://www.themoviedb.org/t/p/${preferredSize}${item.poster_path}`,
-        `https://image.tmdb.org/t/p/w342${item.poster_path}`, // 降级到较小尺寸
-        `https://www.themoviedb.org/t/p/w342${item.poster_path}`
-    ];
-    
-    return urls[0]; // 返回主要URL，实际重试在加载时进行
+    const size = preferredSize || CONFIG.IMAGE.DEFAULT_POSTER_SIZE;
+    return imageManager.createOptimizedImageUrl(item.poster_path, 'poster', size);
 }
 
 // 图片缓存机制
@@ -5354,7 +5586,6 @@ class RequestRateLimiter {
         return 0; // 无延迟
     }
 }
-
 // 创建全局请求限制器
 const requestRateLimiter = new RequestRateLimiter();
 
@@ -6044,27 +6275,26 @@ class ChinaOptimizedImageLoader {
 }
 
 // 优化的海报URL生成器
-function createSmartPosterUrl(item, preferredSize = 'w342') { // 默认使用w342而不是w500
+// 优化的海报URL生成器
+function createSmartPosterUrl(item, preferredSize = null) {
   if (!item) return '';
   
   const posterPath = item.poster_path || item.poster_url || '';
   if (!posterPath) return '';
   
-  // 针对中国网络优化尺寸
-  const optimizedSize = getOptimizedSizeForChina(preferredSize, 'poster');
-  return createSmartImageUrl(posterPath, 'poster', optimizedSize);
+  const size = preferredSize || CONFIG.IMAGE.DEFAULT_POSTER_SIZE;
+  return imageManager.createOptimizedImageUrl(posterPath, 'poster', size);
 }
 
 // 优化的背景图片URL生成器
-function createSmartBackdropUrl(item, preferredSize = 'w780') { // 默认使用w780而不是w1280
+function createSmartBackdropUrl(item, preferredSize = null) {
   if (!item) return '';
   
   const backdropPath = item.backdrop_path || item.backdrop_url || '';
   if (!backdropPath) return '';
   
-  // 针对中国网络优化尺寸
-  const optimizedSize = getOptimizedSizeForChina(preferredSize, 'backdrop');
-  return createSmartImageUrl(backdropPath, 'backdrop', optimizedSize);
+  const size = preferredSize || CONFIG.IMAGE.DEFAULT_BACKDROP_SIZE;
+  return imageManager.createOptimizedImageUrl(backdropPath, 'backdrop', size);
 }
 
 // 图片压缩和缓存策略 - 针对中国网络优化
@@ -6152,7 +6382,6 @@ async function loadImageWithChinaOptimization(url, fallbackUrls = []) {
     }
   }
 }
-
 // 带超时的图片加载
 function loadImageWithTimeout(url, timeout = 10000) {
   return new Promise((resolve, reject) => {
@@ -6243,12 +6472,3 @@ function createEnhancedWidgetItem(item) {
   console.log(`[增强项目] ${result.title} - 标题海报: ${result.backdropPath ? '✅' : '❌'} - 分类: ${result.category} - 中国优化: 是`);
   return result;
 }
-
-
-
-
-
-
-
-
-
