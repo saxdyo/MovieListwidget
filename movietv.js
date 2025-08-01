@@ -6521,15 +6521,35 @@ function createEnhancedWidgetItem(item) {
   const posterUrl = item.poster_url || item.poster_path || "";
   const backdropUrl = titleBackdropUrl || item.title_backdrop || item.backdrop_path || "";
   
+  // 安全地处理海报URL
+  let processedPosterUrl = "";
+  if (posterUrl && posterUrl.trim() !== "") {
+    if (posterUrl.startsWith('https://image.tmdb.org/t/p/')) {
+      processedPosterUrl = createSmartImageUrl(posterUrl.replace('https://image.tmdb.org/t/p/w500', ''), 'poster', 'w342');
+    } else {
+      processedPosterUrl = posterUrl;
+    }
+  }
+  
+  // 安全地处理背景URL
+  let processedBackdropUrl = "";
+  if (backdropUrl && backdropUrl.trim() !== "") {
+    if (backdropUrl.startsWith('https://image.tmdb.org/t/p/')) {
+      processedBackdropUrl = createSmartImageUrl(backdropUrl.replace('https://image.tmdb.org/t/p/w1280', ''), 'backdrop', 'w780');
+    } else {
+      processedBackdropUrl = backdropUrl;
+    }
+  }
+  
   const result = {
     id: item.id,
     type: "tmdb",
     title: displayTitle,
     description: processEnhancedOverview(item.overview),
     releaseDate: item.release_date || item.first_air_date || "未知日期",
-    posterPath: posterUrl ? createSmartImageUrl(posterUrl.replace('https://image.tmdb.org/t/p/w500', ''), 'poster', 'w342') : posterUrl,
-    coverUrl: posterUrl ? createSmartImageUrl(posterUrl.replace('https://image.tmdb.org/t/p/w500', ''), 'poster', 'w342') : posterUrl,
-    backdropPath: backdropUrl ? createSmartImageUrl(backdropUrl.replace('https://image.tmdb.org/t/p/w1280', ''), 'backdrop', 'w780') : backdropUrl,
+    posterPath: processedPosterUrl,
+    coverUrl: processedPosterUrl,
+    backdropPath: processedBackdropUrl,
     backdropHD: item.title_backdrop_hd || item.backdrop_hd || "",
     backdrop780: item.backdrop_w780 || "",
     rating: item.vote_average ? item.vote_average.toFixed(1) : "无评分",
