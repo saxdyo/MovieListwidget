@@ -1,0 +1,15 @@
+{
+  "name": "社交媒体图标",
+  "description": "社交媒体相关图标集合",
+  "category": "social",
+  "version": "1.0.0",
+  "lastUpdated": "2024-01-01",
+  "totalIcons": 0,
+  "icons": [],
+  "metadata": {
+    "baseUrl": "https://raw.githubusercontent.com/[你的用户名]/icon-library/main/icons",
+    "formats": ["svg", "png"],
+    "license": "MIT",
+    "author": "Icon Library"
+  }
+}

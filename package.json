@@ -1,41 +1,31 @@
 {
-  "name": "tmdb-data-generator",
+  "name": "icon-library",
   "version": "1.0.0",
-  "description": "TMDB 数据包生成工具，用于创建类似 ForwardWidgets 的数据文件",
-  "main": "scripts/generate_tmdb_data.js",
+  "description": "一个可以通过JSON订阅链接访问的图标库",
+  "main": "scripts/update-json.js",
   "scripts": {
-    "generate:js": "node scripts/generate_tmdb_data.js",
-    "generate:py": "python scripts/generate_tmdb_data.py",
-    "generate": "npm run generate:js",
-    "test": "node scripts/test_data.js",
-    "test:api": "node -e \"console.log('TMDB API Key:', process.env.TMDB_API_KEY ? '已设置' : '未设置')\"",
-    "setup": "npm install && echo '请设置 TMDB_API_KEY 环境变量'",
-    "validate": "npm run generate && npm run test"
+    "update": "node scripts/update-json.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
-    "tmdb",
-    "api",
-    "data",
-    "widget",
-    "movies",
-    "tv-shows",
-    "trending"
+    "icons",
+    "svg",
+    "png",
+    "json",
+    "subscription",
+    "library"
   ],
-  "author": "Your Name",
+  "author": "Icon Library",
   "license": "MIT",
-  "dependencies": {
-    "node-fetch": "^3.3.2"
-  },
-  "devDependencies": {},
-  "engines": {
-    "node": ">=16.0.0"
-  },
   "repository": {
     "type": "git",
-    "url": "https://github.com/your-username/tmdb-data-generator.git"
+    "url": "https://github.com/[你的用户名]/icon-library.git"
   },
   "bugs": {
-    "url": "https://github.com/your-username/tmdb-data-generator/issues"
+    "url": "https://github.com/[你的用户名]/icon-library/issues"
   },
-  "homepage": "https://github.com/your-username/tmdb-data-generator#readme"
+  "homepage": "https://github.com/[你的用户名]/icon-library#readme",
+  "engines": {
+    "node": ">=12.0.0"
+  }
 }

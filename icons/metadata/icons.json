@@ -1,0 +1,41 @@
+{
+  "version": "1.0.0",
+  "lastUpdated": "2024-01-01",
+  "totalIcons": 0,
+  "categories": {
+    "social": {
+      "name": "社交媒体",
+      "description": "社交媒体相关图标",
+      "count": 0,
+      "icons": []
+    },
+    "tech": {
+      "name": "技术相关",
+      "description": "技术、编程、开发相关图标",
+      "count": 0,
+      "icons": []
+    },
+    "business": {
+      "name": "商业相关",
+      "description": "商业、办公、金融相关图标",
+      "count": 0,
+      "icons": []
+    },
+    "entertainment": {
+      "name": "娱乐相关",
+      "description": "娱乐、游戏、媒体相关图标",
+      "count": 0,
+      "icons": []
+    },
+    "misc": {
+      "name": "其他",
+      "description": "其他分类的图标",
+      "count": 0,
+      "icons": []
+    }
+  },
+  "formats": ["svg", "png"],
+  "baseUrl": "https://raw.githubusercontent.com/[你的用户名]/icon-library/main/icons",
+  "license": "MIT",
+  "author": "Icon Library"
+}

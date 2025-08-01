@@ -1,0 +1,15 @@
+{
+  "name": "完整图标库",
+  "description": "包含所有分类的图标库",
+  "version": "1.0.0",
+  "lastUpdated": "2024-01-01",
+  "totalIcons": 0,
+  "categories": ["social", "tech", "business", "entertainment", "misc"],
+  "icons": [],
+  "metadata": {
+    "baseUrl": "https://raw.githubusercontent.com/[你的用户名]/icon-library/main/icons",
+    "formats": ["svg", "png"],
+    "license": "MIT",
+    "author": "Icon Library"
+  }
+}
