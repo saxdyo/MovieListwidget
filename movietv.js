@@ -2831,54 +2831,87 @@ async function tmdbDiscoverByCompany(params = {}) {
     if (type === "all") {
       console.log("获取全部类型内容（电影+剧集）");
       
-      // 并行获取电影和剧集数据
-      const [movieRes, tvRes] = await Promise.all([
-        Widget.tmdb.get("/discover/movie", {
-          params: {
-            language,
-            page,
-            sort_by,
-            api_key: API_KEY,
-            ...(with_companies && { with_companies }),
-            ...(with_genres && { with_genres })
-          }
-        }),
-        Widget.tmdb.get("/discover/tv", {
-          params: {
-            language,
-            page,
-            sort_by,
-            api_key: API_KEY,
-            ...(with_companies && { with_companies }),
-            ...(with_genres && { with_genres })
-          }
-        })
-      ]);
+      // 分别获取电影和剧集数据，不使用Promise.all避免并发问题
+      console.log("开始获取电影数据...");
+      const movieRes = await Widget.tmdb.get("/discover/movie", {
+        params: {
+          language,
+          page,
+          sort_by,
+          api_key: API_KEY,
+          ...(with_companies && { with_companies }),
+          ...(with_genres && { with_genres })
+        }
+      });
+      
+      console.log("开始获取剧集数据...");
+      const tvRes = await Widget.tmdb.get("/discover/tv", {
+        params: {
+          language,
+          page,
+          sort_by,
+          api_key: API_KEY,
+          ...(with_companies && { with_companies }),
+          ...(with_genres && { with_genres })
+        }
+      });
+      
+      // 调试：检查原始API响应
+      console.log(`电影API响应: ${movieRes.results?.length || 0}项`);
+      console.log(`剧集API响应: ${tvRes.results?.length || 0}项`);
+      
+      // 检查原始数据结构
+      if (movieRes.results && movieRes.results.length > 0) {
+        console.log(`电影原始数据示例: ${JSON.stringify(movieRes.results[0], null, 2)}`);
+      }
+      if (tvRes.results && tvRes.results.length > 0) {
+        console.log(`剧集原始数据示例: ${JSON.stringify(tvRes.results[0], null, 2)}`);
+      }
       
       const genreMap = await fetchTmdbGenres();
       
-      // 合并电影和剧集结果，按热门度排序
-      const movieResults = movieRes.results
-        .map(item => {
-          // 为电影数据明确设置media_type，并确保所有相关字段都正确
+      // 分别处理电影和剧集数据
+      console.log("开始处理电影数据...");
+      const movieResults = [];
+      for (const item of movieRes.results || []) {
+        try {
           const movieItem = { ...item, media_type: "movie" };
           const formatted = formatTmdbItem(movieItem, genreMap.movie);
-          // 确保mediaType字段正确设置
           formatted.mediaType = "movie";
-          return formatted;
-        })
-        .filter(item => item.posterPath);
-        
-      const tvResults = tvRes.results
-        .map(item => {
-          // 为剧集数据明确设置media_type，并确保所有相关字段都正确
+          if (formatted.posterPath) {
+            movieResults.push(formatted);
+          }
+        } catch (error) {
+          console.log(`处理电影项目失败: ${error.message}`);
+        }
+      }
+      
+      console.log("开始处理剧集数据...");
+      const tvResults = [];
+      for (const item of tvRes.results || []) {
+        try {
           const tvItem = { ...item, media_type: "tv" };
           const formatted = formatTmdbItem(tvItem, genreMap.tv);
-          // 确保mediaType字段正确设置
           formatted.mediaType = "tv";
-          return formatted;
-        })
-        .filter(item => item.posterPath);
+          if (formatted.posterPath) {
+            tvResults.push(formatted);
+          }
+        } catch (error) {
+          console.log(`处理剧集项目失败: ${error.message}`);
+        }
+      }
+      
+      // 调试：检查格式化后的结果
+      console.log(`格式化后电影: ${movieResults.length}项`);
+      console.log(`格式化后剧集: ${tvResults.length}项`);
+      
+      // 显示前几个项目的详细信息
+      if (movieResults.length > 0) {
+        console.log(`电影示例: ${movieResults[0].title} (${movieResults[0].mediaType})`);
+      }
+      if (tvResults.length > 0) {
+        console.log(`剧集示例: ${tvResults[0].title} (${tvResults[0].mediaType})`);
+      }
       
       // 合并并排序（按热门度）
       results = [...movieResults, ...tvResults]
