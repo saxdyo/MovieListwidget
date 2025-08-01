@@ -1707,7 +1707,8 @@ async function loadEnhancedTitlePosterWithBackdrops(items, maxItems = 30, conten
             title: backdrop.title,
             posterPath: backdrop.backdropUrl,
             titlePoster: backdrop.titlePoster,
-            metadata: backdrop.metadata
+            metadata: backdrop.metadata,
+            mediaType: backdrop.mediaType || backdrop.media_type || (backdrop.name && !backdrop.title ? "tv" : "movie")
         }));
     } else {
         // 如果没有缓存的横版标题海报，立即生成
@@ -1736,7 +1737,8 @@ async function loadEnhancedTitlePosterWithBackdrops(items, maxItems = 30, conten
                 title: item.title,
                 posterPath: item.backdropUrl,
                 titlePoster: item.titlePoster,
-                metadata: item.metadata
+                metadata: item.metadata,
+                mediaType: item.mediaType || item.media_type || (item.name && !item.title ? "tv" : "movie")
             }));
         } else {
             // 如果生成失败，使用普通数据
@@ -2375,7 +2377,11 @@ async function createTitlePosterWithOverlay(item, options = {}) {
             backdrop_path: item.backdrop_path,
             poster_path: item.poster_path,
             backdropPath: item.backdropPath,
-            posterPath: item.posterPath
+            posterPath: item.posterPath,
+            first_air_date: item.first_air_date,
+            release_date: item.release_date,
+            media_type: item.media_type,
+            mediaType: item.mediaType
         });
         return titlePoster;
     } catch (error) {
@@ -3648,12 +3654,49 @@ async function loadTmdbTitlePosterTrending(params = {}) {
             }
             return true;
           });
+          console.log(`[标题海报] 媒体类型过滤后: ${results.length}项 (${media_type})`);
         }
+        
+        // 确保所有项目都有正确的媒体类型信息
+        results = results.map(item => {
+          // 确保 mediaType 字段存在
+          if (!item.mediaType) {
+            if (item.media_type) {
+              item.mediaType = item.media_type;
+            } else if (item.name && !item.title) {
+              item.mediaType = "tv";
+            } else {
+              item.mediaType = "movie";
+            }
+          }
+          
+          // 确保标题字段正确
+          if (!item.title && item.name) {
+            item.title = item.name;
+          }
+          
+          // 确保年份字段正确
+          if (!item.year) {
+            if (item.release_date) {
+              item.year = item.release_date.substring(0, 4);
+            } else if (item.first_air_date) {
+              item.year = item.first_air_date.substring(0, 4);
+            }
+          }
+          
+          return item;
+        });
         
         // 限制返回数量
         results = results.slice(0, max_items);
         
         console.log(`[标题海报] 最终返回: ${results.length}项`);
+        console.log(`[标题海报] 媒体类型分布:`, {
+          movie: results.filter(item => item.mediaType === "movie").length,
+          tv: results.filter(item => item.mediaType === "tv").length,
+          all: results.length
+        });
+        
         return results;
         
     } catch (error) {
@@ -4983,19 +5026,21 @@ async function batchProcessBackdrops(items, options = {}) {
                     title: item.title || item.name,
                     subtitle: item.genreTitle || item.genre_title || "",
                     rating: item.vote_average || item.rating || 0,
-                    year: item.release_date ? item.release_date.substring(0, 4) : (item.first_air_date ? item.first_air_date.substring(0, 4) : ""),
+                    year: item.year || (item.release_date ? item.release_date.substring(0, 4) : "") || (item.first_air_date ? item.first_air_date.substring(0, 4) : ""),
                     showRating: true,
                     showYear: true,
                     overlayOpacity: 0.7,
                     textColor: "#FFFFFF",
-                    backgroundColor: "rgba(0, 0, 0, 0.6)"
+                    backgroundColor: "rgba(0, 0, 0, 0.6)",
+                    mediaType: item.mediaType || item.media_type || (item.name && !item.title ? "tv" : "movie")
                 });
                 
                 const result = {
                     id: item.id,
                     title: item.title || item.name,
                     backdropUrl: createSmartBackdropUrl(item, preferredSize),
-                    titlePoster: titlePoster
+                    titlePoster: titlePoster,
+                    mediaType: item.mediaType || item.media_type || (item.name && !item.title ? "tv" : "movie")
                 };
                 
                 if (includeMetadata) {
@@ -5003,7 +5048,7 @@ async function batchProcessBackdrops(items, options = {}) {
                         title: item.title || item.name,
                         year: item.release_date ? item.release_date.substring(0, 4) : (item.first_air_date ? item.first_air_date.substring(0, 4) : ""),
                         rating: item.vote_average || item.rating || 0,
-                        mediaType: item.media_type || item.type
+                        mediaType: item.mediaType || item.media_type || (item.name && !item.title ? "tv" : "movie")
                     };
                 }
                 
