@@ -2661,14 +2661,16 @@ class OptimizedImageManager {
     
     // 根据类型选择最佳尺寸
     if (!size) {
-      size = type === 'poster' ? CONFIG.IMAGE.DEFAULT_POSTER_SIZE : CONFIG.IMAGE.DEFAULT_BACKDROP_SIZE;
+      size = type === 'poster' ? 'w500' : 'w1280';
     }
     
-    // 优化CDN选择
-    const cdn = this.selectBestCDN(size, type);
+    // 确保路径以/开头
+    const cleanPath = path.startsWith('/') ? path : `/${path}`;
+    
+    // 构建完整URL
     const baseUrl = `https://image.tmdb.org/t/p/${size}`;
     
-    return `${baseUrl}${path}`;
+    return `${baseUrl}${cleanPath}`;
   }
   
   selectBestCDN(size, type) {
