@@ -11,7 +11,18 @@ const CONFIG = {
   MAX_ITEMS: 30, // 横版标题海报最大条数
   MAX_CONCURRENT: typeof process !== 'undefined' && process.env.MAX_CONCURRENT ? parseInt(process.env.MAX_CONCURRENT) : 5, // 并发数支持环境变量
   LOG_LEVEL: typeof process !== 'undefined' && process.env.LOG_LEVEL ? process.env.LOG_LEVEL : 'info',
-  LRU_CACHE_SIZE: 100 // LRU缓存最大容量
+  LRU_CACHE_SIZE: 100, // LRU缓存最大容量
+  
+  // 新增缓存优化配置
+  CACHE_OPTIMIZATION: {
+    ENABLE_SMART_CACHE: true,        // 启用智能缓存
+    ENABLE_PRELOAD: true,            // 启用预加载
+    ENABLE_COMPRESSION: true,        // 启用数据压缩
+    ENABLE_PRIORITY_QUEUE: true,     // 启用优先级队列
+    MAX_MEMORY_USAGE: 50 * 1024 * 1024, // 最大内存使用50MB
+    CLEANUP_INTERVAL: 5 * 60 * 1000,    // 清理间隔5分钟
+    HEALTH_CHECK_INTERVAL: 2 * 60 * 1000 // 健康检查间隔2分钟
+  }
 };
 
 // 日志工具
@@ -35,57 +46,430 @@ function setLogLevel(level) {
 }
 
 // LRU缓存实现
-class LRUCache {
-  constructor(maxSize) {
+// 优化的智能缓存系统
+class SmartCache {
+  constructor(maxSize = 100, options = {}) {
     this.maxSize = maxSize;
     this.cache = new Map();
     this.hits = 0;
     this.misses = 0;
+    this.totalSize = 0;
+    this.lastCleanup = Date.now();
+    this.priorityQueue = new Map(); // 优先级队列
+    this.compressionEnabled = options.compression !== false;
+    this.preloadEnabled = options.preload !== false;
+    
+    // 启动自动清理
+    this.startAutoCleanup();
   }
-  get(key) {
+  
+  // 智能获取缓存
+  get(key, maxAge = 30 * 60 * 1000) {
     if (this.cache.has(key)) {
-      const value = this.cache.get(key);
+      const item = this.cache.get(key);
+      const now = Date.now();
+      
+      // 检查是否过期
+      if (now - item.timestamp > maxAge) {
+        this.cache.delete(key);
+        this.totalSize -= item.size;
+        this.misses++;
+        return undefined;
+      }
+      
+      // 更新访问时间和优先级
+      item.lastAccess = now;
+      item.accessCount++;
+      this.priorityQueue.set(key, item.accessCount);
+      
+      // 移动到末尾（LRU）
       this.cache.delete(key);
-      this.cache.set(key, value);
+      this.cache.set(key, item);
+      
       this.hits++;
-      return value;
+      return item.data;
     } else {
       this.misses++;
       return undefined;
     }
   }
-  set(key, value) {
-    if (this.cache.has(key)) {
-      this.cache.delete(key);
-    } else if (this.cache.size >= this.maxSize) {
-      const firstKey = this.cache.keys().next().value;
-      this.cache.delete(firstKey);
+  
+  // 智能设置缓存
+  set(key, value, priority = 1, ttl = 30 * 60 * 1000) {
+    const dataSize = this.calculateSize(value);
+    const now = Date.now();
+    
+    // 如果缓存已满，清理低优先级项目
+    if (this.cache.size >= this.maxSize || this.totalSize + dataSize > CONFIG.CACHE_OPTIMIZATION.MAX_MEMORY_USAGE) {
+      this.evictLowPriority();
     }
-    this.cache.set(key, value);
+    
+    // 压缩数据（如果启用）
+    const processedData = this.compressionEnabled ? this.compressData(value) : value;
+    
+    const item = {
+      data: processedData,
+      timestamp: now,
+      lastAccess: now,
+      accessCount: 1,
+      priority: priority,
+      size: dataSize,
+      ttl: ttl
+    };
+    
+    this.cache.set(key, item);
+    this.priorityQueue.set(key, priority);
+    this.totalSize += dataSize;
   }
+  
+  // 计算数据大小
+  calculateSize(data) {
+    try {
+      return JSON.stringify(data).length;
+    } catch {
+      return 1024; // 默认1KB
+    }
+  }
+  
+  // 压缩数据
+  compressData(data) {
+    try {
+      const jsonStr = JSON.stringify(data);
+      // 简单的压缩：移除多余空格
+      return JSON.parse(jsonStr.replace(/\s+/g, ' '));
+    } catch {
+      return data;
+    }
+  }
+  
+  // 清理低优先级项目
+  evictLowPriority() {
+    const entries = Array.from(this.cache.entries());
+    
+    // 按优先级和访问时间排序
+    entries.sort((a, b) => {
+      const [keyA, itemA] = a;
+      const [keyB, itemB] = b;
+      
+      // 优先级低的先删除
+      if (itemA.priority !== itemB.priority) {
+        return itemA.priority - itemB.priority;
+      }
+      
+      // 访问次数少的先删除
+      if (itemA.accessCount !== itemB.accessCount) {
+        return itemA.accessCount - itemB.accessCount;
+      }
+      
+      // 最后访问时间早的先删除
+      return itemA.lastAccess - itemB.lastAccess;
+    });
+    
+    // 删除前20%的项目
+    const deleteCount = Math.max(1, Math.floor(this.cache.size * 0.2));
+    for (let i = 0; i < deleteCount; i++) {
+      const [key, item] = entries[i];
+      this.cache.delete(key);
+      this.priorityQueue.delete(key);
+      this.totalSize -= item.size;
+    }
+  }
+  
+  // 启动自动清理
+  startAutoCleanup() {
+    setInterval(() => {
+      this.cleanup();
+    }, CONFIG.CACHE_OPTIMIZATION.CLEANUP_INTERVAL);
+  }
+  
+  // 清理过期项目
+  cleanup() {
+    const now = Date.now();
+    let cleanedCount = 0;
+    
+    for (const [key, item] of this.cache.entries()) {
+      if (now - item.timestamp > item.ttl) {
+        this.cache.delete(key);
+        this.priorityQueue.delete(key);
+        this.totalSize -= item.size;
+        cleanedCount++;
+      }
+    }
+    
+    if (cleanedCount > 0) {
+      log(`[智能缓存] 清理了 ${cleanedCount} 个过期项目`, 'info');
+    }
+  }
+  
+  // 获取缓存统计
   stats() {
+    const total = this.hits + this.misses;
     return {
       size: this.cache.size,
       hits: this.hits,
       misses: this.misses,
-      hitRate: this.hits + this.misses > 0 ? (this.hits / (this.hits + this.misses)).toFixed(2) : '0.00'
+      hitRate: total > 0 ? ((this.hits / total) * 100).toFixed(2) : '0.00',
+      memoryUsage: (this.totalSize / 1024 / 1024).toFixed(2) + ' MB',
+      avgItemSize: this.cache.size > 0 ? (this.totalSize / this.cache.size / 1024).toFixed(2) + ' KB' : '0 KB'
     };
   }
+  
+  // 预加载功能
+  async preload(key, loader, priority = 2) {
+    if (!this.preloadEnabled) return;
+    
+    try {
+      const data = await loader();
+      this.set(key, data, priority);
+      log(`[智能缓存] 预加载完成: ${key}`, 'debug');
+    } catch (error) {
+      log(`[智能缓存] 预加载失败: ${key} - ${error.message}`, 'warn');
+    }
+  }
+  
+  // 批量预加载
+  async preloadBatch(items) {
+    if (!this.preloadEnabled) return;
+    
+    const promises = items.map(({key, loader, priority}) => 
+      this.preload(key, loader, priority)
+    );
+    
+    await Promise.allSettled(promises);
+  }
+  
+  // 健康检查
+  healthCheck() {
+    const stats = this.stats();
+    const hitRate = parseFloat(stats.hitRate);
+    
+    if (hitRate < 50) {
+      log(`[智能缓存] 命中率较低: ${stats.hitRate}%`, 'warn');
+    }
+    
+    if (this.totalSize > CONFIG.CACHE_OPTIMIZATION.MAX_MEMORY_USAGE * 0.8) {
+      log(`[智能缓存] 内存使用较高: ${stats.memoryUsage}`, 'warn');
+      this.evictLowPriority();
+    }
+    
+    return {
+      healthy: hitRate > 30 && this.totalSize < CONFIG.CACHE_OPTIMIZATION.MAX_MEMORY_USAGE * 0.9,
+      hitRate: hitRate,
+      memoryUsage: stats.memoryUsage,
+      itemCount: this.cache.size
+    };
+  }
+  
+  // 清空缓存
   clear() {
     this.cache.clear();
+    this.priorityQueue.clear();
     this.hits = 0;
     this.misses = 0;
+    this.totalSize = 0;
+    this.lastCleanup = Date.now();
   }
 }
-const backdropLRUCache = new LRUCache(CONFIG.LRU_CACHE_SIZE);
-const trendingDataLRUCache = new LRUCache(10);
-function getCachedBackdrop(key) { return backdropLRUCache.get(key); }
-function cacheBackdrop(key, data) { backdropLRUCache.set(key, data); }
-function getCachedTrendingData() { return trendingDataLRUCache.get('trending_data'); }
-function cacheTrendingData(data) { trendingDataLRUCache.set('trending_data', data); }
+// 创建优化的缓存实例
+const backdropCache = new SmartCache(CONFIG.LRU_CACHE_SIZE, {
+  compression: true,
+  preload: true
+});
+
+const trendingDataCache = new SmartCache(20, {
+  compression: true,
+  preload: true
+});
+
+const imageCache = new SmartCache(50, {
+  compression: false, // 图片数据不压缩
+  preload: true
+});
+
+const genreCache = new SmartCache(10, {
+  compression: true,
+  preload: true
+});
+
+// 优化的缓存函数
+function getCachedBackdrop(key) { 
+  return backdropCache.get(key, 30 * 60 * 1000); // 30分钟过期
+}
+
+function cacheBackdrop(key, data) { 
+  backdropCache.set(key, data, 2, 30 * 60 * 1000); // 优先级2，30分钟过期
+}
+
+function getCachedTrendingData() { 
+  return trendingDataCache.get('trending_data', 60 * 60 * 1000); // 1小时过期
+}
+
+function cacheTrendingData(data) { 
+  trendingDataCache.set('trending_data', data, 3, 60 * 60 * 1000); // 优先级3，1小时过期
+}
+
+function getCachedImage(key) {
+  return imageCache.get(key, 24 * 60 * 60 * 1000); // 24小时过期
+}
+
+function cacheImage(key, data) {
+  imageCache.set(key, data, 1, 24 * 60 * 60 * 1000); // 优先级1，24小时过期
+}
+
+function getCachedGenres() {
+  return genreCache.get('genres', 24 * 60 * 60 * 1000); // 24小时过期
+}
+
+function cacheGenres(data) {
+  genreCache.set('genres', data, 4, 24 * 60 * 60 * 1000); // 优先级4，24小时过期
+}
+
+// 增强的缓存统计日志
 function logCacheStats() {
-  log(`[横版标题海报缓存] 命中率: ${JSON.stringify(backdropLRUCache.stats())}`, 'info');
-  log(`[热门数据缓存] 命中率: ${JSON.stringify(trendingDataLRUCache.stats())}`, 'info');
+  const backdropStats = backdropCache.stats();
+  const trendingStats = trendingDataCache.stats();
+  const imageStats = imageCache.stats();
+  const genreStats = genreCache.stats();
+  
+  log(`[智能缓存统计]`, 'info');
+  log(`  横版海报缓存: ${backdropStats.size}项, 命中率${backdropStats.hitRate}%, 内存${backdropStats.memoryUsage}`, 'info');
+  log(`  热门数据缓存: ${trendingStats.size}项, 命中率${trendingStats.hitRate}%, 内存${trendingStats.memoryUsage}`, 'info');
+  log(`  图片缓存: ${imageStats.size}项, 命中率${imageStats.hitRate}%, 内存${imageStats.memoryUsage}`, 'info');
+  log(`  类型缓存: ${genreStats.size}项, 命中率${genreStats.hitRate}%, 内存${genreStats.memoryUsage}`, 'info');
+  
+  // 健康检查
+  const healthChecks = [
+    backdropCache.healthCheck(),
+    trendingDataCache.healthCheck(),
+    imageCache.healthCheck(),
+    genreCache.healthCheck()
+  ];
+  
+  const unhealthyCaches = healthChecks.filter(check => !check.healthy);
+  if (unhealthyCaches.length > 0) {
+    log(`[智能缓存警告] ${unhealthyCaches.length}个缓存需要优化`, 'warn');
+  }
+}
+
+// 缓存管理器
+class CacheManager {
+  constructor() {
+    this.caches = {
+      backdrop: backdropCache,
+      trending: trendingDataCache,
+      image: imageCache,
+      genre: genreCache
+    };
+    this.isInitialized = false;
+  }
+  
+  // 初始化缓存系统
+  async initialize() {
+    if (this.isInitialized) return;
+    
+    try {
+      log('[缓存管理器] 初始化智能缓存系统...', 'info');
+      
+      // 启动预加载
+      if (CONFIG.CACHE_OPTIMIZATION.ENABLE_PRELOAD) {
+        await this.preloadEssentialData();
+      }
+      
+      // 启动健康检查
+      this.startHealthCheck();
+      
+      this.isInitialized = true;
+      log('[缓存管理器] 智能缓存系统初始化完成', 'info');
+    } catch (error) {
+      log(`[缓存管理器] 初始化失败: ${error.message}`, 'error');
+    }
+  }
+  
+  // 预加载重要数据
+  async preloadEssentialData() {
+    const preloadItems = [
+      {
+        key: 'trending_data',
+        loader: () => loadTmdbTrendingData(),
+        priority: 3
+      },
+      {
+        key: 'genres',
+        loader: () => fetchTmdbGenres(),
+        priority: 4
+      }
+    ];
+    
+    try {
+      await trendingDataCache.preloadBatch(preloadItems);
+      log('[缓存管理器] 重要数据预加载完成', 'info');
+    } catch (error) {
+      log(`[缓存管理器] 预加载失败: ${error.message}`, 'warn');
+    }
+  }
+  
+  // 启动健康检查
+  startHealthCheck() {
+    setInterval(() => {
+      this.performHealthCheck();
+    }, CONFIG.CACHE_OPTIMIZATION.HEALTH_CHECK_INTERVAL);
+  }
+  
+  // 执行健康检查
+  performHealthCheck() {
+    const healthReports = [];
+    
+    for (const [name, cache] of Object.entries(this.caches)) {
+      const health = cache.healthCheck();
+      healthReports.push({ name, ...health });
+      
+      if (!health.healthy) {
+        log(`[缓存管理器] ${name}缓存需要优化`, 'warn');
+      }
+    }
+    
+    // 记录健康状态
+    const healthyCaches = healthReports.filter(r => r.healthy).length;
+    const totalCaches = healthReports.length;
+    
+    log(`[缓存管理器] 健康检查完成: ${healthyCaches}/${totalCaches}个缓存正常`, 'info');
+  }
+  
+  // 获取缓存统计
+  getStats() {
+    const stats = {};
+    for (const [name, cache] of Object.entries(this.caches)) {
+      stats[name] = cache.stats();
+    }
+    return stats;
+  }
+  
+  // 清理所有缓存
+  clearAll() {
+    for (const [name, cache] of Object.entries(this.caches)) {
+      cache.clear();
+      log(`[缓存管理器] 已清理${name}缓存`, 'info');
+    }
+  }
+  
+  // 优化缓存
+  optimize() {
+    for (const [name, cache] of Object.entries(this.caches)) {
+      const health = cache.healthCheck();
+      if (!health.healthy) {
+        cache.evictLowPriority();
+        log(`[缓存管理器] 已优化${name}缓存`, 'info');
+      }
+    }
+  }
+}
+
+// 创建全局缓存管理器实例
+const cacheManager = new CacheManager();
+
+// 批量预加载热门数据（保持向后兼容）
+async function preloadPopularData() {
+  await cacheManager.initialize();
 }
 
 // 并发池
@@ -1063,14 +1447,18 @@ const API_KEY = (typeof process !== 'undefined' && process.env.TMDB_API_KEY) ? p
 // TMDB类型缓存
 let tmdbGenresCache = null;
 
-// 提取 TMDB 的种类信息
+// 提取 TMDB 的种类信息（优化版）
 async function fetchTmdbGenres() {
-  // 如果已有缓存，直接返回
-  if (tmdbGenresCache) {
-    return tmdbGenresCache;
+  // 检查智能缓存
+  const cachedGenres = getCachedGenres();
+  if (cachedGenres) {
+    log('[类型缓存] 使用缓存的类型数据', 'debug');
+    return cachedGenres;
   }
   
   try {
+    log('[类型缓存] 开始获取类型数据...', 'info');
+    
     const [movieGenres, tvGenres] = await Promise.all([
       Widget.tmdb.get('/genre/movie/list', { params: { language: 'zh-CN', api_key: API_KEY } }),
       Widget.tmdb.get('/genre/tv/list', { params: { language: 'zh-CN', api_key: API_KEY } })
@@ -1078,14 +1466,17 @@ async function fetchTmdbGenres() {
 
     const genreData = {
       movie: movieGenres.genres.reduce((acc, g) => ({ ...acc, [g.id]: g.name }), {}),
-      tv: tvGenres.genres.reduce((acc, g) => ({ ...acc, [g.id]: g.name }), {})
+      tv: tvGenres.genres.reduce((acc, g) => ({ ...acc, [g.id]: g.name }), {}),
+      fetched_at: Date.now()
     };
     
-    // 缓存结果
-    tmdbGenresCache = genreData;
+    // 缓存到智能缓存系统
+    cacheGenres(genreData);
+    log('[类型缓存] 类型数据获取并缓存成功', 'info');
+    
     return genreData;
   } catch (error) {
-    console.error("Error fetching genres:", error);
+    console.error("[类型缓存] 获取类型数据失败:", error);
     return { movie: {}, tv: {} };
   }
 }
@@ -1211,39 +1602,39 @@ async function fetchTmdbDataFromApi() {
     }
 }
 
-// 优化的TMDB数据获取函数 - 优先使用定时更新的数据包
+// 优化的TMDB数据获取函数 - 使用智能缓存系统
 async function loadTmdbTrendingData() {
     try {
-        console.log("[数据源] 开始获取TMDB热门数据...");
+        log("[智能缓存] 开始获取TMDB热门数据...", 'info');
         
-        // 1. 优先使用定时更新的缓存数据
+        // 1. 优先使用智能缓存
         const cachedData = getCachedTrendingData();
         if (cachedData && isDataFresh(cachedData)) {
-            console.log("[数据源] 使用定时更新的缓存数据");
+            log("[智能缓存] 使用缓存的热门数据", 'info');
             return cachedData;
         }
         
         // 2. 尝试获取最新数据包
         const data = await fetchSimpleData();
         if (data) {
-            console.log("[数据源] 成功获取数据包");
-            // 缓存数据包
+            log("[智能缓存] 成功获取数据包", 'info');
+            // 缓存到智能缓存系统
             cacheTrendingData(data);
             return data;
         }
         
         // 3. 备用方案：使用实时API
-        console.log("[数据源] 数据包不可用，使用实时API");
+        log("[智能缓存] 数据包不可用，使用实时API", 'info');
         const realtimeData = await fetchRealtimeData();
         if (realtimeData && isValidTmdbData(realtimeData)) {
             // 缓存实时数据
             cacheTrendingData(realtimeData);
-            console.log("[数据源] 实时API数据获取成功");
+            log("[智能缓存] 实时API数据获取成功", 'info');
             return realtimeData;
         }
         
         // 4. 最后的备用方案：返回空数据结构
-        console.log("[数据源] 所有数据源都失败，返回空数据结构");
+        log("[智能缓存] 所有数据源都失败，返回空数据结构", 'warn');
         return {
             today_global: [],
             week_global_all: [],
@@ -1251,7 +1642,7 @@ async function loadTmdbTrendingData() {
         };
         
     } catch (error) {
-        console.error("[数据源] 数据获取失败:", error);
+        console.error("[智能缓存] 数据获取失败:", error);
         // 返回空数据结构而不是null
         return {
             today_global: [],
@@ -6246,6 +6637,17 @@ function createEnhancedWidgetItem(item) {
   console.log(`[增强项目] ${result.title} - 标题海报: ${result.backdropPath ? '✅' : '❌'} - 分类: ${result.category} - 中国优化: 是`);
   return result;
 }
+
+// 初始化智能缓存系统
+(async function initializeCacheSystem() {
+  try {
+    log('[系统] 启动智能缓存系统...', 'info');
+    await cacheManager.initialize();
+    log('[系统] 智能缓存系统启动完成', 'info');
+  } catch (error) {
+    log(`[系统] 缓存系统启动失败: ${error.message}`, 'error');
+  }
+})();
 
 
 
