@@ -35,7 +35,7 @@
     }
   },
   "formats": ["svg", "png"],
-  "baseUrl": "https://raw.githubusercontent.com/saxdyo/icon-library/main/icons",
+  "baseUrl": "https://raw.githubusercontent.com/saxdyo/MovieListwidget/main/icons",
   "license": "MIT",
   "author": "Icon Library"
 }

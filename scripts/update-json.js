@@ -4,7 +4,7 @@ const fs = require('fs');
 const path = require('path');
 
 // 配置
-const BASE_URL = 'https://raw.githubusercontent.com/saxdyo/icon-library/main/icons';
+const BASE_URL = 'https://raw.githubusercontent.com/saxdyo/MovieListwidget/main/icons';
 const ICONS_DIR = path.join(__dirname, '../icons');
 const METADATA_FILE = path.join(ICONS_DIR, 'metadata/icons.json');
 
