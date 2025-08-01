@@ -1367,15 +1367,7 @@ async function loadTmdbTrendingData() {
         logger.time('trending_data_load');
         logger.log("开始获取TMDB热门数据...", 'info', 'DATA');
         
-        // 1. 优先使用定时更新的缓存数据
-        const cachedData = getCachedTrendingData();
-        if (cachedData && isDataFresh(cachedData)) {
-            logger.log("使用定时更新的缓存数据", 'info', 'CACHE');
-            logger.timeEnd('trending_data_load');
-            return cachedData;
-        }
-        
-        // 2. 尝试获取最新数据包
+        // 1. 最高优先级：尝试获取最新数据包
         const data = await fetchSimpleData();
         if (data) {
             logger.log("成功获取数据包", 'info', 'DATA');
@@ -1383,6 +1375,14 @@ async function loadTmdbTrendingData() {
             cacheTrendingData(data);
             logger.timeEnd('trending_data_load');
             return data;
+        }
+        
+        // 2. 备用方案：使用定时更新的缓存数据
+        const cachedData = getCachedTrendingData();
+        if (cachedData && isDataFresh(cachedData)) {
+            logger.log("使用定时更新的缓存数据", 'info', 'CACHE');
+            logger.timeEnd('trending_data_load');
+            return cachedData;
         }
         
         // 3. 备用方案：使用实时API
