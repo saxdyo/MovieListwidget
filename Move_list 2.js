@@ -10,7 +10,7 @@
 const CONFIG = {
   // 缓存配置
   CACHE: {
-    DURATION: 4 * 60 * 60 * 1000, // 4小时缓存（原30分钟）
+    DURATION: 30 * 60 * 1000, // 30分钟缓存
     FRESH_DATA_DURATION: 2 * 60 * 60 * 1000, // 2小时内数据新鲜
     MAX_ITEMS: 30, // 横版标题海报最大条数
     LRU_SIZE: 200, // LRU缓存最大容量（原100）
