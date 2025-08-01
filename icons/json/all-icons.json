@@ -2,14 +2,93 @@
   "name": "完整图标库",
   "description": "包含所有分类的图标库",
   "version": "1.0.0",
-  "lastUpdated": "2024-01-01",
-  "totalIcons": 0,
-  "categories": ["social", "tech", "business", "entertainment", "misc"],
-  "icons": [],
+  "lastUpdated": "2025-08-01",
+  "totalIcons": 4,
+  "categories": [
+    "social",
+    "tech",
+    "business",
+    "entertainment",
+    "misc"
+  ],
+  "icons": [
+    {
+      "name": "facebook",
+      "category": "social",
+      "tags": [
+        "social",
+        "facebook"
+      ],
+      "formats": [
+        "svg",
+        "png"
+      ],
+      "urls": {
+        "svg": "https://raw.githubusercontent.com/saxdyo/MovieListwidget/main/icons/svg/social/facebook.svg",
+        "png": "https://raw.githubusercontent.com/saxdyo/MovieListwidget/main/icons/png/social/facebook.png"
+      },
+      "description": "facebook图标",
+      "author": "Icon Library",
+      "license": "MIT"
+    },
+    {
+      "name": "instagram",
+      "category": "social",
+      "tags": [
+        "social",
+        "instagram"
+      ],
+      "formats": [
+        "svg"
+      ],
+      "urls": {
+        "svg": "https://raw.githubusercontent.com/saxdyo/MovieListwidget/main/icons/svg/social/instagram.svg"
+      },
+      "description": "instagram图标",
+      "author": "Icon Library",
+      "license": "MIT"
+    },
+    {
+      "name": "twitter",
+      "category": "social",
+      "tags": [
+        "social",
+        "twitter"
+      ],
+      "formats": [
+        "svg"
+      ],
+      "urls": {
+        "svg": "https://raw.githubusercontent.com/saxdyo/MovieListwidget/main/icons/svg/social/twitter.svg"
+      },
+      "description": "twitter图标",
+      "author": "Icon Library",
+      "license": "MIT"
+    },
+    {
+      "name": "github",
+      "category": "tech",
+      "tags": [
+        "tech",
+        "github"
+      ],
+      "formats": [
+        "svg"
+      ],
+      "urls": {
+        "svg": "https://raw.githubusercontent.com/saxdyo/MovieListwidget/main/icons/svg/tech/github.svg"
+      },
+      "description": "github图标",
+      "author": "Icon Library",
+      "license": "MIT"
+    }
+  ],
   "metadata": {
     "baseUrl": "https://raw.githubusercontent.com/saxdyo/MovieListwidget/main/icons",
-    "formats": ["svg", "png"],
-    "pngSizes": ["24x24", "32x32", "48x48", "64x64", "128x128"],
+    "formats": [
+      "svg",
+      "png"
+    ],
     "license": "MIT",
     "author": "Icon Library"
   }

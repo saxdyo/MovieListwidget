@@ -3,12 +3,33 @@
   "description": "技术、编程、开发相关图标集合",
   "category": "tech",
   "version": "1.0.0",
-  "lastUpdated": "2024-01-01",
-  "totalIcons": 0,
-  "icons": [],
+  "lastUpdated": "2025-08-01",
+  "totalIcons": 1,
+  "icons": [
+    {
+      "name": "github",
+      "category": "tech",
+      "tags": [
+        "tech",
+        "github"
+      ],
+      "formats": [
+        "svg"
+      ],
+      "urls": {
+        "svg": "https://raw.githubusercontent.com/saxdyo/MovieListwidget/main/icons/svg/tech/github.svg"
+      },
+      "description": "github图标",
+      "author": "Icon Library",
+      "license": "MIT"
+    }
+  ],
   "metadata": {
     "baseUrl": "https://raw.githubusercontent.com/saxdyo/MovieListwidget/main/icons",
-    "formats": ["svg", "png"],
+    "formats": [
+      "svg",
+      "png"
+    ],
     "license": "MIT",
     "author": "Icon Library"
   }
