@@ -1643,11 +1643,55 @@ async function fetchTmdbDataFromUrl(url) {
 }
 
 function isValidTmdbData(data) {
-    return data && (
-        (Array.isArray(data.today_global) && data.today_global.length > 0) ||
-        (Array.isArray(data.week_global_all) && data.week_global_all.length > 0) ||
-        (Array.isArray(data.popular_movies) && data.popular_movies.length > 0)
-    );
+    try {
+        if (!data || typeof data !== 'object') {
+            log('[数据验证] 数据为空或不是对象', 'warn');
+            return false;
+        }
+        
+        // 检查是否有基本的数据结构
+        const hasTodayGlobal = Array.isArray(data.today_global);
+        const hasWeekGlobal = Array.isArray(data.week_global_all);
+        const hasPopularMovies = Array.isArray(data.popular_movies);
+        
+        // 至少要有其中一个数组
+        if (!hasTodayGlobal && !hasWeekGlobal && !hasPopularMovies) {
+            log('[数据验证] 缺少基本数据结构', 'warn');
+            return false;
+        }
+        
+        // 检查数组中的项目是否有基本结构
+        const allArrays = [data.today_global, data.week_global_all, data.popular_movies].filter(Array.isArray);
+        if (allArrays.length === 0) {
+            log('[数据验证] 没有有效的数组', 'warn');
+            return false;
+        }
+        
+        // 检查第一个数组的第一个项目是否有基本结构
+        const firstArray = allArrays[0];
+        if (firstArray.length > 0) {
+            const firstItem = firstArray[0];
+            if (!firstItem || typeof firstItem !== 'object') {
+                log('[数据验证] 数组项目不是对象', 'warn');
+                return false;
+            }
+            
+            // 检查是否有基本的字段
+            const hasId = firstItem.id !== undefined;
+            const hasTitle = firstItem.title !== undefined || firstItem.name !== undefined;
+            
+            if (!hasId || !hasTitle) {
+                log('[数据验证] 缺少基本字段', 'warn');
+                return false;
+            }
+        }
+        
+        log('[数据验证] 数据验证通过', 'debug');
+        return true;
+    } catch (error) {
+        log(`[数据验证] 验证数据时出错: ${error.message}`, 'error');
+        return false;
+    }
 }
 
 async function fetchTmdbDataFromApi() {
@@ -1752,7 +1796,8 @@ async function recoverDataFromBackup() {
         const backupSources = [
             () => fetchRealtimeData(),
             () => fetchSimpleData(),
-            () => generateSimpleTrendingData()
+            () => generateSimpleTrendingData(),
+            () => generateMockData() // 添加模拟数据作为最后备用
         ];
         
         for (let i = 0; i < backupSources.length; i++) {
@@ -1791,35 +1836,55 @@ async function emergencyDataFetch() {
             return emergencyData;
         }
         
-        // 如果还是失败，返回模拟数据
-        log('[紧急数据] 返回模拟数据', 'warn');
-        return {
-            today_global: [
-                {
-                    id: 'emergency-1',
-                    title: '数据加载中...',
-                    poster_path: null,
-                    vote_average: 0,
-                    overview: '正在尝试恢复数据连接'
-                }
-            ],
-            week_global_all: [],
-            popular_movies: [],
-            is_emergency: true
-        };
+        // 如果还是失败，生成模拟数据
+        log('[紧急数据] 生成模拟数据', 'warn');
+        return generateMockData();
         
     } catch (error) {
         log(`[紧急数据] 紧急数据获取失败: ${error.message}`, 'error');
-        return {
-            today_global: [],
-            week_global_all: [],
-            popular_movies: [],
-            error: error.message
-        };
+        return generateMockData();
     }
 }
 
-// 简化的数据包获取
+// 生成模拟数据
+function generateMockData() {
+    const mockItems = [
+        {
+            id: 'mock-1',
+            title: '热门电影',
+            poster_path: null,
+            vote_average: 8.5,
+            overview: '精彩电影内容',
+            media_type: 'movie'
+        },
+        {
+            id: 'mock-2',
+            title: '热门剧集',
+            poster_path: null,
+            vote_average: 8.8,
+            overview: '精彩剧集内容',
+            media_type: 'tv'
+        },
+        {
+            id: 'mock-3',
+            title: '新上映',
+            poster_path: null,
+            vote_average: 7.9,
+            overview: '最新上映内容',
+            media_type: 'movie'
+        }
+    ];
+    
+    return {
+        today_global: mockItems,
+        week_global_all: mockItems,
+        popular_movies: mockItems,
+        is_mock: true,
+        last_updated: new Date().toISOString()
+    };
+}
+
+// 简化的数据包获取（带备用方案）
 async function fetchSimpleData() {
     const dataUrls = [
         "https://raw.githubusercontent.com/quantumultxx/ForwardWidgets/refs/heads/main/data/TMDB_Trending.json",
@@ -1828,75 +1893,114 @@ async function fetchSimpleData() {
     
     for (const url of dataUrls) {
         try {
-            console.log(`[数据包] 尝试获取: ${url}`);
-            const response = await Widget.http.get(url, {
-                timeout: 8000,
-                headers: {
-                    'Cache-Control': 'no-cache',
-                    'User-Agent': 'MovieListWidget/2.0'
-                }
-            });
+            log(`[数据包] 尝试获取: ${url}`, 'info');
             
-            if (response.data && isValidTmdbData(response.data)) {
-                console.log(`[数据包] 获取成功，今日热门: ${response.data.today_global?.length || 0}项`);
+            // 尝试使用Widget.http.get
+            let response;
+            try {
+                response = await Widget.http.get(url, {
+                    timeout: 8000,
+                    headers: {
+                        'Cache-Control': 'no-cache',
+                        'User-Agent': 'MovieListWidget/2.0'
+                    }
+                });
+            } catch (httpError) {
+                log(`[数据包] Widget.http.get失败: ${httpError.message}`, 'warn');
+                
+                // 备用方案：使用fetch
+                try {
+                    const fetchResponse = await fetch(url, {
+                        method: 'GET',
+                        headers: {
+                            'Cache-Control': 'no-cache',
+                            'User-Agent': 'MovieListWidget/2.0'
+                        }
+                    });
+                    
+                    if (fetchResponse.ok) {
+                        response = { data: await fetchResponse.json() };
+                    } else {
+                        throw new Error(`HTTP ${fetchResponse.status}`);
+                    }
+                } catch (fetchError) {
+                    log(`[数据包] fetch也失败: ${fetchError.message}`, 'warn');
+                    continue;
+                }
+            }
+            
+            if (response && response.data && isValidTmdbData(response.data)) {
+                log(`[数据包] 获取成功，今日热门: ${response.data.today_global?.length || 0}项`, 'info');
                 return response.data;
             }
         } catch (error) {
-            console.log(`[数据包] 获取失败 ${url}: ${error.message}`);
+            log(`[数据包] 获取失败 ${url}: ${error.message}`, 'warn');
         }
     }
     
-    console.log("[数据包] 所有数据源都获取失败");
+    log("[数据包] 所有数据源都获取失败", 'warn');
     return null;
 }
 
-// 增强的实时数据获取 - 包含更多剧集数据
+// 增强的实时数据获取 - 包含更多剧集数据（带备用方案）
 async function fetchRealtimeData() {
     try {
-        console.log("[实时API] 开始获取实时数据...");
+        log("[实时API] 开始获取实时数据...", 'info');
+        
+        // 定义API调用函数
+        const makeApiCall = async (endpoint, params) => {
+            try {
+                return await Widget.tmdb.get(endpoint, { params });
+            } catch (error) {
+                log(`[实时API] Widget.tmdb.get失败 ${endpoint}: ${error.message}`, 'warn');
+                
+                // 备用方案：使用fetch直接调用TMDB API
+                try {
+                    const url = `https://api.themoviedb.org/3${endpoint}?${new URLSearchParams(params).toString()}`;
+                    const response = await fetch(url);
+                    
+                    if (response.ok) {
+                        return await response.json();
+                    } else {
+                        throw new Error(`HTTP ${response.status}`);
+                    }
+                } catch (fetchError) {
+                    log(`[实时API] fetch也失败 ${endpoint}: ${fetchError.message}`, 'warn');
+                    throw fetchError;
+                }
+            }
+        };
         
         const [todayRes, weekRes, popularMoviesRes, popularTVRes, topRatedMoviesRes, topRatedTVRes] = await Promise.allSettled([
-            Widget.tmdb.get("/trending/all/day", { 
-                params: { 
-                    language: 'zh-CN',
-                    region: 'CN', 
-                    api_key: API_KEY 
-                } 
+            makeApiCall("/trending/all/day", { 
+                language: 'zh-CN',
+                region: 'CN', 
+                api_key: API_KEY 
             }),
-            Widget.tmdb.get("/trending/all/week", { 
-                params: { 
-                    language: 'zh-CN',
-                    region: 'CN', 
-                    api_key: API_KEY 
-                } 
+            makeApiCall("/trending/all/week", { 
+                language: 'zh-CN',
+                region: 'CN', 
+                api_key: API_KEY 
             }),
-            Widget.tmdb.get("/movie/popular", { 
-                params: { 
-                    language: 'zh-CN',
-                    region: 'CN', 
-                    api_key: API_KEY 
-                } 
+            makeApiCall("/movie/popular", { 
+                language: 'zh-CN',
+                region: 'CN', 
+                api_key: API_KEY 
             }),
-            Widget.tmdb.get("/tv/popular", { 
-                params: { 
-                    language: 'zh-CN',
-                    region: 'CN', 
-                    api_key: API_KEY 
-                } 
+            makeApiCall("/tv/popular", { 
+                language: 'zh-CN',
+                region: 'CN', 
+                api_key: API_KEY 
             }),
-            Widget.tmdb.get("/movie/top_rated", { 
-                params: { 
-                    language: 'zh-CN',
-                    region: 'CN', 
-                    api_key: API_KEY 
-                } 
+            makeApiCall("/movie/top_rated", { 
+                language: 'zh-CN',
+                region: 'CN', 
+                api_key: API_KEY 
             }),
-            Widget.tmdb.get("/tv/top_rated", { 
-                params: { 
-                    language: 'zh-CN',
-                    region: 'CN', 
-                    api_key: API_KEY 
-                } 
+            makeApiCall("/tv/top_rated", { 
+                language: 'zh-CN',
+                region: 'CN', 
+                api_key: API_KEY 
             })
         ]);
         
