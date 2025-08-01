@@ -2336,8 +2336,19 @@ async function createTitlePosterWithOverlay(item, options = {}) {
             backgroundUrl = `https://image.tmdb.org/t/p/w1280${item.backdrop_path}`;
         } else if (item.poster_path) {
             backgroundUrl = `https://image.tmdb.org/t/p/w500${item.poster_path}`;
+        } else if (item.backdropPath) {
+            backgroundUrl = item.backdropPath;
+        } else if (item.posterPath) {
+            backgroundUrl = item.posterPath;
         } else {
-            return null;
+            console.log(`[标题海报] 项目 ${title} 没有背景图片，跳过生成`);
+            // 如果强制生成，使用默认背景
+            if (options.forceGenerate) {
+                backgroundUrl = "https://via.placeholder.com/1280x720/2c3e50/ffffff?text=No+Image";
+                console.log(`[标题海报] 使用默认背景图片`);
+            } else {
+                return null;
+            }
         }
         
         // 创建带标题覆盖的横版海报
@@ -2358,6 +2369,14 @@ async function createTitlePosterWithOverlay(item, options = {}) {
         };
         
         console.log(`[横版海报] 生成带标题的横版海报: ${title}`);
+        console.log(`[横版海报] 背景URL: ${backgroundUrl}`);
+        console.log(`[横版海报] 项目数据:`, {
+            title: item.title || item.name,
+            backdrop_path: item.backdrop_path,
+            poster_path: item.poster_path,
+            backdropPath: item.backdropPath,
+            posterPath: item.posterPath
+        });
         return titlePoster;
     } catch (error) {
         console.error("[标题海报] 创建带覆盖的标题海报时出错:", error);
@@ -6525,3 +6544,72 @@ function createEnhancedWidgetItem(item) {
   console.log(`[增强项目] ${result.title} - 标题海报: ${result.backdropPath ? '✅' : '❌'} - 分类: ${result.category} - 中国优化: 是`);
   return result;
 }
+
+// 调试标题海报问题
+async function debugTitlePosterIssue() {
+    console.log("=== 调试标题海报问题 ===");
+    
+    try {
+        // 1. 检查热门数据
+        console.log("1. 获取热门数据...");
+        const trendingData = await loadTmdbTrendingData();
+        
+        if (trendingData && trendingData.today_global) {
+            console.log(`获取到 ${trendingData.today_global.length} 个今日热门项目`);
+            
+            // 检查前3个项目
+            const sampleItems = trendingData.today_global.slice(0, 3);
+            sampleItems.forEach((item, index) => {
+                console.log(`\n项目 ${index + 1}: ${item.title || item.name}`);
+                console.log(`  背景路径: ${item.backdrop_path || '无'}`);
+                console.log(`  海报路径: ${item.poster_path || '无'}`);
+                console.log(`  是否有标题海报: ${item.title_backdrop ? '是' : '否'}`);
+                console.log(`  是否有标题海报对象: ${item.titlePoster ? '是' : '否'}`);
+            });
+            
+            // 2. 测试标题海报生成
+            console.log("\n2. 测试标题海报生成...");
+            const testItem = sampleItems[0];
+            if (testItem) {
+                const titlePoster = await createTitlePosterWithOverlay(testItem, {
+                    forceGenerate: true
+                });
+                
+                if (titlePoster) {
+                    console.log("✅ 标题海报生成成功");
+                    console.log(`   标题: ${titlePoster.title}`);
+                    console.log(`   URL: ${titlePoster.url}`);
+                } else {
+                    console.log("❌ 标题海报生成失败");
+                }
+            }
+        } else {
+            console.log("❌ 无法获取热门数据");
+        }
+        
+        // 3. 检查缓存
+        console.log("\n3. 检查缓存...");
+        const cachedData = getCachedTrendingData();
+        console.log(`缓存状态: ${cachedData ? '有缓存' : '无缓存'}`);
+        
+        // 4. 清理缓存并重新测试
+        console.log("\n4. 清理缓存并重新测试...");
+        if (globalCache) {
+            globalCache.clear();
+            console.log("缓存已清理");
+        }
+        
+        const freshData = await loadTmdbTrendingData();
+        if (freshData && freshData.today_global && freshData.today_global.length > 0) {
+            const firstItem = freshData.today_global[0];
+            console.log(`重新获取的第一个项目: ${firstItem.title || firstItem.name}`);
+            console.log(`背景路径: ${firstItem.backdrop_path || '无'}`);
+        }
+        
+    } catch (error) {
+        console.error("调试过程中出错:", error);
+    }
+}
+
+// 暴露调试函数到全局
+global.debugTitlePosterIssue = debugTitlePosterIssue;

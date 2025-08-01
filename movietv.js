@@ -2336,8 +2336,19 @@ async function createTitlePosterWithOverlay(item, options = {}) {
             backgroundUrl = `https://image.tmdb.org/t/p/w1280${item.backdrop_path}`;
         } else if (item.poster_path) {
             backgroundUrl = `https://image.tmdb.org/t/p/w500${item.poster_path}`;
+        } else if (item.backdropPath) {
+            backgroundUrl = item.backdropPath;
+        } else if (item.posterPath) {
+            backgroundUrl = item.posterPath;
         } else {
-            return null;
+            console.log(`[标题海报] 项目 ${title} 没有背景图片，跳过生成`);
+            // 如果强制生成，使用默认背景
+            if (options.forceGenerate) {
+                backgroundUrl = "https://via.placeholder.com/1280x720/2c3e50/ffffff?text=No+Image";
+                console.log(`[标题海报] 使用默认背景图片`);
+            } else {
+                return null;
+            }
         }
         
         // 创建带标题覆盖的横版海报
@@ -2358,6 +2369,14 @@ async function createTitlePosterWithOverlay(item, options = {}) {
         };
         
         console.log(`[横版海报] 生成带标题的横版海报: ${title}`);
+        console.log(`[横版海报] 背景URL: ${backgroundUrl}`);
+        console.log(`[横版海报] 项目数据:`, {
+            title: item.title || item.name,
+            backdrop_path: item.backdrop_path,
+            poster_path: item.poster_path,
+            backdropPath: item.backdropPath,
+            posterPath: item.posterPath
+        });
         return titlePoster;
     } catch (error) {
         console.error("[标题海报] 创建带覆盖的标题海报时出错:", error);
