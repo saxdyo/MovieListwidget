@@ -1,9 +1,5 @@
 // ========== 优化工具与结构集成（见注释区分，原有业务逻辑保留） ==========
 
-
-
-
-
 // 集中配置区
 const CONFIG = {
   CACHE_DURATION: 30 * 60 * 1000, // 30分钟缓存
@@ -6867,12 +6863,3 @@ function diagnoseCacheIssues() {
     log(`[系统] 缓存系统启动失败: ${error.message}`, 'error');
   }
 })();
-
-
-
-
-
-
-
-
-
