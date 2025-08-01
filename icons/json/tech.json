@@ -1,0 +1,15 @@
+{
+  "name": "技术相关图标",
+  "description": "技术、编程、开发相关图标集合",
+  "category": "tech",
+  "version": "1.0.0",
+  "lastUpdated": "2024-01-01",
+  "totalIcons": 0,
+  "icons": [],
+  "metadata": {
+    "baseUrl": "https://raw.githubusercontent.com/saxdyo/icon-library/main/icons",
+    "formats": ["svg", "png"],
+    "license": "MIT",
+    "author": "Icon Library"
+  }
+}

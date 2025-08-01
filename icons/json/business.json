@@ -1,0 +1,15 @@
+{
+  "name": "商业相关图标",
+  "description": "商业、办公、金融相关图标集合",
+  "category": "business",
+  "version": "1.0.0",
+  "lastUpdated": "2024-01-01",
+  "totalIcons": 0,
+  "icons": [],
+  "metadata": {
+    "baseUrl": "https://raw.githubusercontent.com/saxdyo/icon-library/main/icons",
+    "formats": ["svg", "png"],
+    "license": "MIT",
+    "author": "Icon Library"
+  }
+}

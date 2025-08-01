@@ -1,0 +1,15 @@
+{
+  "name": "娱乐相关图标",
+  "description": "娱乐、游戏、媒体相关图标集合",
+  "category": "entertainment",
+  "version": "1.0.0",
+  "lastUpdated": "2024-01-01",
+  "totalIcons": 0,
+  "icons": [],
+  "metadata": {
+    "baseUrl": "https://raw.githubusercontent.com/saxdyo/icon-library/main/icons",
+    "formats": ["svg", "png"],
+    "license": "MIT",
+    "author": "Icon Library"
+  }
+}
