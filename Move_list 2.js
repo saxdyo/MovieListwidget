@@ -2322,7 +2322,7 @@ async function createTitlePosterWithOverlay(item, options = {}) {
             title = item.title || item.name || "未知标题",
             subtitle = item.genreTitle || item.genre_title || "",
             rating = item.rating || item.vote_average || 0,
-            year = item.year || (item.release_date ? item.release_date.substring(0, 4) : ""),
+            year = item.year || (item.release_date ? item.release_date.substring(0, 4) : "") || (item.first_air_date ? item.first_air_date.substring(0, 4) : ""),
             showRating = true,
             showYear = true,
             overlayOpacity = 0.7,
@@ -6613,3 +6613,96 @@ async function debugTitlePosterIssue() {
 
 // 暴露调试函数到全局
 global.debugTitlePosterIssue = debugTitlePosterIssue;
+
+// 调试剧集标题海报问题
+async function debugTVShowTitlePoster() {
+    console.log("=== 调试剧集标题海报问题 ===");
+    
+    try {
+        // 1. 检查剧集数据
+        console.log("1. 获取剧集数据...");
+        const trendingData = await loadTmdbTrendingData();
+        
+        if (trendingData && trendingData.today_global) {
+            // 筛选剧集项目
+            const tvShows = trendingData.today_global.filter(item => 
+                item.media_type === 'tv' || item.name || !item.title
+            );
+            
+            console.log(`找到 ${tvShows.length} 个剧集项目`);
+            
+            // 检查前3个剧集项目
+            const sampleTVShows = tvShows.slice(0, 3);
+            sampleTVShows.forEach((item, index) => {
+                console.log(`\n剧集 ${index + 1}: ${item.name || item.title}`);
+                console.log(`  媒体类型: ${item.media_type || '未知'}`);
+                console.log(`  背景路径: ${item.backdrop_path || '无'}`);
+                console.log(`  海报路径: ${item.poster_path || '无'}`);
+                console.log(`  首播日期: ${item.first_air_date || '无'}`);
+                console.log(`  上映日期: ${item.release_date || '无'}`);
+                console.log(`  是否有标题海报: ${item.title_backdrop ? '是' : '否'}`);
+            });
+            
+            // 2. 测试剧集标题海报生成
+            console.log("\n2. 测试剧集标题海报生成...");
+            const testTVShow = sampleTVShows[0];
+            if (testTVShow) {
+                const titlePoster = await createTitlePosterWithOverlay(testTVShow, {
+                    forceGenerate: true
+                });
+                
+                if (titlePoster) {
+                    console.log("✅ 剧集标题海报生成成功");
+                    console.log(`   标题: ${titlePoster.title}`);
+                    console.log(`   年份: ${titlePoster.year}`);
+                    console.log(`   URL: ${titlePoster.url}`);
+                } else {
+                    console.log("❌ 剧集标题海报生成失败");
+                }
+            }
+        } else {
+            console.log("❌ 无法获取剧集数据");
+        }
+        
+        // 3. 测试专门的剧集API
+        console.log("\n3. 测试剧集API...");
+        try {
+            const tvResponse = await Widget.tmdb.get("/tv/popular", {
+                params: {
+                    language: 'zh-CN',
+                    api_key: API_KEY
+                }
+            });
+            
+            if (tvResponse && tvResponse.results) {
+                console.log(`获取到 ${tvResponse.results.length} 个热门剧集`);
+                const firstTV = tvResponse.results[0];
+                if (firstTV) {
+                    console.log(`第一个剧集: ${firstTV.name}`);
+                    console.log(`首播日期: ${firstTV.first_air_date}`);
+                    console.log(`背景路径: ${firstTV.backdrop_path || '无'}`);
+                    
+                    const tvTitlePoster = await createTitlePosterWithOverlay(firstTV, {
+                        forceGenerate: true
+                    });
+                    
+                    if (tvTitlePoster) {
+                        console.log("✅ 剧集API标题海报生成成功");
+                        console.log(`   标题: ${tvTitlePoster.title}`);
+                        console.log(`   年份: ${tvTitlePoster.year}`);
+                    } else {
+                        console.log("❌ 剧集API标题海报生成失败");
+                    }
+                }
+            }
+        } catch (error) {
+            console.error("剧集API测试失败:", error);
+        }
+        
+    } catch (error) {
+        console.error("调试剧集标题海报时出错:", error);
+    }
+}
+
+// 暴露剧集调试函数到全局
+global.debugTVShowTitlePoster = debugTVShowTitlePoster;
