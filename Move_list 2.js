@@ -2388,12 +2388,7 @@ async function fetchFromBackupSources() {
     return null;
 }
 
-// 智能缓存管理
-const trendingDataCache = new Map();
-const CACHE_DURATION = 30 * 60 * 1000; // 30分钟缓存
-const FRESH_DATA_DURATION = 2 * 60 * 60 * 1000; // 2小时内的数据认为是新鲜的
-
-// 检查数据时效性
+// 检查数据时效性（优化版）
 function isDataFresh(data) {
     try {
         // 检查数据是否有时间戳
@@ -2404,11 +2399,11 @@ function isDataFresh(data) {
             
             // 如果数据超过24小时，认为过期
             if (hoursDiff > 24) {
-                console.log(`[时效性检查] 数据已过期 ${hoursDiff.toFixed(1)} 小时`);
+                log(`[时效性检查] 数据已过期 ${hoursDiff.toFixed(1)} 小时`, 'warn');
                 return false;
             }
             
-            console.log(`[时效性检查] 数据新鲜度: ${hoursDiff.toFixed(1)} 小时前`);
+            log(`[时效性检查] 数据新鲜度: ${hoursDiff.toFixed(1)} 小时前`, 'debug');
             return true;
         }
         
@@ -2427,52 +2422,17 @@ function isDataFresh(data) {
             });
             
             if (!hasRecentContent) {
-                console.log("[时效性检查] 数据中缺少最近发布的内容");
+                log("[时效性检查] 数据中缺少最近发布的内容", 'warn');
                 return false;
             }
         }
         
         // 默认认为数据是新鲜的
-        console.log("[时效性检查] 数据时效性检查通过");
+        log("[时效性检查] 数据时效性检查通过", 'debug');
         return true;
     } catch (error) {
-        console.error("[时效性检查] 检查数据时效性时出错:", error);
+        log(`[时效性检查] 检查数据时效性时出错: ${error.message}`, 'error');
         return true; // 出错时默认认为数据可用
-    }
-}
-
-// 获取缓存的趋势数据
-function getCachedTrendingData() {
-    const now = Date.now();
-    const cacheKey = 'trending_data';
-    const cached = trendingDataCache.get(cacheKey);
-    
-    if (cached && (now - cached.timestamp) < CACHE_DURATION) {
-        console.log(`[缓存] 使用缓存数据 (${Math.round((now - cached.timestamp) / 1000)}秒前缓存)`);
-        return cached.data;
-    }
-    
-    return null;
-}
-
-// 缓存趋势数据
-function cacheTrendingData(data) {
-    const cacheKey = 'trending_data';
-    trendingDataCache.set(cacheKey, {
-        data: data,
-        timestamp: Date.now()
-    });
-    console.log("[缓存] 数据已缓存");
-}
-
-// 清理过期缓存
-function cleanupExpiredCache() {
-    const now = Date.now();
-    for (const [key, value] of trendingDataCache.entries()) {
-        if ((now - value.timestamp) > CACHE_DURATION) {
-            trendingDataCache.delete(key);
-            console.log(`[缓存] 清理过期缓存: ${key}`);
-        }
     }
 }
 
@@ -5266,31 +5226,7 @@ async function batchProcessBackdrops(items, options = {}) {
     return results;
 }
 
-// 横版海报缓存管理器
-const backdropCache = new Map();
-const BACKDROP_CACHE_SIZE = 100;
-
-function cacheBackdrop(key, data) {
-    if (backdropCache.size >= BACKDROP_CACHE_SIZE) {
-        // 删除最老的缓存项
-        const firstKey = backdropCache.keys().next().value;
-        backdropCache.delete(firstKey);
-    }
-    backdropCache.set(key, {
-        data,
-        timestamp: Date.now()
-    });
-}
-
-function getCachedBackdrop(key, maxAge = 30 * 60 * 1000) { // 30分钟
-    const cached = backdropCache.get(key);
-    if (cached && (Date.now() - cached.timestamp) < maxAge) {
-        return cached.data;
-    }
-    return null;
-}
-
-// 横版海报质量优化器
+// 横版海报质量优化器（使用智能缓存系统）
 function optimizeBackdropQuality(items) {
     return items
         .filter(item => item.backdrop_path) // 只保留有横版海报的项目
@@ -5305,6 +5241,8 @@ function optimizeBackdropQuality(items) {
             backdropQuality: calculateBackdropQuality(item)
         }));
 }
+
+
 
 // 横版海报质量评估器
 function calculateBackdropQuality(item) {
@@ -5639,37 +5577,6 @@ function createSmartPosterUrl(item, preferredSize = 'w500') {
     ];
     
     return urls[0]; // 返回主要URL，实际重试在加载时进行
-}
-
-// 图片缓存机制
-const imageCache = new Map();
-const IMAGE_CACHE_DURATION = 60 * 60 * 1000; // 1小时缓存
-
-// 缓存图片URL
-function cacheImageUrl(key, url) {
-    imageCache.set(key, {
-        url: url,
-        timestamp: Date.now()
-    });
-}
-
-// 获取缓存的图片URL
-function getCachedImageUrl(key) {
-    const cached = imageCache.get(key);
-    if (cached && (Date.now() - cached.timestamp) < IMAGE_CACHE_DURATION) {
-        return cached.url;
-    }
-    return null;
-}
-
-// 清理过期的图片缓存
-function cleanupImageCache() {
-    const now = Date.now();
-    for (const [key, value] of imageCache.entries()) {
-        if ((now - value.timestamp) > IMAGE_CACHE_DURATION) {
-            imageCache.delete(key);
-        }
-    }
 }
 
 // 智能图片URL生成器 - 带缓存
