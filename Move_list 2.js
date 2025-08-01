@@ -14,6 +14,18 @@ const CONFIG = {
   LRU_CACHE_SIZE: 100 // LRU缓存最大容量
 };
 
+  // 新增缓存优化配置
+  CACHE_OPTIMIZATION: {
+    ENABLE_SMART_CACHE: true,        // 启用智能缓存
+    ENABLE_PRELOAD: true,            // 启用预加载
+    ENABLE_COMPRESSION: true,        // 启用数据压缩
+    ENABLE_PRIORITY_QUEUE: true,     // 启用优先级队列
+    MAX_MEMORY_USAGE: 50 * 1024 * 1024, // 最大内存使用50MB
+    CLEANUP_INTERVAL: 5 * 60 * 1000,    // 清理间隔5分钟
+    HEALTH_CHECK_INTERVAL: 2 * 60 * 1000 // 健康检查间隔2分钟
+  }
+};
+
 // 日志工具
 function log(msg, level = 'info') {
   const levels = { error: 0, warn: 1, info: 2, debug: 3 };
