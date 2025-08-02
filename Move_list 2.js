@@ -1159,7 +1159,6 @@ async function fetchTmdbDataFromApi() {
         return { today_global: [], week_global_all: [], popular_movies: [] };
     }
 }
-
 // 优化的TMDB数据获取函数 - 优先使用定时更新的数据包
 async function loadTmdbTrendingData() {
     try {
@@ -1778,7 +1777,6 @@ async function fetchFromBackupSources() {
     
     return null;
 }
-
 // 智能缓存管理
 const trendingDataCache = new Map();
 const CACHE_DURATION = 30 * 60 * 1000; // 30分钟缓存
@@ -2423,7 +2421,6 @@ function generateEnhancedGenreTitle(genreIds, mediaType, genreMap) {
     
     return mediaType === 'movie' ? '电影' : '剧集';
 }
-
 // 扩展的CDN配置 - 更多备用方案
 const CDN_CONFIGS = [
     {
@@ -3048,7 +3045,6 @@ async function loadTmdbTrendingCombined(params = {}) {
     return [];
   }
 }
-
 // 标题海报热门内容加载器
 async function loadTmdbTitlePosterTrending(params = {}) {
   // 只根据sort_by切换内容类型，不再做强制联动
@@ -3681,7 +3677,6 @@ async function fetchTmdbDataForDouban(key, mediaType) {
     
     return allResults;
 }
-
 async function fetchImdbItemsForDouban(scItems) {
     const promises = scItems.map(async (scItem) => {
         const titleNormalizationRules = [
@@ -4310,7 +4305,6 @@ async function fetchPagedData(shardPath) {
     cachedData[encodedUrl] = data;
     return data;
 }
-
 // 将数据源格式映射为小组件格式
 function mapToWidgetItem(item) {
     // 数据源字段：id, t(title), p(poster), b(backdrop), r(rating), y(year), rd(release_date), mt(mediaType), o(overview)
@@ -4947,7 +4941,6 @@ if (typeof global !== 'undefined') {
         return [];
     };
 }
-
 // 图片加载重试和降级机制
 async function loadImageWithFallback(urls, maxRetries = 3) {
     const urlArray = Array.isArray(urls) ? urls : [urls];
@@ -5352,7 +5345,6 @@ setTimeout(async () => {
     console.error("[启动任务] 数据包获取失败:", error);
   }
 }, 5000); // 5秒后执行
-
 // ===============================
 // 🚀 高性能TMDB加载器 - Move_list 2.js 优化版
 // ===============================
@@ -5984,7 +5976,6 @@ function createSmartBackdropUrl(item, preferredSize = 'w780') { // 默认使用w
   const optimizedSize = getOptimizedSizeForChina(preferredSize, 'backdrop');
   return createSmartImageUrl(backdropPath, 'backdrop', optimizedSize);
 }
-
 // 图片压缩和缓存策略 - 针对中国网络优化
 class ChinaImageOptimizer {
   constructor() {
@@ -6095,10 +6086,16 @@ function loadImageWithTimeout(url, timeout = 10000) {
   });
 }
 
-// 优化的组件项目创建器 - 针对中国网络
+// 优化的组件项目创建器 - 针对中国网络，支持Logo背景图
 function createSimpleWidgetItem(item) {
   const posterUrl = item.poster_url || (item.poster_path ? createSmartImageUrl(item.poster_path, 'poster', 'w342') : "");
   const backdropUrl = item.backdrop_path ? createSmartImageUrl(item.backdrop_path, 'backdrop', 'w780') : "";
+  
+  // 处理Logo背景图 - 新增功能
+  const logoUrl = item.logo_url || "";
+  const hasLogo = !!logoUrl;
+  const mediaType = item.type || item.media_type || (item.title ? "movie" : "tv");
+  const isTVShow = mediaType === "tv";
   
   return {
     id: item.id,
@@ -6109,30 +6106,53 @@ function createSimpleWidgetItem(item) {
     posterPath: posterUrl,
     coverUrl: posterUrl,
     backdropPath: backdropUrl,
-    rating: item.vote_average ? item.vote_average.toFixed(1) : "无评分",
-    mediaType: item.media_type || (item.title ? "movie" : "tv"),
-    genreTitle: item.genre_ids && item.genre_ids.length > 0 ? 
-      item.genre_ids.slice(0, 3).map(id => item.genreMap?.[id]).filter(Boolean).join('•') : "未知类型",
+    
+    // 新增：Logo背景图支持
+    logoUrl: logoUrl,
+    logoPath: logoUrl, // 兼容性字段
+    hasLogo: hasLogo,
+    logoBackground: hasLogo ? logoUrl : "", // 用于背景显示的logo
+    
+    rating: item.rating || item.vote_average ? (item.rating || item.vote_average).toFixed(1) : "无评分",
+    mediaType: mediaType,
+    genreTitle: item.genreTitle || (item.genre_ids && item.genre_ids.length > 0 ? 
+      item.genre_ids.slice(0, 3).map(id => item.genreMap?.[id]).filter(Boolean).join('•') : "未知类型"),
     link: null,
     duration: 0,
     durationText: "",
     episode: 0,
     childItems: [],
-    isChinaOptimized: true // 标记为中国网络优化
+    isChinaOptimized: true, // 标记为中国网络优化
+    
+    // 新增：媒体类型标识
+    isTVShow: isTVShow,
+    isMovie: mediaType === "movie",
+    
+    // 新增：Logo状态信息
+    logoStatus: hasLogo ? "available" : "unavailable",
+    logoQuality: hasLogo ? "high" : "none"
   };
 }
 
-// 优化的增强组件项目创建器 - 针对中国网络
+// 优化的增强组件项目创建器 - 针对中国网络，支持剧集Logo背景图
 function createEnhancedWidgetItem(item) {
   // 生成标题海报URL - 使用较小的尺寸
   const titleBackdropUrl = item.title_backdrop || item.backdrop_path ? 
     createSmartImageUrl(item.backdrop_path || item.title_backdrop, 'backdrop', 'w780') : "";
+  
+  // 处理Logo背景图 - 新增功能
+  const logoUrl = item.logo_url || "";
+  const hasLogo = !!logoUrl;
   
   // 选择最佳显示标题
   const displayTitle = pickEnhancedChineseTitle(item);
   
   const posterUrl = item.poster_url || item.poster_path || "";
   const backdropUrl = titleBackdropUrl || item.title_backdrop || item.backdrop_path || "";
+  
+  // 确定媒体类型
+  const mediaType = item.type || item.media_type || (item.title ? "movie" : "tv");
+  const isTVShow = mediaType === "tv";
   
   const result = {
     id: item.id,
@@ -6145,9 +6165,16 @@ function createEnhancedWidgetItem(item) {
     backdropPath: backdropUrl ? createSmartImageUrl(backdropUrl.replace('https://image.tmdb.org/t/p/w1280', ''), 'backdrop', 'w780') : backdropUrl,
     backdropHD: item.title_backdrop_hd || item.backdrop_hd || "",
     backdrop780: item.backdrop_w780 || "",
-    rating: item.vote_average ? item.vote_average.toFixed(1) : "无评分",
-    mediaType: item.media_type || (item.title ? "movie" : "tv"),
-    genreTitle: generateEnhancedGenreTitle(item.genre_ids || [], item.media_type || (item.title ? "movie" : "tv"), item.genreMap || {}),
+    
+    // 新增：Logo背景图支持
+    logoUrl: logoUrl,
+    logoPath: logoUrl, // 兼容性字段
+    hasLogo: hasLogo,
+    logoBackground: hasLogo ? logoUrl : "", // 用于背景显示的logo
+    
+    rating: item.rating || item.vote_average ? (item.rating || item.vote_average).toFixed(1) : "无评分",
+    mediaType: mediaType,
+    genreTitle: item.genreTitle || generateEnhancedGenreTitle(item.genre_ids || [], mediaType, item.genreMap || {}),
     link: null,
     duration: 0,
     durationText: "",
@@ -6155,17 +6182,21 @@ function createEnhancedWidgetItem(item) {
     childItems: [],
     category: item.category || "热门",
     isChinaOptimized: true, // 标记为中国网络优化
-    hasTitleBackdrop: !!titleBackdropUrl
+    hasTitleBackdrop: !!titleBackdropUrl,
+    
+    // 新增：媒体类型标识
+    isTVShow: isTVShow,
+    isMovie: mediaType === "movie",
+    
+    // 新增：Logo状态信息
+    logoStatus: hasLogo ? "available" : "unavailable",
+    logoQuality: hasLogo ? "high" : "none"
   };
   
-  console.log(`[增强项目] ${result.title} - 标题海报: ${result.backdropPath ? '✅' : '❌'} - 分类: ${result.category} - 中国优化: 是`);
+  // 增强的日志输出，包含Logo信息
+  const logoStatus = hasLogo ? '✅' : '❌';
+  const mediaIcon = isTVShow ? '📺' : '🎬';
+  console.log(`[增强项目] ${mediaIcon} ${result.title} - 标题海报: ${result.backdropPath ? '✅' : '❌'} - Logo: ${logoStatus} - 分类: ${result.category} - 中国优化: 是`);
+  
   return result;
 }
-
-
-
-
-
-
-
-
