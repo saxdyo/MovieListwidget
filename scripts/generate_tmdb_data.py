@@ -21,6 +21,61 @@ OUTPUT_FILE = DATA_DIR / 'TMDB_Trending.json'
 # 确保数据目录存在
 DATA_DIR.mkdir(exist_ok=True)
 
+# 图像 URL 前缀
+TMDB_IMAGE_BASE_URL = 'https://image.tmdb.org/t/p/'
+
+def build_image_url(path: str | None, size: str = 'original') -> str:
+    """构造完整的 TMDB 图片地址, path 可能为 None"""
+    if not path:
+        return ''
+    return f"{TMDB_IMAGE_BASE_URL}{size}{path}"
+
+def fetch_tmdb_images(media_type: str, media_id: int) -> dict:
+    """获取指定影片/剧集的所有图片信息"""
+    try:
+        url = f"{TMDB_BASE_URL}/{media_type}/{media_id}/images"
+        params = {
+            'api_key': TMDB_API_KEY,
+            'include_image_language': 'zh,en,null'
+        }
+        response = requests.get(url, params=params, timeout=10)
+        response.raise_for_status()
+        return response.json()
+    except requests.RequestException as e:
+        print(f"⚠️ 获取图片失败 {media_type}/{media_id}: {e}")
+        return {}
+
+def _image_priority(img: dict) -> tuple:
+    """内部函数: 计算图片优先级, 越小越优"""
+    lang = img.get('iso_639_1')
+    if lang == 'zh':
+        lang_score = 0
+    elif lang == 'en':
+        lang_score = 1
+    elif lang is None:
+        lang_score = 2
+    else:
+        lang_score = 3
+    # vote_average 越大越好 → 取负数进行升序排序
+    vote_score = -img.get('vote_average', 0)
+    resolution_score = -(img.get('width', 0) * img.get('height', 0))
+    return (lang_score, vote_score, resolution_score)
+
+def pick_best_image(images: list[dict]) -> str:
+    """从图片列表中挑选优先级最高的一张, 返回完整 URL, 若无则空串"""
+    if not images:
+        return ''
+    best = min(images, key=_image_priority)
+    return build_image_url(best.get('file_path'))
+
+def pick_best_logo(image_data: dict) -> str:
+    """挑选剧集/电影的最佳 logo"""
+    return pick_best_image(image_data.get('logos', []))
+
+def pick_best_backdrop(image_data: dict) -> str:
+    """挑选最佳标题背景图"""
+    return pick_best_image(image_data.get('backdrops', []))
+
 def fetch_tmdb_trending_data():
     """获取 TMDB 趋势数据"""
     try:
@@ -90,19 +145,30 @@ def process_tmdb_data(raw_data, config, genres):
     people = []
     
     for item in raw_data['results']:
+        # 对于电影/剧集额外抓取图片信息 (logo & backdrop)
+        image_data = fetch_tmdb_images(item['media_type'], item['id']) if item['media_type'] in {'movie', 'tv'} else {}
+        logo_url = pick_best_logo(image_data)
+        backdrop_url = pick_best_backdrop(image_data)
+
+        processed_extra = {
+            'poster_url': build_image_url(item.get('poster_path')),
+            'logo_url': logo_url,
+            'title_backdrop': backdrop_url,
+        }
+
         processed_item = {
             'id': item['id'],
-            'poster_path': item.get('poster_path'),
-            'backdrop_path': item.get('backdrop_path'),
             'vote_average': item.get('vote_average', 0),
             'vote_count': item.get('vote_count', 0),
             'popularity': item.get('popularity', 0),
             'genre_ids': item.get('genre_ids', []),
             'adult': item.get('adult', False),
             'original_language': item.get('original_language', 'en'),
-            'media_type': item['media_type']
+            'media_type': item['media_type'],
+            **processed_extra,
         }
-        
+
+        # Media-type specific fields
         if item['media_type'] == 'movie':
             movies.append({
                 **processed_item,
@@ -110,7 +176,7 @@ def process_tmdb_data(raw_data, config, genres):
                 'original_title': item.get('original_title', ''),
                 'overview': item.get('overview', ''),
                 'release_date': item.get('release_date', ''),
-                'video': item.get('video', False)
+                'video': item.get('video', False),
             })
         elif item['media_type'] == 'tv':
             tv_shows.append({
@@ -119,7 +185,7 @@ def process_tmdb_data(raw_data, config, genres):
                 'original_name': item.get('original_name', ''),
                 'overview': item.get('overview', ''),
                 'first_air_date': item.get('first_air_date', ''),
-                'origin_country': item.get('origin_country', [])
+                'origin_country': item.get('origin_country', []),
             })
         elif item['media_type'] == 'person':
             people.append({
@@ -128,13 +194,13 @@ def process_tmdb_data(raw_data, config, genres):
                 'original_name': item.get('original_name', ''),
                 'profile_path': item.get('profile_path'),
                 'known_for_department': item.get('known_for_department', ''),
-                'gender': item.get('gender', 0)
+                'gender': item.get('gender', 0),
             })
     
     return {
         'movies': movies,
         'tv_shows': tv_shows,
-        'people': people
+        'people': people,
     }
 
 def generate_data_package(processed_data, config, genres):
