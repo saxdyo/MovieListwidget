@@ -303,7 +303,7 @@ WidgetMetadata = {
       title: "TMDB 标题海报热门",
       description: "今日热门、本周热门、热门电影 - 带标题海报效果",
       requiresWebView: false,
-      functionName: "loadTmdbTitlePosterTrending",
+  
       cacheDuration: 60,
       params: [
         { 
@@ -350,7 +350,7 @@ WidgetMetadata = {
       title: "TMDB 热门内容",
       description: "今日热门、本周热门、热门电影、高分内容合并模块",
       requiresWebView: false,
-      functionName: "loadTmdbTrendingCombined",
+  
       cacheDuration: 60,
       params: [
         {
@@ -2966,8 +2966,7 @@ async function tmdbDiscoverByCompany(params = {}) {
   }
 }
 
-// TMDB热门内容合并模块 - 整合今日热门、本周热门、热门电影、高分内容
-async function loadTmdbTrendingCombined(params = {}) {
+
   const { 
     sort_by = "today",  // 现在sort_by包含内容类型
     media_type = "all", 
@@ -3232,13 +3231,9 @@ async function loadTmdbTrendingCombined(params = {}) {
     return results;
     
   } catch (error) {
-    console.error("Error in loadTmdbTrendingCombined:", error);
-    return [];
-  }
-}
 
-// 标题海报热门内容加载器
-async function loadTmdbTitlePosterTrending(params = {}) {
+
+
   // 只根据sort_by切换内容类型，不再做强制联动
   let { 
     content_type = "today", 
@@ -3445,10 +3440,7 @@ async function loadTmdbTitlePosterTrending(params = {}) {
         return results;
         
     } catch (error) {
-        console.error("Error in loadTmdbTitlePosterTrending:", error);
-        return [];
-    }
-}
+
 
 
 
@@ -5057,8 +5049,8 @@ async function quickDataTest() {
         }
         
         // 测试标题海报功能
-        const titlePosterData = await loadTmdbTitlePosterTrending({ content_type: "today" });
-        console.log(`标题海报功能: ${titlePosterData.length > 0 ? '✅ 成功' : '❌ 失败'}`);
+
+        
         
         // 测试横版标题海报功能
         console.log("=== 测试横版标题海报功能 ===");
@@ -5119,7 +5111,7 @@ if (typeof global !== 'undefined') {
     global.quickDataTest = quickDataTest;
     global.testTitlePosterFunctionality = testTitlePosterFunctionality;
     global.loadTmdbTrendingData = loadTmdbTrendingData;
-    global.loadTmdbTitlePosterTrending = loadTmdbTitlePosterTrending;
+    
     global.fetchSimpleData = fetchSimpleData;
     global.fetchRealtimeData = fetchRealtimeData;
     global.createSimpleWidgetItem = createSimpleWidgetItem;
