@@ -114,7 +114,7 @@ class TMDBCrawler:
         params = {"include_image_language": "zh,en,null"}
         
         data = self._make_request(endpoint, params)
-        return data or {"backdrops": [], "posters": []}
+        return data or {"backdrops": [], "posters": [], "logos": []}
     
     def get_image_url(self, path: str, size: str = "original") -> str:
         """构建图片URL"""
@@ -122,16 +122,36 @@ class TMDBCrawler:
             return ""
         return f"{IMAGE_BASE_URL}{size}{path}"
     
-    def get_best_title_backdrop(self, image_data: Dict) -> str:
+    def get_best_title_backdrop(self, image_data: Dict, media_type: str = "movie") -> str:
         """获取最佳标题背景图"""
+        # 对于剧集，优先尝试获取logos，然后回退到backdrops
+        # 对于电影，主要使用backdrops
+        
+        if media_type == "tv":
+            # 剧集优先检查logos
+            logos = image_data.get("logos", [])
+            if logos:
+                best_logo = self._select_best_image(logos, prefer_logos=True)
+                if best_logo:
+                    return self.get_image_url(best_logo["file_path"])
+        
+        # 回退到backdrops或电影的默认处理
         backdrops = image_data.get("backdrops", [])
+        if backdrops:
+            best_backdrop = self._select_best_image(backdrops, prefer_logos=False)
+            if best_backdrop:
+                return self.get_image_url(best_backdrop["file_path"])
         
-        if not backdrops:
-            return ""
+        return ""
+    
+    def _select_best_image(self, images: List[Dict], prefer_logos: bool = False) -> Optional[Dict]:
+        """选择最佳图片"""
+        if not images:
+            return None
         
-        def get_priority_score(backdrop):
-            """计算背景图优先级得分"""
-            lang = backdrop.get("iso_639_1")
+        def get_priority_score(image):
+            """计算图片优先级得分"""
+            lang = image.get("iso_639_1")
             
             # 语言优先级：中文 > 英文 > 无语言 > 其他
             if lang == "zh":
@@ -144,18 +164,24 @@ class TMDBCrawler:
                 lang_score = 3
             
             # 评分和分辨率（负值用于排序）
-            vote_avg = -backdrop.get("vote_average", 0)
-            width = backdrop.get("width", 0)
-            height = backdrop.get("height", 0)
+            vote_avg = -image.get("vote_average", 0)
+            width = image.get("width", 0)
+            height = image.get("height", 0)
             resolution = -(width * height)
             
-            return (lang_score, vote_avg, resolution)
+            # 对于logos，适当调整优先级
+            if prefer_logos:
+                # logos通常尺寸较小，调整权重
+                aspect_ratio = width / height if height > 0 else 1.0
+                # 偏好横向比例的logos (适合做标题背景)
+                aspect_score = abs(aspect_ratio - 2.5)  # 理想比例约2.5:1
+                return (lang_score, vote_avg, aspect_score, resolution)
+            else:
+                return (lang_score, vote_avg, resolution)
         
         # 按优先级排序
-        sorted_backdrops = sorted(backdrops, key=get_priority_score)
-        best_backdrop = sorted_backdrops[0]
-        
-        return self.get_image_url(best_backdrop["file_path"])
+        sorted_images = sorted(images, key=get_priority_score)
+        return sorted_images[0]
     
     def process_media_item(self, item: Dict, media_type: str = None) -> Optional[Dict]:
         """处理单个媒体项目"""
@@ -188,7 +214,7 @@ class TMDBCrawler:
             
             # 获取标题背景图
             image_data = self.get_media_images(item_type, media_id)
-            title_backdrop_url = self.get_best_title_backdrop(image_data)
+            title_backdrop_url = self.get_best_title_backdrop(image_data, item_type)
             
             # 数据质量检查
             if (rating == 0 and 
