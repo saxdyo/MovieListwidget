@@ -1,41 +1,37 @@
 {
-  "name": "tmdb-data-generator",
-  "version": "1.0.0",
-  "description": "TMDB 数据包生成工具，用于创建类似 ForwardWidgets 的数据文件",
-  "main": "scripts/generate_tmdb_data.js",
+  "name": "tmdb-trending-optimized",
+  "version": "2.0.0",
+  "description": "优化的TMDB热门数据获取脚本 - Optimized TMDB Trending Data Fetcher",
+  "main": "scripts/get_tmdb_data_optimized.js",
   "scripts": {
-    "generate:js": "node scripts/generate_tmdb_data.js",
-    "generate:py": "python scripts/generate_tmdb_data.py",
-    "generate": "npm run generate:js",
-    "test": "node scripts/test_data.js",
-    "test:api": "node -e \"console.log('TMDB API Key:', process.env.TMDB_API_KEY ? '已设置' : '未设置')\"",
-    "setup": "npm install && echo '请设置 TMDB_API_KEY 环境变量'",
-    "validate": "npm run generate && npm run test"
+    "start": "node scripts/get_tmdb_data_optimized.js",
+    "fetch": "node scripts/get_tmdb_data_optimized.js",
+    "test": "node -e \"console.log('Testing TMDB script...'); require('./scripts/get_tmdb_data_optimized.js').main().then(() => console.log('Test completed')).catch(console.error)\"",
+    "dev": "node --inspect scripts/get_tmdb_data_optimized.js"
   },
   "keywords": [
     "tmdb",
-    "api",
-    "data",
-    "widget",
+    "trending",
     "movies",
     "tv-shows",
-    "trending"
+    "api",
+    "javascript",
+    "optimized",
+    "cache"
   ],
-  "author": "Your Name",
+  "author": "TMDB Optimized Crawler",
   "license": "MIT",
-  "dependencies": {
-    "node-fetch": "^3.3.2"
-  },
-  "devDependencies": {},
   "engines": {
     "node": ">=16.0.0"
   },
+  "dependencies": {},
+  "devDependencies": {},
   "repository": {
     "type": "git",
-    "url": "https://github.com/your-username/tmdb-data-generator.git"
+    "url": "https://github.com/your-repo/tmdb-trending-optimized.git"
   },
   "bugs": {
-    "url": "https://github.com/your-username/tmdb-data-generator/issues"
+    "url": "https://github.com/your-repo/tmdb-trending-optimized/issues"
   },
-  "homepage": "https://github.com/your-username/tmdb-data-generator#readme"
+  "homepage": "https://github.com/your-repo/tmdb-trending-optimized#readme"
 }
