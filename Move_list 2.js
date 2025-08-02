@@ -4818,8 +4818,6 @@ class HighPerformanceTMDBLoaderV2 {
   startBackgroundServices() {
     // 预加载服务
     setTimeout(() => {
-      this.preloadData();
-      
       // 定期后台更新
       setInterval(() => {
         this.backgroundUpdate();
