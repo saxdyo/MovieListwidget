@@ -7,7 +7,9 @@ const CONFIG = {
   MAX_ITEMS: 30, // 横版标题海报最大条数
   MAX_CONCURRENT: typeof process !== 'undefined' && process.env.MAX_CONCURRENT ? parseInt(process.env.MAX_CONCURRENT) : 5, // 并发数支持环境变量
   LOG_LEVEL: typeof process !== 'undefined' && process.env.LOG_LEVEL ? process.env.LOG_LEVEL : 'info',
-  LRU_CACHE_SIZE: 100 // LRU缓存最大容量
+  LRU_CACHE_SIZE: 100, // LRU缓存最大容量
+  ENABLE_TV_LOGOS: true, // 启用剧集Logo背景图功能
+  TV_LOGO_CACHE_DURATION: 60 * 60 * 1000 // 剧集Logo缓存1小时
 };
 
 // 日志工具
@@ -75,13 +77,17 @@ class LRUCache {
 }
 const backdropLRUCache = new LRUCache(CONFIG.LRU_CACHE_SIZE);
 const trendingDataLRUCache = new LRUCache(10);
+const tvLogoLRUCache = new LRUCache(50); // 剧集Logo缓存
 function getCachedBackdrop(key) { return backdropLRUCache.get(key); }
 function cacheBackdrop(key, data) { backdropLRUCache.set(key, data); }
 function getCachedTrendingData() { return trendingDataLRUCache.get('trending_data'); }
 function cacheTrendingData(data) { trendingDataLRUCache.set('trending_data', data); }
+function getCachedTvLogo(key) { return tvLogoLRUCache.get(key); }
+function cacheTvLogo(key, data) { tvLogoLRUCache.set(key, data); }
 function logCacheStats() {
   log(`[横版标题海报缓存] 命中率: ${JSON.stringify(backdropLRUCache.stats())}`, 'info');
   log(`[热门数据缓存] 命中率: ${JSON.stringify(trendingDataLRUCache.stats())}`, 'info');
+  log(`[剧集Logo缓存] 命中率: ${JSON.stringify(tvLogoLRUCache.stats())}`, 'info');
 }
 
 // 并发池
@@ -2061,12 +2067,21 @@ async function processItemsWithTitlePosters(items, category) {
     }
 }
 
-// 生成标题海报
+// 生成标题海报 - 增强版：支持剧集Logo背景图
 async function generateTitleBackdrop(item) {
     try {
         // 如果有现有的标题海报，直接使用
         if (item.title_backdrop && item.title_backdrop.url) {
             return item.title_backdrop;
+        }
+        
+        // 对于剧集，优先尝试获取Logo背景图
+        if (CONFIG.ENABLE_TV_LOGOS && (item.type === 'tv' || item.media_type === 'tv')) {
+            const logoBackdrop = await getTvShowLogoBackdrop(item);
+            if (logoBackdrop && logoBackdrop.url) {
+                log(`[剧集Logo] 成功获取Logo背景图: ${item.title || item.name}`, 'info');
+                return logoBackdrop;
+            }
         }
         
         // 如果有背景图片，使用背景图片作为标题海报
@@ -2109,6 +2124,162 @@ async function generateTitleBackdrop(item) {
     }
 }
 
+// 获取剧集Logo背景图
+async function getTvShowLogoBackdrop(item) {
+    try {
+        if (!item.id) {
+            log('[剧集Logo] 缺少媒体ID，无法获取Logo', 'warn');
+            return null;
+        }
+
+        // 检查缓存
+        const cacheKey = `tv_logo_${item.id}`;
+        const cached = getCachedTvLogo(cacheKey);
+        if (cached) {
+            log(`[剧集Logo] 使用缓存Logo: ${item.title || item.name}`, 'debug');
+            return cached;
+        }
+
+        // 获取剧集图片数据
+        const imageData = await getTmdbMediaImages(item.id, 'tv');
+        if (!imageData) {
+            log(`[剧集Logo] 无法获取图片数据: ${item.title || item.name}`, 'warn');
+            return null;
+        }
+
+        // 优先选择Logo
+        if (imageData.logos && imageData.logos.length > 0) {
+            const bestLogo = selectBestImage(imageData.logos, true);
+            if (bestLogo) {
+                const logoResult = {
+                    url: `https://image.tmdb.org/t/p/original${bestLogo.file_path}`,
+                    width: bestLogo.width || 800,
+                    height: bestLogo.height || 320,
+                    type: "tv_logo",
+                    language: bestLogo.iso_639_1,
+                    vote_average: bestLogo.vote_average
+                };
+                // 缓存Logo结果
+                cacheTvLogo(cacheKey, logoResult);
+                return logoResult;
+            }
+        }
+
+        // 回退到背景图
+        if (imageData.backdrops && imageData.backdrops.length > 0) {
+            const bestBackdrop = selectBestImage(imageData.backdrops, false);
+            if (bestBackdrop) {
+                const backdropResult = {
+                    url: `https://image.tmdb.org/t/p/w1280${bestBackdrop.file_path}`,
+                    width: bestBackdrop.width || 1280,
+                    height: bestBackdrop.height || 720,
+                    type: "tv_backdrop_fallback",
+                    language: bestBackdrop.iso_639_1,
+                    vote_average: bestBackdrop.vote_average
+                };
+                // 缓存背景图结果
+                cacheTvLogo(cacheKey, backdropResult);
+                return backdropResult;
+            }
+        }
+
+        // 缓存空结果，避免重复请求
+        cacheTvLogo(cacheKey, null);
+        return null;
+    } catch (error) {
+        console.error('[剧集Logo] 获取Logo背景图失败:', error);
+        return null;
+    }
+}
+
+// 获取TMDB媒体图片数据
+async function getTmdbMediaImages(mediaId, mediaType) {
+    try {
+        const apiKey = process.env.TMDB_API_KEY || 'your_api_key_here';
+        if (!apiKey || apiKey === 'your_api_key_here') {
+            log('[TMDB] API密钥未设置，无法获取图片数据', 'warn');
+            return null;
+        }
+
+        const url = `https://api.themoviedb.org/3/${mediaType}/${mediaId}/images?api_key=${apiKey}&include_image_language=zh,en,null`;
+        
+        log(`[TMDB] 获取图片数据: ${url}`, 'debug');
+        
+        const response = await fetch(url);
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        
+        log(`[TMDB] 成功获取图片数据 - Logos: ${data.logos?.length || 0}, Backdrops: ${data.backdrops?.length || 0}`, 'debug');
+        
+        return data;
+    } catch (error) {
+        console.error('[TMDB] 获取媒体图片失败:', error);
+        return null;
+    }
+}
+
+// 智能图片选择算法
+function selectBestImage(images, preferLogos = false) {
+    if (!images || images.length === 0) {
+        return null;
+    }
+
+    // 计算图片优先级得分
+    function calculateScore(image) {
+        let score = 0;
+        
+        // 语言优先级：中文 > 英文 > 无语言 > 其他
+        const lang = image.iso_639_1;
+        if (lang === 'zh') {
+            score += 1000;
+        } else if (lang === 'en') {
+            score += 800;
+        } else if (!lang) {
+            score += 600;
+        } else {
+            score += 400;
+        }
+        
+        // 评分权重
+        const voteAvg = image.vote_average || 0;
+        score += voteAvg * 100;
+        
+        // 分辨率权重
+        const width = image.width || 0;
+        const height = image.height || 0;
+        const resolution = width * height;
+        score += Math.log(resolution + 1) * 10;
+        
+        // 对于Logo，考虑宽高比
+        if (preferLogos) {
+            const aspectRatio = width / Math.max(height, 1);
+            // 偏好横向Logo (2:1 到 3:1 比例)
+            if (aspectRatio >= 2.0 && aspectRatio <= 3.5) {
+                score += 200;
+            } else if (aspectRatio >= 1.5 && aspectRatio <= 4.0) {
+                score += 100;
+            }
+        }
+        
+        return score;
+    }
+
+    // 按得分排序并返回最佳图片
+    const sortedImages = images
+        .map(image => ({
+            ...image,
+            score: calculateScore(image)
+        }))
+        .sort((a, b) => b.score - a.score);
+
+    log(`[图片选择] 选择了评分最高的图片 (得分: ${sortedImages[0].score}, 语言: ${sortedImages[0].iso_639_1}, 尺寸: ${sortedImages[0].width}x${sortedImages[0].height})`, 'debug');
+    
+    return sortedImages[0];
+}
+
 // 创建带标题覆盖的横版海报
 async function createTitlePosterWithOverlay(item, options = {}) {
     try {
@@ -2124,14 +2295,31 @@ async function createTitlePosterWithOverlay(item, options = {}) {
             backgroundColor = "rgba(0, 0, 0, 0.6)"
         } = options;
         
-        // 获取背景图片
+        // 获取背景图片 - 增强版：支持剧集Logo
         let backgroundUrl = "";
-        if (item.backdrop_path) {
-            backgroundUrl = `https://image.tmdb.org/t/p/w1280${item.backdrop_path}`;
-        } else if (item.poster_path) {
-            backgroundUrl = `https://image.tmdb.org/t/p/w500${item.poster_path}`;
-        } else {
-            return null;
+        let imageType = "backdrop";
+        
+                 // 对于剧集，优先尝试获取Logo
+         if (CONFIG.ENABLE_TV_LOGOS && (item.type === 'tv' || item.media_type === 'tv')) {
+             const logoBackdrop = await getTvShowLogoBackdrop(item);
+             if (logoBackdrop && logoBackdrop.url) {
+                 backgroundUrl = logoBackdrop.url;
+                 imageType = logoBackdrop.type;
+                 log(`[剧集Logo] 使用Logo作为背景: ${item.title || item.name}`, 'info');
+             }
+         }
+        
+        // 如果没有Logo或不是剧集，使用原有逻辑
+        if (!backgroundUrl) {
+            if (item.backdrop_path) {
+                backgroundUrl = `https://image.tmdb.org/t/p/w1280${item.backdrop_path}`;
+                imageType = "backdrop";
+            } else if (item.poster_path) {
+                backgroundUrl = `https://image.tmdb.org/t/p/w500${item.poster_path}`;
+                imageType = "poster";
+            } else {
+                return null;
+            }
         }
         
         // 创建带标题覆盖的横版海报
@@ -2139,7 +2327,7 @@ async function createTitlePosterWithOverlay(item, options = {}) {
             url: backgroundUrl,
             width: 1280,
             height: 720,
-            type: "backdrop_with_title",
+            type: imageType === "tv_logo" ? "tv_logo_with_title" : "backdrop_with_title",
             title: title,
             subtitle: subtitle,
             rating: rating,
@@ -6160,6 +6348,116 @@ function createEnhancedWidgetItem(item) {
   
   console.log(`[增强项目] ${result.title} - 标题海报: ${result.backdropPath ? '✅' : '❌'} - 分类: ${result.category} - 中国优化: 是`);
   return result;
+}
+
+// =============== 剧集Logo功能测试 ===============
+
+// 测试剧集Logo获取功能
+async function testTvLogoFunctionality() {
+    console.log('🧪 开始测试剧集Logo功能...');
+    
+    // 测试剧集数据
+    const testTvShows = [
+        { id: 1399, title: '权力的游戏', name: 'Game of Thrones', type: 'tv', media_type: 'tv' },
+        { id: 1396, title: '绝命毒师', name: 'Breaking Bad', type: 'tv', media_type: 'tv' },
+        { id: 66732, title: '怪奇物语', name: 'Stranger Things', type: 'tv', media_type: 'tv' }
+    ];
+
+    console.log(`📺 测试 ${testTvShows.length} 个知名剧集的Logo获取:`);
+    
+    for (const show of testTvShows) {
+        try {
+            console.log(`\n🎭 ${show.title} (ID: ${show.id})`);
+            
+            const startTime = Date.now();
+            const logoBackdrop = await getTvShowLogoBackdrop(show);
+            const duration = Date.now() - startTime;
+            
+            if (logoBackdrop) {
+                console.log(`   ✅ 成功获取: ${logoBackdrop.type}`);
+                console.log(`   🔗 URL: ${logoBackdrop.url}`);
+                console.log(`   📐 尺寸: ${logoBackdrop.width}x${logoBackdrop.height}`);
+                console.log(`   🌐 语言: ${logoBackdrop.language || '无'}`);
+                console.log(`   ⏱️ 耗时: ${duration}ms`);
+            } else {
+                console.log(`   ❌ 未找到Logo背景图`);
+            }
+            
+        } catch (error) {
+            console.error(`   ❌ 获取失败: ${error.message}`);
+        }
+    }
+    
+    // 显示缓存统计
+    console.log('\n📊 缓存统计:');
+    logCacheStats();
+    
+    console.log('\n🎉 剧集Logo功能测试完成!');
+}
+
+// 测试图片选择算法
+function testImageSelectionAlgorithm() {
+    console.log('\n🔍 测试图片选择算法');
+    
+    // 模拟图片数据
+    const mockLogos = [
+        {
+            file_path: '/logo_zh_high.png',
+            vote_average: 9.5,
+            width: 800,
+            height: 320,
+            iso_639_1: 'zh'
+        },
+        {
+            file_path: '/logo_en_medium.png',
+            vote_average: 8.0,
+            width: 600,
+            height: 240,
+            iso_639_1: 'en'
+        },
+        {
+            file_path: '/logo_zh_low.png',
+            vote_average: 7.0,
+            width: 400,
+            height: 400,
+            iso_639_1: 'zh'
+        }
+    ];
+    
+    console.log('📋 测试数据:');
+    mockLogos.forEach((logo, i) => {
+        const aspectRatio = logo.width / logo.height;
+        console.log(`   ${i + 1}. 语言:${logo.iso_639_1} 评分:${logo.vote_average} 尺寸:${logo.width}×${logo.height} 比例:${aspectRatio.toFixed(1)}:1`);
+    });
+    
+    const bestLogo = selectBestImage(mockLogos, true);
+    console.log(`\n🏆 选择结果: ${bestLogo.file_path}`);
+    console.log(`   原因: 中文语言 + 高评分 + 适合的宽高比`);
+}
+
+// 功能开关控制
+function toggleTvLogoFeature(enabled) {
+    CONFIG.ENABLE_TV_LOGOS = enabled;
+    console.log(`[剧集Logo] 功能已${enabled ? '启用' : '禁用'}`);
+    return CONFIG.ENABLE_TV_LOGOS;
+}
+
+// 清除剧集Logo缓存
+function clearTvLogoCache() {
+    tvLogoLRUCache.clear();
+    console.log('[剧集Logo] 缓存已清除');
+}
+
+// 导出测试函数（如果在Node.js环境）
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = {
+        testTvLogoFunctionality,
+        testImageSelectionAlgorithm,
+        toggleTvLogoFeature,
+        clearTvLogoCache,
+        getTvShowLogoBackdrop,
+        selectBestImage
+    };
 }
 
 
