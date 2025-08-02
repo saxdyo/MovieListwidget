@@ -879,8 +879,9 @@ WidgetMetadata = {
           title: "🎭内容类型",
           type: "enumeration",
           description: "选择要筛选的内容类型",
-          value: "movie",
+          value: "all",
           enumOptions: [
+            { title: "全部", value: "all" },
             { title: "电影", value: "movie" },
             { title: "剧集", value: "tv" }
           ]
@@ -3430,10 +3431,48 @@ async function tmdbDiscoverByNetwork(params = {}) {
 
 // 获取出品公司内容
 async function tmdbDiscoverByCompany(params = {}) {
-  const { language = "zh-CN", page = 1, with_companies, type = "movie", with_genres, sort_by = "popularity.desc" } = params;
+  const { language = "zh-CN", page = 1, with_companies, type = "all", with_genres, sort_by = "popularity.desc" } = params;
+  
+  try {
+    console.log(`[出品公司] 开始获取${type === "all" ? "电影和剧集" : type === "movie" ? "电影" : "剧集"}数据...`);
+    
+    let allResults = [];
+    
+    // 如果选择"全部"，则同时获取电影和剧集
+    if (type === "all") {
+      console.log(`[出品公司] 获取电影数据...`);
+      const movieResults = await fetchCompanyContent("movie", params);
+      console.log(`[出品公司] 电影数据获取完成: ${movieResults.length}项`);
+      
+      console.log(`[出品公司] 获取剧集数据...`);
+      const tvResults = await fetchCompanyContent("tv", params);
+      console.log(`[出品公司] 剧集数据获取完成: ${tvResults.length}项`);
+      
+      // 合并结果并按评分排序
+      allResults = [...movieResults, ...tvResults];
+      allResults.sort((a, b) => (b.vote_average || 0) - (a.vote_average || 0));
+      
+      console.log(`[出品公司] 合并完成，总计: ${allResults.length}项`);
+    } else {
+      // 获取单一类型数据
+      allResults = await fetchCompanyContent(type, params);
+    }
+    
+    return allResults;
+    
+  } catch (error) {
+    console.error("Error fetching discover by company:", error);
+    return [];
+  }
+}
+
+// 辅助函数：获取指定类型的内容
+async function fetchCompanyContent(contentType, params) {
+  const { language = "zh-CN", page = 1, with_companies, with_genres, sort_by = "popularity.desc" } = params;
+  
   try {
     // 构建API端点
-    const endpoint = type === "movie" ? "/discover/movie" : "/discover/tv";
+    const endpoint = contentType === "movie" ? "/discover/movie" : "/discover/tv";
     
     // 构建查询参数
     const queryParams = { 
@@ -3459,11 +3498,20 @@ async function tmdbDiscoverByCompany(params = {}) {
     });
     
     const genreMap = await fetchTmdbGenres();
-    return res.results
-      .map(item => formatTmdbItem(item, genreMap[type]))
-      .filter(item => item.posterPath); // 出品公司
+    const results = res.results
+      .map(item => {
+        const formattedItem = formatTmdbItem(item, genreMap[contentType]);
+        // 添加媒体类型标识
+        formattedItem.media_type = contentType;
+        formattedItem.type = contentType;
+        return formattedItem;
+      })
+      .filter(item => item.posterPath);
+    
+    return results;
+    
   } catch (error) {
-    console.error("Error fetching discover by company:", error);
+    console.error(`Error fetching ${contentType} content:`, error);
     return [];
   }
 }
