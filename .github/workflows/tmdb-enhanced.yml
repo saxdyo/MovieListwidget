@@ -1,0 +1,138 @@
+name: TMDB Enhanced Data Collection
+on:
+  schedule:
+    - cron: "*/30 * * * *"  # 每30分钟运行一次
+  workflow_dispatch:  # 允许手动触发
+  push:
+    paths:
+      - 'scripts/get_tmdb_data_enhanced.py'
+      - 'requirements.txt'
+
+permissions:
+  contents: write
+
+jobs:
+  run-enhanced-script:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30  # 增加超时时间
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          
+      - name: Cache pip dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+            
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          
+      - name: Run Enhanced Python script
+        env:
+          TMDB_API_KEY: ${{ secrets.TMDB_API_KEY }}
+        run: |
+          echo "🔄 开始运行 get_tmdb_data_enhanced.py..."
+          python scripts/get_tmdb_data_enhanced.py
+          echo "✅ get_tmdb_data_enhanced.py 运行完成"
+          
+      - name: Check for changes in JSON file
+        id: check_changes
+        run: |
+          if ! git diff --quiet -- data/TMDB_Trending.json; then
+            echo "changes_detected=true" >> $GITHUB_OUTPUT
+            echo "📝 检测到数据文件变化"
+          else
+            echo "changes_detected=false" >> $GITHUB_OUTPUT
+            echo "ℹ️ 未检测到数据文件变化"
+          fi
+          
+      - name: Configure Git
+        if: steps.check_changes.outputs.changes_detected == 'true'
+        run: |
+          git config --global user.name "GitHub Actions Bot"
+          git config --global user.email "actions@github.com"
+          git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
+          
+      - name: Commit and push changes with retry
+        if: steps.check_changes.outputs.changes_detected == 'true'
+        run: |
+          git add data/TMDB_Trending.json
+          git commit -m "🤖 Auto-update TMDB Enhanced Data: $(TZ=Asia/Shanghai date +%Y-%m-%d_%H:%M:%S)
+          
+          - Enhanced with logo backgrounds and title backdrops
+          - Improved poster quality selection
+          - Added metadata tracking"
+          
+          for i in {1..3}; do
+            echo "🔄 尝试推送 (第 $i 次)..."
+            
+            if git pull origin main --rebase --autostash; then
+              echo "✅ 成功同步远程更改"
+            else
+              echo "⚠️ 同步远程更改失败，尝试重置..."
+              git rebase --abort 2>/dev/null || true
+              git reset --hard HEAD~1
+              git pull origin main
+              git add data/TMDB_Trending.json
+              git commit -m "🤖 Auto-update TMDB Enhanced Data: $(TZ=Asia/Shanghai date +%Y-%m-%d_%H:%M:%S)"
+            fi
+            
+            if git push origin main; then
+              echo "✅ 数据文件已成功更新并推送"
+              break
+            else
+              echo "❌ 推送失败"
+              if [ $i -eq 3 ]; then
+                echo "🚨 所有推送尝试都失败了"
+                exit 1
+              else
+                echo "⏳ 等待 10 秒后重试..."
+                sleep 10
+              fi
+            fi
+          done
+          
+      - name: Notify if no changes
+        if: steps.check_changes.outputs.changes_detected == 'false'
+        run: echo "ℹ️ 未检测到数据文件变化，跳过提交"
+        
+      - name: Show file statistics
+        run: |
+          if [ -f "data/TMDB_Trending.json" ]; then
+            echo "📊 数据文件统计:"
+            echo "文件大小: $(ls -lh data/TMDB_Trending.json | awk '{print $5}')"
+            echo "最后修改: $(stat -c %y data/TMDB_Trending.json)"
+            
+            # 使用Python读取并显示统计信息
+            python3 -c "
+import json
+try:
+    with open('data/TMDB_Trending.json', 'r', encoding='utf-8') as f:
+        data = json.load(f)
+    
+    metadata = data.get('metadata', {})
+    print(f'版本: {metadata.get(\"version\", \"unknown\")}')
+    print(f'总项目数: {metadata.get(\"total_items\", 0)}')
+    print(f'Logo数量: {metadata.get(\"logos_count\", 0)}')
+    print(f'背景图数量: {metadata.get(\"backdrops_count\", 0)}')
+    print(f'API密钥配置: {metadata.get(\"api_key_configured\", False)}')
+    print(f'最后更新: {data.get(\"last_updated\", \"unknown\")}')
+except Exception as e:
+    print(f'读取统计信息失败: {e}')
+"
+          else
+            echo "❌ 数据文件不存在"
+          fi
