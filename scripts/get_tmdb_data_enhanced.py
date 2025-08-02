@@ -121,8 +121,8 @@ def get_best_title_backdrop(image_data):
     best_backdrop = sorted_backdrops[0]
     return get_image_url(best_backdrop["file_path"])
 
-def get_best_logo(image_data):
-    """获取最佳logo"""
+def get_best_logo(image_data, media_type="movie"):
+    """获取最佳logo，特别优化剧集logo获取"""
     logos = image_data.get("logos", [])
     
     if not logos:
@@ -130,6 +130,8 @@ def get_best_logo(image_data):
     
     def get_logo_priority_score(logo):
         lang = logo.get("iso_639_1")
+        
+        # 语言优先级
         if lang == "zh":
             lang_score = 0
         elif lang == "en":
@@ -139,12 +141,26 @@ def get_best_logo(image_data):
         else:
             lang_score = 3
         
+        # 评分优先级
         vote_avg = -logo.get("vote_average", 0)
+        
+        # 尺寸优先级
         width = logo.get("width", 0)
         height = logo.get("height", 0)
         resolution = -(width * height)
         
-        return (lang_score, vote_avg, resolution)
+        # 对于剧集，优先选择透明背景的logo
+        if media_type == "tv":
+            # 检查文件名是否包含透明相关关键词
+            file_path = logo.get("file_path", "").lower()
+            if "transparent" in file_path or "png" in file_path:
+                transparency_bonus = -1
+            else:
+                transparency_bonus = 0
+        else:
+            transparency_bonus = 0
+        
+        return (lang_score, transparency_bonus, vote_avg, resolution)
     
     sorted_logos = sorted(logos, key=get_logo_priority_score)
     best_logo = sorted_logos[0]
@@ -180,7 +196,7 @@ def get_best_poster(image_data):
     return get_image_url(best_poster["file_path"])
 
 def process_tmdb_data(data, time_window, media_type):
-    """处理TMDB数据"""
+    """处理TMDB数据，特别优化剧集logo背景图"""
     results = []
     
     for item in data.get("results", []):
@@ -207,7 +223,9 @@ def process_tmdb_data(data, time_window, media_type):
         # 获取图片数据
         image_data = get_media_images(item_type, media_id)
         title_backdrop_url = get_best_title_backdrop(image_data)
-        logo_url = get_best_logo(image_data)
+        
+        # 特别优化剧集logo获取
+        logo_url = get_best_logo(image_data, item_type)
         enhanced_poster_url = get_best_poster(image_data) or poster_url
 
         # 跳过人物类型
@@ -224,6 +242,11 @@ def process_tmdb_data(data, time_window, media_type):
         # 添加延迟避免API限制
         time.sleep(0.1)
 
+        # 特别标记剧集logo状态
+        logo_status = "✅" if logo_url else "❌"
+        if item_type == "tv":
+            print(f"📺 剧集 '{title}' Logo状态: {logo_status}")
+
         results.append({
             "id": media_id,
             "title": title,
@@ -235,7 +258,8 @@ def process_tmdb_data(data, time_window, media_type):
             "poster_url": enhanced_poster_url,
             "title_backdrop": title_backdrop_url,
             "logo_url": logo_url,
-            "original_poster": poster_url
+            "original_poster": poster_url,
+            "has_logo": bool(logo_url)  # 添加logo状态标记
         })
     
     return results
@@ -249,7 +273,7 @@ def save_to_json(data, filepath):
         json.dump(data, f, ensure_ascii=False, indent=2)
 
 def print_trending_results(results, section_title):
-    """打印趋势结果"""
+    """打印趋势结果，特别显示剧集logo状态"""
     print("")
     print(f"================= {section_title}  =================")
     
@@ -261,12 +285,41 @@ def print_trending_results(results, section_title):
         has_logo = "✅" if item.get("logo_url") else "❌"
         has_backdrop = "✅" if item.get("title_backdrop") else "❌"
         
-        print(f"{i:2d}. {title} ({item_type}) 评分: {rating} | {genre_title}")
+        # 特别标记剧集
+        type_icon = "📺" if item_type == "tv" else "🎬" if item_type == "movie" else "👤"
+        
+        print(f"{i:2d}. {type_icon} {title} ({item_type}) 评分: {rating} | {genre_title}")
         print(f"    Logo: {has_logo} Backdrop: {has_backdrop}")
+
+def analyze_logo_coverage(results):
+    """分析logo覆盖率，特别关注剧集"""
+    total_items = len(results)
+    total_logos = sum(1 for item in results if item.get("logo_url"))
+    
+    # 按类型分析
+    movies = [item for item in results if item.get("type") == "movie"]
+    tv_shows = [item for item in results if item.get("type") == "tv"]
+    
+    movie_logos = sum(1 for item in movies if item.get("logo_url"))
+    tv_logos = sum(1 for item in tv_shows if item.get("logo_url"))
+    
+    print(f"\n📊 Logo覆盖率分析:")
+    print(f"   总计: {total_logos}/{total_items} ({total_logos/total_items*100:.1f}%)")
+    print(f"   电影: {movie_logos}/{len(movies)} ({movie_logos/len(movies)*100:.1f}%)" if movies else "   电影: 0/0")
+    print(f"   剧集: {tv_logos}/{len(tv_shows)} ({tv_logos/len(tv_shows)*100:.1f}%)" if tv_shows else "   剧集: 0/0")
+    
+    return {
+        "total_items": total_items,
+        "total_logos": total_logos,
+        "movie_logos": movie_logos,
+        "tv_logos": tv_logos,
+        "movies_count": len(movies),
+        "tv_shows_count": len(tv_shows)
+    }
 
 def main():
     """主函数"""
-    print("=== 开始执行TMDB增强数据获取 ===")
+    print("=== 开始执行TMDB增强数据获取（剧集Logo优化版） ===")
     
     if not TMDB_API_KEY:
         beijing_timezone = timezone(timedelta(hours=8))
@@ -282,8 +335,8 @@ def main():
             "week_global_all": [],
             "popular_movies": [],
             "metadata": {
-                "version": "2.0",
-                "features": ["logo_background", "enhanced_posters", "title_backdrops"],
+                "version": "2.1",
+                "features": ["logo_background", "enhanced_posters", "title_backdrops", "tv_logo_optimization"],
                 "total_items": 0
             }
         }
@@ -311,10 +364,9 @@ def main():
 
     print(f"✅ 热门数据获取时间: {last_updated}")
 
-    # 统计信息
-    total_items = len(today_processed) + len(week_processed) + len(popular_processed)
-    logos_count = sum(1 for item in today_processed + week_processed + popular_processed if item.get("logo_url"))
-    backdrops_count = sum(1 for item in today_processed + week_processed + popular_processed if item.get("title_backdrop"))
+    # 分析logo覆盖率
+    all_results = today_processed + week_processed + popular_processed
+    logo_stats = analyze_logo_coverage(all_results)
 
     print_trending_results(today_processed, "今日热门")
     print_trending_results(week_processed, "本周热门")
@@ -328,12 +380,17 @@ def main():
         "week_global_all": week_processed,
         "popular_movies": popular_processed,
         "metadata": {
-            "version": "2.0",
-            "features": ["logo_background", "enhanced_posters", "title_backdrops"],
-            "total_items": total_items,
-            "logos_count": logos_count,
-            "backdrops_count": backdrops_count,
-            "api_key_configured": bool(TMDB_API_KEY)
+            "version": "2.1",
+            "features": ["logo_background", "enhanced_posters", "title_backdrops", "tv_logo_optimization"],
+            "total_items": logo_stats["total_items"],
+            "logos_count": logo_stats["total_logos"],
+            "backdrops_count": sum(1 for item in all_results if item.get("title_backdrop")),
+            "api_key_configured": bool(TMDB_API_KEY),
+            "logo_coverage": {
+                "total": f"{logo_stats['total_logos']}/{logo_stats['total_items']}",
+                "movies": f"{logo_stats['movie_logos']}/{logo_stats['movies_count']}",
+                "tv_shows": f"{logo_stats['tv_logos']}/{logo_stats['tv_shows_count']}"
+            }
         }
     }
 
@@ -342,9 +399,10 @@ def main():
     print("")
     print("================= 执行完成 =================")
     print(f"📊 统计信息:")
-    print(f"   总项目数: {total_items}")
-    print(f"   包含Logo: {logos_count}")
-    print(f"   包含背景图: {backdrops_count}")
+    print(f"   总项目数: {logo_stats['total_items']}")
+    print(f"   包含Logo: {logo_stats['total_logos']}")
+    print(f"   电影Logo: {logo_stats['movie_logos']}/{logo_stats['movies_count']}")
+    print(f"   剧集Logo: {logo_stats['tv_logos']}/{logo_stats['tv_shows_count']}")
     print(f"   数据文件: {SAVE_PATH}")
 
 if __name__ == "__main__":
