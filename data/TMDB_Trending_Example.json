@@ -1,5 +1,5 @@
 {
-  "last_updated": "2025-08-02 13:44:47",
+  "last_updated": "2024-01-15 14:30:00",
   "today_global": [
     {
       "id": 550,
@@ -52,6 +52,18 @@
       "poster_url": "https://image.tmdb.org/t/p/original/7WsyChQLEftFiDOVTGkv3hFpyyt.jpg",
       "title_backdrop": "https://image.tmdb.org/t/p/original/example_backdrop_3.jpg",
       "logo_url": "https://image.tmdb.org/t/p/original/example_logo_3.png"
+    },
+    {
+      "id": 550,
+      "title": "搏击俱乐部",
+      "type": "movie",
+      "genreTitle": "剧情•惊悚",
+      "rating": 8.8,
+      "release_date": "1999-10-15",
+      "overview": "一个失眠的上班族遇到了一个肥皂商，两人建立了地下搏击俱乐部，但事情开始失控...",
+      "poster_url": "https://image.tmdb.org/t/p/original/pB8BM7pdSp6B6Ih7QZ4DrQ3PmJK.jpg",
+      "title_backdrop": "https://image.tmdb.org/t/p/original/example_backdrop.jpg",
+      "logo_url": "https://image.tmdb.org/t/p/original/example_logo.png"
     }
   ]
 }
