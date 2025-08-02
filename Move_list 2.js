@@ -1367,7 +1367,15 @@ async function loadTmdbTrendingData() {
         logger.time('trending_data_load');
         logger.log("开始获取TMDB热门数据...", 'info', 'DATA');
         
-        // 1. 最高优先级：尝试获取最新数据包
+        // 1. 优先使用定时更新的缓存数据
+        const cachedData = getCachedTrendingData();
+        if (cachedData && isDataFresh(cachedData)) {
+            logger.log("使用定时更新的缓存数据", 'info', 'CACHE');
+            logger.timeEnd('trending_data_load');
+            return cachedData;
+        }
+        
+        // 2. 尝试获取最新数据包
         const data = await fetchSimpleData();
         if (data) {
             logger.log("成功获取数据包", 'info', 'DATA');
@@ -1375,14 +1383,6 @@ async function loadTmdbTrendingData() {
             cacheTrendingData(data);
             logger.timeEnd('trending_data_load');
             return data;
-        }
-        
-        // 2. 备用方案：使用定时更新的缓存数据
-        const cachedData = getCachedTrendingData();
-        if (cachedData && isDataFresh(cachedData)) {
-            logger.log("使用定时更新的缓存数据", 'info', 'CACHE');
-            logger.timeEnd('trending_data_load');
-            return cachedData;
         }
         
         // 3. 备用方案：使用实时API
@@ -1707,8 +1707,7 @@ async function loadEnhancedTitlePosterWithBackdrops(items, maxItems = 30, conten
             title: backdrop.title,
             posterPath: backdrop.backdropUrl,
             titlePoster: backdrop.titlePoster,
-            metadata: backdrop.metadata,
-            mediaType: backdrop.mediaType || backdrop.media_type || (backdrop.name && !backdrop.title ? "tv" : "movie")
+            metadata: backdrop.metadata
         }));
     } else {
         // 如果没有缓存的横版标题海报，立即生成
@@ -1737,8 +1736,7 @@ async function loadEnhancedTitlePosterWithBackdrops(items, maxItems = 30, conten
                 title: item.title,
                 posterPath: item.backdropUrl,
                 titlePoster: item.titlePoster,
-                metadata: item.metadata,
-                mediaType: item.mediaType || item.media_type || (item.name && !item.title ? "tv" : "movie")
+                metadata: item.metadata
             }));
         } else {
             // 如果生成失败，使用普通数据
@@ -2240,7 +2238,7 @@ async function processItemsWithTitlePosters(items, category) {
                 title: pickEnhancedChineseTitle(item),
                 subtitle: item.genreTitle || item.genre_title || "",
                 rating: item.rating || item.vote_average || 0,
-                year: item.year || (item.release_date ? item.release_date.substring(0, 4) : "") || (item.first_air_date ? item.first_air_date.substring(0, 4) : ""),
+                year: item.year || (item.release_date ? item.release_date.substring(0, 4) : ""),
                 showRating: true,
                 showYear: true
             });
@@ -2324,7 +2322,7 @@ async function createTitlePosterWithOverlay(item, options = {}) {
             title = item.title || item.name || "未知标题",
             subtitle = item.genreTitle || item.genre_title || "",
             rating = item.rating || item.vote_average || 0,
-            year = item.year || (item.release_date ? item.release_date.substring(0, 4) : "") || (item.first_air_date ? item.first_air_date.substring(0, 4) : ""),
+            year = item.year || (item.release_date ? item.release_date.substring(0, 4) : ""),
             showRating = true,
             showYear = true,
             overlayOpacity = 0.7,
@@ -2338,19 +2336,8 @@ async function createTitlePosterWithOverlay(item, options = {}) {
             backgroundUrl = `https://image.tmdb.org/t/p/w1280${item.backdrop_path}`;
         } else if (item.poster_path) {
             backgroundUrl = `https://image.tmdb.org/t/p/w500${item.poster_path}`;
-        } else if (item.backdropPath) {
-            backgroundUrl = item.backdropPath;
-        } else if (item.posterPath) {
-            backgroundUrl = item.posterPath;
         } else {
-            console.log(`[标题海报] 项目 ${title} 没有背景图片，跳过生成`);
-            // 如果强制生成，使用默认背景
-            if (options.forceGenerate) {
-                backgroundUrl = "https://via.placeholder.com/1280x720/2c3e50/ffffff?text=No+Image";
-                console.log(`[标题海报] 使用默认背景图片`);
-            } else {
-                return null;
-            }
+            return null;
         }
         
         // 创建带标题覆盖的横版海报
@@ -2371,18 +2358,6 @@ async function createTitlePosterWithOverlay(item, options = {}) {
         };
         
         console.log(`[横版海报] 生成带标题的横版海报: ${title}`);
-        console.log(`[横版海报] 背景URL: ${backgroundUrl}`);
-        console.log(`[横版海报] 项目数据:`, {
-            title: item.title || item.name,
-            backdrop_path: item.backdrop_path,
-            poster_path: item.poster_path,
-            backdropPath: item.backdropPath,
-            posterPath: item.posterPath,
-            first_air_date: item.first_air_date,
-            release_date: item.release_date,
-            media_type: item.media_type,
-            mediaType: item.mediaType
-        });
         return titlePoster;
     } catch (error) {
         console.error("[标题海报] 创建带覆盖的标题海报时出错:", error);
@@ -2667,16 +2642,14 @@ class OptimizedImageManager {
     
     // 根据类型选择最佳尺寸
     if (!size) {
-      size = type === 'poster' ? 'w500' : 'w1280';
+      size = type === 'poster' ? CONFIG.IMAGE.DEFAULT_POSTER_SIZE : CONFIG.IMAGE.DEFAULT_BACKDROP_SIZE;
     }
     
-    // 确保路径以/开头
-    const cleanPath = path.startsWith('/') ? path : `/${path}`;
-    
-    // 构建完整URL
+    // 优化CDN选择
+    const cdn = this.selectBestCDN(size, type);
     const baseUrl = `https://image.tmdb.org/t/p/${size}`;
     
-    return `${baseUrl}${cleanPath}`;
+    return `${baseUrl}${path}`;
   }
   
   selectBestCDN(size, type) {
@@ -3204,9 +3177,7 @@ async function loadTmdbTrendingCombined(params = {}) {
         // 尝试多个数据源
         const todayData = await loadTmdbTrendingData();
         if (todayData && todayData.today_global && todayData.today_global.length > 0) {
-          // 为数据添加标题海报功能
-          const enhancedData = await enhanceDataWithTitlePosters(todayData);
-          results = enhancedData.today_global.map(item => createEnhancedWidgetItem(item));
+          results = todayData.today_global.map(item => createEnhancedWidgetItem(item));
           console.log(`[TMDB热门内容] 从缓存获取今日热门: ${results.length}项`);
         }
         
@@ -3255,9 +3226,7 @@ async function loadTmdbTrendingCombined(params = {}) {
         
         const weekData = await loadTmdbTrendingData();
         if (weekData && weekData.week_global_all && weekData.week_global_all.length > 0) {
-          // 为数据添加标题海报功能
-          const enhancedData = await enhanceDataWithTitlePosters(weekData);
-          results = enhancedData.week_global_all.map(item => createEnhancedWidgetItem(item));
+          results = weekData.week_global_all.map(item => createEnhancedWidgetItem(item));
           console.log(`[TMDB热门内容] 从缓存获取本周热门: ${results.length}项`);
         }
         
@@ -3654,49 +3623,12 @@ async function loadTmdbTitlePosterTrending(params = {}) {
             }
             return true;
           });
-          console.log(`[标题海报] 媒体类型过滤后: ${results.length}项 (${media_type})`);
         }
-        
-        // 确保所有项目都有正确的媒体类型信息
-        results = results.map(item => {
-          // 确保 mediaType 字段存在
-          if (!item.mediaType) {
-            if (item.media_type) {
-              item.mediaType = item.media_type;
-            } else if (item.name && !item.title) {
-              item.mediaType = "tv";
-            } else {
-              item.mediaType = "movie";
-            }
-          }
-          
-          // 确保标题字段正确
-          if (!item.title && item.name) {
-            item.title = item.name;
-          }
-          
-          // 确保年份字段正确
-          if (!item.year) {
-            if (item.release_date) {
-              item.year = item.release_date.substring(0, 4);
-            } else if (item.first_air_date) {
-              item.year = item.first_air_date.substring(0, 4);
-            }
-          }
-          
-          return item;
-        });
         
         // 限制返回数量
         results = results.slice(0, max_items);
         
         console.log(`[标题海报] 最终返回: ${results.length}项`);
-        console.log(`[标题海报] 媒体类型分布:`, {
-          movie: results.filter(item => item.mediaType === "movie").length,
-          tv: results.filter(item => item.mediaType === "tv").length,
-          all: results.length
-        });
-        
         return results;
         
     } catch (error) {
@@ -5026,21 +4958,19 @@ async function batchProcessBackdrops(items, options = {}) {
                     title: item.title || item.name,
                     subtitle: item.genreTitle || item.genre_title || "",
                     rating: item.vote_average || item.rating || 0,
-                    year: item.year || (item.release_date ? item.release_date.substring(0, 4) : "") || (item.first_air_date ? item.first_air_date.substring(0, 4) : ""),
+                    year: item.release_date ? item.release_date.substring(0, 4) : (item.first_air_date ? item.first_air_date.substring(0, 4) : ""),
                     showRating: true,
                     showYear: true,
                     overlayOpacity: 0.7,
                     textColor: "#FFFFFF",
-                    backgroundColor: "rgba(0, 0, 0, 0.6)",
-                    mediaType: item.mediaType || item.media_type || (item.name && !item.title ? "tv" : "movie")
+                    backgroundColor: "rgba(0, 0, 0, 0.6)"
                 });
                 
                 const result = {
                     id: item.id,
                     title: item.title || item.name,
                     backdropUrl: createSmartBackdropUrl(item, preferredSize),
-                    titlePoster: titlePoster,
-                    mediaType: item.mediaType || item.media_type || (item.name && !item.title ? "tv" : "movie")
+                    titlePoster: titlePoster
                 };
                 
                 if (includeMetadata) {
@@ -5048,7 +4978,7 @@ async function batchProcessBackdrops(items, options = {}) {
                         title: item.title || item.name,
                         year: item.release_date ? item.release_date.substring(0, 4) : (item.first_air_date ? item.first_air_date.substring(0, 4) : ""),
                         rating: item.vote_average || item.rating || 0,
-                        mediaType: item.mediaType || item.media_type || (item.name && !item.title ? "tv" : "movie")
+                        mediaType: item.media_type || item.type
                     };
                 }
                 
@@ -6568,35 +6498,15 @@ function createEnhancedWidgetItem(item) {
   const posterUrl = item.poster_url || item.poster_path || "";
   const backdropUrl = titleBackdropUrl || item.title_backdrop || item.backdrop_path || "";
   
-  // 安全地处理海报URL
-  let processedPosterUrl = "";
-  if (posterUrl && posterUrl.trim() !== "") {
-    if (posterUrl.startsWith('https://image.tmdb.org/t/p/')) {
-      processedPosterUrl = createSmartImageUrl(posterUrl.replace('https://image.tmdb.org/t/p/w500', ''), 'poster', 'w342');
-    } else {
-      processedPosterUrl = posterUrl;
-    }
-  }
-  
-  // 安全地处理背景URL
-  let processedBackdropUrl = "";
-  if (backdropUrl && backdropUrl.trim() !== "") {
-    if (backdropUrl.startsWith('https://image.tmdb.org/t/p/')) {
-      processedBackdropUrl = createSmartImageUrl(backdropUrl.replace('https://image.tmdb.org/t/p/w1280', ''), 'backdrop', 'w780');
-    } else {
-      processedBackdropUrl = backdropUrl;
-    }
-  }
-  
   const result = {
     id: item.id,
     type: "tmdb",
     title: displayTitle,
     description: processEnhancedOverview(item.overview),
     releaseDate: item.release_date || item.first_air_date || "未知日期",
-    posterPath: processedPosterUrl,
-    coverUrl: processedPosterUrl,
-    backdropPath: processedBackdropUrl,
+    posterPath: posterUrl ? createSmartImageUrl(posterUrl.replace('https://image.tmdb.org/t/p/w500', ''), 'poster', 'w342') : posterUrl,
+    coverUrl: posterUrl ? createSmartImageUrl(posterUrl.replace('https://image.tmdb.org/t/p/w500', ''), 'poster', 'w342') : posterUrl,
+    backdropPath: backdropUrl ? createSmartImageUrl(backdropUrl.replace('https://image.tmdb.org/t/p/w1280', ''), 'backdrop', 'w780') : backdropUrl,
     backdropHD: item.title_backdrop_hd || item.backdrop_hd || "",
     backdrop780: item.backdrop_w780 || "",
     rating: item.vote_average ? item.vote_average.toFixed(1) : "无评分",
@@ -6615,346 +6525,3 @@ function createEnhancedWidgetItem(item) {
   console.log(`[增强项目] ${result.title} - 标题海报: ${result.backdropPath ? '✅' : '❌'} - 分类: ${result.category} - 中国优化: 是`);
   return result;
 }
-
-// 调试标题海报问题
-async function debugTitlePosterIssue() {
-    console.log("=== 调试标题海报问题 ===");
-    
-    try {
-        // 1. 检查热门数据
-        console.log("1. 获取热门数据...");
-        const trendingData = await loadTmdbTrendingData();
-        
-        if (trendingData && trendingData.today_global) {
-            console.log(`获取到 ${trendingData.today_global.length} 个今日热门项目`);
-            
-            // 检查前3个项目
-            const sampleItems = trendingData.today_global.slice(0, 3);
-            sampleItems.forEach((item, index) => {
-                console.log(`\n项目 ${index + 1}: ${item.title || item.name}`);
-                console.log(`  背景路径: ${item.backdrop_path || '无'}`);
-                console.log(`  海报路径: ${item.poster_path || '无'}`);
-                console.log(`  是否有标题海报: ${item.title_backdrop ? '是' : '否'}`);
-                console.log(`  是否有标题海报对象: ${item.titlePoster ? '是' : '否'}`);
-            });
-            
-            // 2. 测试标题海报生成
-            console.log("\n2. 测试标题海报生成...");
-            const testItem = sampleItems[0];
-            if (testItem) {
-                const titlePoster = await createTitlePosterWithOverlay(testItem, {
-                    forceGenerate: true
-                });
-                
-                if (titlePoster) {
-                    console.log("✅ 标题海报生成成功");
-                    console.log(`   标题: ${titlePoster.title}`);
-                    console.log(`   URL: ${titlePoster.url}`);
-                } else {
-                    console.log("❌ 标题海报生成失败");
-                }
-            }
-        } else {
-            console.log("❌ 无法获取热门数据");
-        }
-        
-        // 3. 检查缓存
-        console.log("\n3. 检查缓存...");
-        const cachedData = getCachedTrendingData();
-        console.log(`缓存状态: ${cachedData ? '有缓存' : '无缓存'}`);
-        
-        // 4. 清理缓存并重新测试
-        console.log("\n4. 清理缓存并重新测试...");
-        if (globalCache) {
-            globalCache.clear();
-            console.log("缓存已清理");
-        }
-        
-        const freshData = await loadTmdbTrendingData();
-        if (freshData && freshData.today_global && freshData.today_global.length > 0) {
-            const firstItem = freshData.today_global[0];
-            console.log(`重新获取的第一个项目: ${firstItem.title || firstItem.name}`);
-            console.log(`背景路径: ${firstItem.backdrop_path || '无'}`);
-        }
-        
-    } catch (error) {
-        console.error("调试过程中出错:", error);
-    }
-}
-
-// 暴露调试函数到全局
-global.debugTitlePosterIssue = debugTitlePosterIssue;
-
-// 调试剧集标题海报问题
-async function debugTVShowTitlePoster() {
-    console.log("=== 调试剧集标题海报问题 ===");
-    
-    try {
-        // 1. 检查剧集数据
-        console.log("1. 获取剧集数据...");
-        const trendingData = await loadTmdbTrendingData();
-        
-        if (trendingData && trendingData.today_global) {
-            // 筛选剧集项目
-            const tvShows = trendingData.today_global.filter(item => 
-                item.media_type === 'tv' || item.name || !item.title
-            );
-            
-            console.log(`找到 ${tvShows.length} 个剧集项目`);
-            
-            // 检查前3个剧集项目
-            const sampleTVShows = tvShows.slice(0, 3);
-            sampleTVShows.forEach((item, index) => {
-                console.log(`\n剧集 ${index + 1}: ${item.name || item.title}`);
-                console.log(`  媒体类型: ${item.media_type || '未知'}`);
-                console.log(`  背景路径: ${item.backdrop_path || '无'}`);
-                console.log(`  海报路径: ${item.poster_path || '无'}`);
-                console.log(`  首播日期: ${item.first_air_date || '无'}`);
-                console.log(`  上映日期: ${item.release_date || '无'}`);
-                console.log(`  是否有标题海报: ${item.title_backdrop ? '是' : '否'}`);
-            });
-            
-            // 2. 测试剧集标题海报生成
-            console.log("\n2. 测试剧集标题海报生成...");
-            const testTVShow = sampleTVShows[0];
-            if (testTVShow) {
-                const titlePoster = await createTitlePosterWithOverlay(testTVShow, {
-                    forceGenerate: true
-                });
-                
-                if (titlePoster) {
-                    console.log("✅ 剧集标题海报生成成功");
-                    console.log(`   标题: ${titlePoster.title}`);
-                    console.log(`   年份: ${titlePoster.year}`);
-                    console.log(`   URL: ${titlePoster.url}`);
-                } else {
-                    console.log("❌ 剧集标题海报生成失败");
-                }
-            }
-        } else {
-            console.log("❌ 无法获取剧集数据");
-        }
-        
-        // 3. 测试专门的剧集API
-        console.log("\n3. 测试剧集API...");
-        try {
-            const tvResponse = await Widget.tmdb.get("/tv/popular", {
-                params: {
-                    language: 'zh-CN',
-                    api_key: API_KEY
-                }
-            });
-            
-            if (tvResponse && tvResponse.results) {
-                console.log(`获取到 ${tvResponse.results.length} 个热门剧集`);
-                const firstTV = tvResponse.results[0];
-                if (firstTV) {
-                    console.log(`第一个剧集: ${firstTV.name}`);
-                    console.log(`首播日期: ${firstTV.first_air_date}`);
-                    console.log(`背景路径: ${firstTV.backdrop_path || '无'}`);
-                    
-                    const tvTitlePoster = await createTitlePosterWithOverlay(firstTV, {
-                        forceGenerate: true
-                    });
-                    
-                    if (tvTitlePoster) {
-                        console.log("✅ 剧集API标题海报生成成功");
-                        console.log(`   标题: ${tvTitlePoster.title}`);
-                        console.log(`   年份: ${tvTitlePoster.year}`);
-                    } else {
-                        console.log("❌ 剧集API标题海报生成失败");
-                    }
-                }
-            }
-        } catch (error) {
-            console.error("剧集API测试失败:", error);
-        }
-        
-    } catch (error) {
-        console.error("调试剧集标题海报时出错:", error);
-    }
-}
-
-// 暴露剧集调试函数到全局
-global.debugTVShowTitlePoster = debugTVShowTitlePoster;
-
-// 调试热门内容模块标题海报
-async function debugHotContentTitlePoster() {
-    console.log("=== 调试热门内容模块标题海报 ===");
-    
-    try {
-        // 1. 检查热门内容数据
-        console.log("1. 获取热门内容数据...");
-        const trendingData = await loadTmdbTrendingData();
-        
-        if (trendingData) {
-            console.log("热门数据获取成功");
-            
-            // 检查今日热门
-            if (trendingData.today_global) {
-                console.log(`今日热门项目数量: ${trendingData.today_global.length}`);
-                
-                // 分析前3个项目
-                const sampleItems = trendingData.today_global.slice(0, 3);
-                sampleItems.forEach((item, index) => {
-                    console.log(`\n项目 ${index + 1}: ${item.title || item.name}`);
-                    console.log(`  媒体类型: ${item.media_type || '未知'}`);
-                    console.log(`  标题字段: title=${item.title}, name=${item.name}`);
-                    console.log(`  日期字段: release_date=${item.release_date}, first_air_date=${item.first_air_date}`);
-                    console.log(`  背景路径: ${item.backdrop_path || '无'}`);
-                    console.log(`  海报路径: ${item.poster_path || '无'}`);
-                    console.log(`  是否有标题海报: ${item.title_backdrop ? '是' : '否'}`);
-                });
-            }
-            
-            // 2. 测试标题海报生成
-            console.log("\n2. 测试标题海报生成...");
-            if (trendingData.today_global && trendingData.today_global.length > 0) {
-                const testItem = trendingData.today_global[0];
-                console.log(`测试项目: ${testItem.title || testItem.name}`);
-                
-                const titlePoster = await createTitlePosterWithOverlay(testItem, {
-                    forceGenerate: true
-                });
-                
-                if (titlePoster) {
-                    console.log("✅ 标题海报生成成功");
-                    console.log(`   标题: ${titlePoster.title}`);
-                    console.log(`   年份: ${titlePoster.year}`);
-                    console.log(`   URL: ${titlePoster.url}`);
-                } else {
-                    console.log("❌ 标题海报生成失败");
-                }
-            }
-            
-            // 3. 测试增强数据功能
-            console.log("\n3. 测试增强数据功能...");
-            const enhancedData = await enhanceDataWithTitlePosters(trendingData);
-            
-            if (enhancedData && enhancedData.today_global) {
-                console.log(`增强后项目数量: ${enhancedData.today_global.length}`);
-                
-                const enhancedItems = enhancedData.today_global.slice(0, 3);
-                enhancedItems.forEach((item, index) => {
-                    console.log(`\n增强项目 ${index + 1}: ${item.title || item.name}`);
-                    console.log(`  媒体类型: ${item.media_type || '未知'}`);
-                    console.log(`  是否有标题海报: ${item.title_backdrop ? '是' : '否'}`);
-                    console.log(`  标题海报类型: ${item.title_backdrop ? item.title_backdrop.type : '无'}`);
-                    if (item.title_backdrop) {
-                        console.log(`  标题海报URL: ${item.title_backdrop.url}`);
-                    }
-                });
-            }
-        } else {
-            console.log("❌ 无法获取热门数据");
-        }
-        
-        // 4. 检查数据包
-        console.log("\n4. 检查数据包...");
-        try {
-            const dataPackage = await fetchFromPrimarySource();
-            if (dataPackage && dataPackage.today_global) {
-                console.log(`数据包今日热门数量: ${dataPackage.today_global.length}`);
-                
-                const packageItems = dataPackage.today_global.slice(0, 3);
-                packageItems.forEach((item, index) => {
-                    console.log(`\n数据包项目 ${index + 1}: ${item.title || item.name}`);
-                    console.log(`  媒体类型: ${item.media_type || '未知'}`);
-                    console.log(`  日期字段: release_date=${item.release_date}, first_air_date=${item.first_air_date}`);
-                });
-            }
-        } catch (error) {
-            console.error("数据包检查失败:", error);
-        }
-        
-    } catch (error) {
-        console.error("调试热门内容标题海报时出错:", error);
-    }
-}
-
-// 暴露热门内容调试函数到全局
-global.debugHotContentTitlePoster = debugHotContentTitlePoster;
-
-// 调试海报加载问题
-async function debugPosterLoading() {
-    console.log("=== 调试海报加载问题 ===");
-    
-    try {
-        // 1. 检查热门数据
-        console.log("1. 获取热门数据...");
-        const trendingData = await loadTmdbTrendingData();
-        
-        if (trendingData && trendingData.today_global) {
-            console.log(`获取到 ${trendingData.today_global.length} 个今日热门项目`);
-            
-            // 检查前3个项目
-            const sampleItems = trendingData.today_global.slice(0, 3);
-            sampleItems.forEach((item, index) => {
-                console.log(`\n项目 ${index + 1}: ${item.title || item.name}`);
-                console.log(`  原始海报路径: ${item.poster_path || '无'}`);
-                console.log(`  原始海报URL: ${item.poster_url || '无'}`);
-                console.log(`  原始背景路径: ${item.backdrop_path || '无'}`);
-                console.log(`  媒体类型: ${item.media_type || '未知'}`);
-                
-                // 测试createEnhancedWidgetItem
-                const enhancedItem = createEnhancedWidgetItem(item);
-                console.log(`  处理后海报路径: ${enhancedItem.posterPath || '无'}`);
-                console.log(`  处理后背景路径: ${enhancedItem.backdropPath || '无'}`);
-                console.log(`  是否有标题海报: ${enhancedItem.hasTitleBackdrop ? '是' : '否'}`);
-            });
-        }
-        
-        // 2. 测试标题海报生成
-        console.log("\n2. 测试标题海报生成...");
-        if (trendingData && trendingData.today_global && trendingData.today_global.length > 0) {
-            const testItem = trendingData.today_global[0];
-            console.log(`测试项目: ${testItem.title || testItem.name}`);
-            
-            // 测试增强数据功能
-            const enhancedData = await enhanceDataWithTitlePosters(trendingData);
-            if (enhancedData && enhancedData.today_global) {
-                const enhancedItem = enhancedData.today_global[0];
-                console.log(`增强后项目: ${enhancedItem.title || enhancedItem.name}`);
-                console.log(`  标题海报: ${enhancedItem.title_backdrop ? '有' : '无'}`);
-                if (enhancedItem.title_backdrop) {
-                    console.log(`  标题海报URL: ${enhancedItem.title_backdrop.url || '无'}`);
-                }
-                
-                // 测试createEnhancedWidgetItem
-                const finalItem = createEnhancedWidgetItem(enhancedItem);
-                console.log(`最终项目海报: ${finalItem.posterPath || '无'}`);
-                console.log(`最终项目背景: ${finalItem.backdropPath || '无'}`);
-            }
-        }
-        
-        // 3. 测试热门内容模块
-        console.log("\n3. 测试热门内容模块...");
-        try {
-            const hotContentResults = await loadTmdbTrendingCombined({
-                sort_by: "today",
-                media_type: "all"
-            });
-            
-            if (hotContentResults && hotContentResults.length > 0) {
-                console.log(`热门内容模块返回 ${hotContentResults.length} 个项目`);
-                
-                const sampleResults = hotContentResults.slice(0, 3);
-                sampleResults.forEach((item, index) => {
-                    console.log(`\n热门内容项目 ${index + 1}: ${item.title}`);
-                    console.log(`  海报路径: ${item.posterPath || '无'}`);
-                    console.log(`  背景路径: ${item.backdropPath || '无'}`);
-                    console.log(`  媒体类型: ${item.mediaType || '未知'}`);
-                    console.log(`  是否有标题海报: ${item.hasTitleBackdrop ? '是' : '否'}`);
-                });
-            }
-        } catch (error) {
-            console.error("热门内容模块测试失败:", error);
-        }
-        
-    } catch (error) {
-        console.error("调试海报加载时出错:", error);
-    }
-}
-
-// 暴露海报加载调试函数到全局
-global.debugPosterLoading = debugPosterLoading;
