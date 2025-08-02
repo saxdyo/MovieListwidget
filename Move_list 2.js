@@ -733,6 +733,58 @@ WidgetMetadata = {
       ]
     },
     {
+      title: "TMDB 热门内容",
+      description: "今日热门、本周热门、热门电影、高分内容合并模块",
+      requiresWebView: false,
+      functionName: "loadTmdbTrendingCombined",
+      cacheDuration: 60,
+      params: [
+        {
+          name: "sort_by",
+          title: "📺内容类型",
+          type: "enumeration",
+          description: "选择内容类型",
+          value: "today",
+          enumOptions: [
+            { title: "今日热门", value: "today" },
+            { title: "本周热门", value: "week" },
+            { title: "热门电影", value: "popular" },
+            { title: "高分内容", value: "top_rated" }
+          ]
+        },
+        { 
+          name: "media_type", 
+          title: "🎭媒体类型", 
+          type: "enumeration", 
+          enumOptions: [
+            { title: "全部", value: "all" },
+            { title: "电影", value: "movie" },
+            { title: "剧集", value: "tv" }
+          ], 
+          value: "all" 
+        },
+        { 
+          name: "content_type", 
+          title: "📊排序方式", 
+          type: "enumeration", 
+          description: "选择排序方式",
+          value: "popularity.desc",
+          enumOptions: [
+            { title: "热门度↓", value: "popularity.desc" },
+            { title: "热门度↑", value: "popularity.asc" },
+            { title: "评分↓", value: "vote_average.desc" },
+            { title: "评分↑", value: "vote_average.asc" },
+            { title: "上映日期↓", value: "release_date.desc" },
+            { title: "上映日期↑", value: "release_date.asc" },
+            { title: "收入↓", value: "revenue.desc" },
+            { title: "收入↑", value: "revenue.asc" }
+          ]
+        },
+        { name: "language", title: "语言", type: "language", value: "zh-CN" },
+        { name: "page", title: "页码", type: "page" }
+      ]
+    },
+    {
       title: "TMDB 播出平台",
       description: "按播出平台和内容类型筛选剧集内容",
       requiresWebView: false,
@@ -1875,6 +1927,128 @@ async function loadEnhancedTitlePosterWithBackdrops(items, maxItems = 30, conten
             return items.map(item => createEnhancedWidgetItem(item));
         }
     }
+}
+
+// 批量横版海报处理器
+async function batchProcessBackdrops(items, options = {}) {
+    const {
+        enableTitleOverlay = true,
+        preferredSize = 'auto',
+        includeMetadata = true,
+        forceRegenerate = false,
+        maxConcurrent = 3
+    } = options;
+    
+    console.log(`[横版海报] 开始批量处理 ${items.length} 项横版海报...`);
+    
+    const results = [];
+    
+    // 分批处理，避免并发过多
+    const batchSize = Math.ceil(items.length / maxConcurrent);
+    for (let i = 0; i < items.length; i += batchSize) {
+        const batch = items.slice(i, i + batchSize);
+        const batchPromises = batch.map(async (item) => {
+            try {
+                // 生成带标题的横版海报
+                const titlePoster = await createTitlePosterWithOverlay(item, {
+                    title: item.title || item.name,
+                    subtitle: item.genreTitle || item.genre_title || "",
+                    rating: item.vote_average || item.rating || 0,
+                    year: item.release_date ? item.release_date.substring(0, 4) : (item.first_air_date ? item.first_air_date.substring(0, 4) : ""),
+                    showRating: true,
+                    showYear: true,
+                    overlayOpacity: 0.7,
+                    textColor: "#FFFFFF",
+                    backgroundColor: "rgba(0, 0, 0, 0.6)"
+                });
+                
+                const result = {
+                    id: item.id,
+                    title: item.title || item.name,
+                    backdropUrl: createSmartBackdropUrl(item, preferredSize),
+                    titlePoster: titlePoster
+                };
+                
+                if (includeMetadata) {
+                    result.metadata = {
+                        title: item.title || item.name,
+                        year: item.release_date ? item.release_date.substring(0, 4) : (item.first_air_date ? item.first_air_date.substring(0, 4) : ""),
+                        rating: item.vote_average || item.rating || 0,
+                        mediaType: item.media_type || item.type
+                    };
+                }
+                
+                console.log(`[横版海报] 完成处理: ${result.title}`);
+                return result;
+                
+            } catch (error) {
+                console.error(`[横版海报] 处理项目失败: ${item.title || item.name}`, error);
+                return null;
+            }
+        });
+        
+        const batchResults = await Promise.all(batchPromises);
+        results.push(...batchResults.filter(result => result !== null));
+    }
+    
+    console.log(`[横版海报] 批量处理完成: ${results.length} 项成功`);
+    return results;
+}
+
+// 智能横版海报生成器 - 根据内容类型和设备自动选择最佳尺寸
+function createSmartBackdropUrl(item, preferredSize = 'auto') {
+    if (!item.backdrop_path) return '';
+    
+    const baseUrl = 'https://image.tmdb.org/t/p/';
+    const sizes = {
+        'small': 'w300',
+        'medium': 'w780', 
+        'large': 'w1280',
+        'original': 'original'
+    };
+    
+    // 自动选择最佳尺寸
+    if (preferredSize === 'auto') {
+        // 根据屏幕尺寸智能选择
+        const screenWidth = typeof window !== 'undefined' ? window.screen.width : 1920;
+        if (screenWidth <= 480) preferredSize = 'small';
+        else if (screenWidth <= 1024) preferredSize = 'medium';
+        else if (screenWidth <= 1920) preferredSize = 'large';
+        else preferredSize = 'original';
+    }
+    
+    return `${baseUrl}${sizes[preferredSize] || sizes.large}${item.backdrop_path}`;
+}
+
+// 横版海报标题叠加器 - 为横版海报添加标题叠加效果（CSS）
+function generateBackdropWithTitleOverlay(item, options = {}) {
+    const {
+        titlePosition = 'bottom-left',
+        titleColor = '#ffffff',
+        backgroundColor = 'rgba(0, 0, 0, 0.6)',
+        fontSize = '24px',
+        fontWeight = 'bold'
+    } = options;
+    
+    const backdropUrl = createSmartBackdropUrl(item, options.size);
+    
+    return {
+        backdropUrl,
+        titleOverlay: {
+            title: item.title || '未知标题',
+            position: titlePosition,
+            style: {
+                color: titleColor,
+                backgroundColor: backgroundColor,
+                fontSize: fontSize,
+                fontWeight: fontWeight,
+                padding: '12px 16px',
+                borderRadius: '8px',
+                textShadow: '2px 2px 4px rgba(0, 0, 0, 0.8)'
+            }
+        },
+        cssClasses: ['backdrop-with-title', `title-${titlePosition}`]
+    };
 }
 
 // 简化的组件项目创建器
