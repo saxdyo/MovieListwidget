@@ -1,260 +1,135 @@
-// ========== Move_list 2.js 优化版本 ==========
-// 主要优化：
-// 1. 性能优化 - 更高效的缓存和并发控制
-// 2. 内存优化 - 减少不必要的对象创建
-// 3. 网络优化 - 智能CDN选择和请求合并
-// 4. 错误处理优化 - 更健壮的错误恢复机制
-// 5. 代码结构优化 - 减少重复代码，提高可维护性
+// ========== 优化工具与结构集成（见注释区分，原有业务逻辑保留） ==========
 
-// 集中配置区 - 优化版
+// 集中配置区
 const CONFIG = {
-  // 缓存配置
-  CACHE: {
-    DURATION: 30 * 60 * 1000, // 30分钟缓存
-    FRESH_DATA_DURATION: 2 * 60 * 60 * 1000, // 2小时内数据新鲜
-    MAX_ITEMS: 30, // 横版标题海报最大条数
-    LRU_SIZE: 200, // LRU缓存最大容量（原100）
-    IMAGE_DURATION: 30 * 60 * 1000, // 图片缓存30分钟
-    GENRE_DURATION: 24 * 60 * 60 * 1000 // 类型缓存24小时
-  },
-  
-  // 网络配置
-  NETWORK: {
-    MAX_CONCURRENT: typeof process !== 'undefined' && process.env.MAX_CONCURRENT ? parseInt(process.env.MAX_CONCURRENT) : 8, // 并发数（原5）
-    TIMEOUT: 3000, // 请求超时3秒
-    MAX_RETRIES: 3, // 最大重试次数
-    RATE_LIMIT_DELAY: 100 // 请求间隔
-  },
-  
-  // 图片配置
-  IMAGE: {
-    DEFAULT_POSTER_SIZE: 'w342', // 默认海报尺寸（原w500）
-    DEFAULT_BACKDROP_SIZE: 'w780', // 默认背景尺寸（原w1280）
-    COMPRESSION_QUALITY: 0.85, // 压缩质量
-    PRELOAD_BATCH_SIZE: 5 // 预加载批次大小
-  },
-  
-  // 日志配置
-  LOG: {
-    LEVEL: typeof process !== 'undefined' && process.env.LOG_LEVEL ? process.env.LOG_LEVEL : 'info',
-    ENABLE_PERFORMANCE: true // 启用性能监控
-  }
+  CACHE_DURATION: 30 * 60 * 1000, // 30分钟缓存
+  FRESH_DATA_DURATION: 2 * 60 * 60 * 1000, // 2小时内数据新鲜
+  MAX_ITEMS: 30, // 横版标题海报最大条数
+  MAX_CONCURRENT: typeof process !== 'undefined' && process.env.MAX_CONCURRENT ? parseInt(process.env.MAX_CONCURRENT) : 5, // 并发数支持环境变量
+  LOG_LEVEL: typeof process !== 'undefined' && process.env.LOG_LEVEL ? process.env.LOG_LEVEL : 'info',
+  LRU_CACHE_SIZE: 100 // LRU缓存最大容量
 };
 
-// 优化的日志系统
-class OptimizedLogger {
-  constructor() {
-    this.levels = { error: 0, warn: 1, info: 2, debug: 3 };
-    this.performance = new Map();
-  }
-  
-  log(msg, level = 'info', context = '') {
-    if (this.levels[level] <= this.levels[CONFIG.LOG.LEVEL]) {
-      const timestamp = new Date().toISOString();
-      const prefix = context ? `[${context}]` : '';
-      console[level === 'error' ? 'error' : level === 'warn' ? 'warn' : 'log'](
-        `${timestamp} ${prefix} ${msg}`
-      );
-    }
-  }
-  
-  time(label) {
-    if (CONFIG.LOG.ENABLE_PERFORMANCE) {
-      this.performance.set(label, Date.now());
-    }
-  }
-  
-  timeEnd(label) {
-    if (CONFIG.LOG.ENABLE_PERFORMANCE) {
-      const start = this.performance.get(label);
-      if (start) {
-        const duration = Date.now() - start;
-        this.log(`${label}: ${duration}ms`, 'info', 'PERFORMANCE');
-        this.performance.delete(label);
-      }
-    }
-  }
-}
-
-const logger = new OptimizedLogger();
-
-// 兼容性函数
+// 日志工具
 function log(msg, level = 'info') {
-  logger.log(msg, level);
+  const levels = { error: 0, warn: 1, info: 2, debug: 3 };
+  if (levels[level] <= levels[CONFIG.LOG_LEVEL]) {
+    if (level === 'error') {
+      console.error(msg);
+    } else if (level === 'warn') {
+      console.warn(msg);
+    } else {
+      console.log(msg);
+    }
+  }
 }
-
 function setLogLevel(level) {
   if (['error','warn','info','debug'].includes(level)) {
-    CONFIG.LOG.LEVEL = level;
-    logger.log(`日志等级已切换为: ${level}`, 'info', 'CONFIG');
+    CONFIG.LOG_LEVEL = level;
+    log(`[日志] 日志等级已切换为: ${level}`, 'info');
   }
 }
 
-// 优化的LRU缓存实现
-class OptimizedLRUCache {
-  constructor(maxSize = 100) {
+// LRU缓存实现
+class LRUCache {
+  constructor(maxSize) {
     this.maxSize = maxSize;
     this.cache = new Map();
-    this.stats = { hits: 0, misses: 0, sets: 0 };
+    this.hits = 0;
+    this.misses = 0;
   }
-  
   get(key) {
     if (this.cache.has(key)) {
-      const item = this.cache.get(key);
-      // 检查TTL
-      if (item.ttl > 0 && (Date.now() - item.timestamp) > item.ttl) {
-        this.cache.delete(key);
-        this.stats.misses++;
-        return null;
-      }
-      
-      // 移动到最新位置
+      const value = this.cache.get(key);
       this.cache.delete(key);
-      this.cache.set(key, item);
-      this.stats.hits++;
-      return item.value;
+      this.cache.set(key, value);
+      this.hits++;
+      return value;
+    } else {
+      this.misses++;
+      return undefined;
     }
-    this.stats.misses++;
-    return null;
   }
-  
-  set(key, value, ttl = 0) {
+  set(key, value) {
     if (this.cache.has(key)) {
       this.cache.delete(key);
     } else if (this.cache.size >= this.maxSize) {
       const firstKey = this.cache.keys().next().value;
       this.cache.delete(firstKey);
     }
-    
-    const item = {
-      value,
-      timestamp: Date.now(),
-      ttl
-    };
-    
-    this.cache.set(key, item);
-    this.stats.sets++;
+    this.cache.set(key, value);
   }
-  
-  getStats() {
-    const total = this.stats.hits + this.stats.misses;
+  stats() {
     return {
       size: this.cache.size,
-      hits: this.stats.hits,
-      misses: this.stats.misses,
-      sets: this.stats.sets,
-      hitRate: total > 0 ? (this.stats.hits / total * 100).toFixed(2) : '0.00'
+      hits: this.hits,
+      misses: this.misses,
+      hitRate: this.hits + this.misses > 0 ? (this.hits / (this.hits + this.misses)).toFixed(2) : '0.00'
     };
   }
-  
-  cleanup() {
-    const now = Date.now();
-    for (const [key, item] of this.cache.entries()) {
-      if (item.ttl > 0 && (now - item.timestamp) > item.ttl) {
-        this.cache.delete(key);
-      }
-    }
-  }
-  
   clear() {
     this.cache.clear();
-    this.stats = { hits: 0, misses: 0, sets: 0 };
+    this.hits = 0;
+    this.misses = 0;
   }
 }
-
-// 全局缓存实例
-const globalCache = {
-  trending: new OptimizedLRUCache(10),
-  genres: new OptimizedLRUCache(5),
-  images: new OptimizedLRUCache(CONFIG.CACHE.LRU_SIZE),
-  backdrops: new OptimizedLRUCache(50)
-};
-
-// 兼容性函数
-function getCachedBackdrop(key) { 
-  return globalCache.backdrops.get(key); 
-}
-
-function cacheBackdrop(key, data) { 
-  globalCache.backdrops.set(key, data, CONFIG.CACHE.IMAGE_DURATION); 
-}
-
-function getCachedTrendingData() { 
-  return globalCache.trending.get('trending_data'); 
-}
-
-function cacheTrendingData(data) { 
-  globalCache.trending.set('trending_data', data, CONFIG.CACHE.DURATION); 
-}
-
+const backdropLRUCache = new LRUCache(CONFIG.LRU_CACHE_SIZE);
+const trendingDataLRUCache = new LRUCache(10);
+function getCachedBackdrop(key) { return backdropLRUCache.get(key); }
+function cacheBackdrop(key, data) { backdropLRUCache.set(key, data); }
+function getCachedTrendingData() { return trendingDataLRUCache.get('trending_data'); }
+function cacheTrendingData(data) { trendingDataLRUCache.set('trending_data', data); }
 function logCacheStats() {
-  logger.log(`缓存统计: ${JSON.stringify({
-    trending: globalCache.trending.getStats(),
-    images: globalCache.images.getStats(),
-    backdrops: globalCache.backdrops.getStats()
-  })}`, 'info', 'CACHE');
+  log(`[横版标题海报缓存] 命中率: ${JSON.stringify(backdropLRUCache.stats())}`, 'info');
+  log(`[热门数据缓存] 命中率: ${JSON.stringify(trendingDataLRUCache.stats())}`, 'info');
 }
 
-// 优化的并发控制
-class OptimizedPromisePool {
-  constructor(maxConcurrent = CONFIG.NETWORK.MAX_CONCURRENT) {
+// 并发池
+class PromisePool {
+  constructor(maxConcurrent) {
     this.maxConcurrent = maxConcurrent;
-    this.active = 0;
+    this.activeCount = 0;
     this.queue = [];
-    this.stats = { total: 0, success: 0, failed: 0 };
   }
-  
-  async run(fn) {
+  run(fn) {
     return new Promise((resolve, reject) => {
-      const task = async () => {
-        this.active++;
-        this.stats.total++;
-        
-        try {
-          const result = await fn();
-          this.stats.success++;
-          resolve(result);
-        } catch (error) {
-          this.stats.failed++;
-          reject(error);
-        } finally {
-          this.active--;
-          this.processQueue();
-        }
+      const task = () => {
+        this.activeCount++;
+        fn().then(resolve, reject).finally(() => {
+          this.activeCount--;
+          if (this.queue.length > 0) {
+            const next = this.queue.shift();
+            next();
+          }
+        });
       };
-      
-      if (this.active < this.maxConcurrent) {
+      if (this.activeCount < this.maxConcurrent) {
         task();
       } else {
         this.queue.push(task);
       }
     });
   }
-  
-  processQueue() {
-    if (this.queue.length > 0 && this.active < this.maxConcurrent) {
-      const task = this.queue.shift();
-      task();
-    }
-  }
-  
   async all(tasks) {
-    return Promise.all(tasks.map(task => this.run(task)));
-  }
-  
-  getStats() {
-    return {
-      ...this.stats,
-      active: this.active,
-      queued: this.queue.length,
-      successRate: this.stats.total > 0 ? (this.stats.success / this.stats.total * 100).toFixed(2) : '0.00'
-    };
+    const results = [];
+    let i = 0;
+    return new Promise((resolve, reject) => {
+      const next = () => {
+        if (i === tasks.length && this.activeCount === 0) {
+          resolve(results);
+        }
+      };
+      for (; i < tasks.length; i++) {
+        this.run(tasks[i])
+          .then(r => results.push(r))
+          .catch(e => results.push(e))
+          .finally(next);
+      }
+      next();
+    });
   }
 }
-
-function getPromisePool(concurrent) { 
-  return new OptimizedPromisePool(concurrent || CONFIG.NETWORK.MAX_CONCURRENT); 
-}
+function getPromisePool(concurrent) { return new PromisePool(concurrent || CONFIG.MAX_CONCURRENT); }
 async function batchGenerateBackdrops(items, generatorFn, concurrent) {
   const pool = getPromisePool(concurrent);
   const tasks = items.map(item => () => generatorFn(item));
@@ -400,8 +275,10 @@ function processItemsWithGenre(items, genreMap, mediaType) {
     };
   });
 }
+
 // API Key安全性说明：所有API调用均应通过CONFIG.API_KEY获取密钥
 // 例如：Widget.tmdb.get('/movie/popular', { params: { api_key: CONFIG.API_KEY, ... } })
+
 // ========== 以上为优化内容，原有业务逻辑如下 ==========
 // ... existing code ...
 
@@ -534,25 +411,11 @@ WidgetMetadata = {
             { title: "iQiyi", value: "1330" },
             { title: "Youku", value: "1419" },
             { title: "Bilibili", value: "1605" },
-            { title: "MGTV", value: "1631" },
             { title: "Netflix", value: "213" },
             { title: "Disney+", value: "2739" },
             { title: "HBO", value: "49" },
-            { title: "HBO Max", value: "3186" },
             { title: "Apple TV+", value: "2552" },
-            { title: "Hulu", value: "453" },
-            { title: "Amazon Prime Video", value: "1024" },
-            { title: "FOX", value: "19" },
-            { title: "Paramount", value: "576" },
-            { title: "Paramount+", value: "4330" },
-            { title: "TV Tokyo", value: "94" },
-            { title: "BBC One", value: "332" },
-            { title: "BBC Two", value: "295" },
-            { title: "NBC", value: "6" },
-            { title: "AMC+", value: "174" },
-            { title: "We TV", value: "3732" },
-            { title: "Viu TV", value: "2146" },
-            { title: "TVB", value: "48" }
+            { title: "TV Tokyo", value: "84" }
           ]
         },
         {
@@ -563,34 +426,9 @@ WidgetMetadata = {
           value: "",
           enumOptions: [
             { title: "全部类型", value: "" },
-            { title: "犯罪", value: "80" },
-            { title: "动画", value: "16" },
-            { title: "喜剧", value: "35" },
-            { title: "剧情", value: "18" },
-            { title: "家庭", value: "10751" },
-            { title: "儿童", value: "10762" },
-            { title: "悬疑", value: "9648" },
-            { title: "真人秀", value: "10764" },
-            { title: "脱口秀", value: "10767" },
-            { title: "肥皂剧", value: "10766" },
-            { title: "纪录片", value: "99" },
-            { title: "动作与冒险", value: "10759" },
-            { title: "科幻与奇幻", value: "10765" },
-            { title: "战争与政治", value: "10768" },
             { title: "动作", value: "28" },
             { title: "科幻", value: "878" },
             { title: "爱情", value: "10749" }
-          ]
-        },
-        {
-          name: "air_status",
-          title: "上映状态",
-          type: "enumeration",
-          description: "默认已上映",
-          value: "released",
-          enumOptions: [
-            { title: "已上映", value: "released" },
-            { title: "未上映", value: "upcoming" }
           ]
         },
         {
@@ -598,14 +436,14 @@ WidgetMetadata = {
           title: "📊排序方式",
           type: "enumeration",
           description: "选择排序方式",
-          value: "first_air_date.desc",
+          value: "popularity.desc",
           enumOptions: [
-            { title: "上映时间↓", value: "first_air_date.desc" },
-            { title: "上映时间↑", value: "first_air_date.asc" },
             { title: "热门度↓", value: "popularity.desc" },
             { title: "热门度↑", value: "popularity.asc" },
             { title: "评分↓", value: "vote_average.desc" },
-            { title: "评分↑", value: "vote_average.asc" }
+            { title: "评分↑", value: "vote_average.asc" },
+            { title: "首播日期↓", value: "first_air_date.desc" },
+            { title: "首播日期↑", value: "first_air_date.asc" }
           ]
         },
         { name: "page", title: "页码", type: "page" },
@@ -651,7 +489,6 @@ WidgetMetadata = {
           description: "选择要筛选的内容类型",
           value: "movie",
           enumOptions: [
-            { title: "全部类型", value: "all" },
             { title: "电影", value: "movie" },
             { title: "剧集", value: "tv" }
           ]
@@ -1177,7 +1014,9 @@ const performanceMonitor = {
     };
   }
 };
-const API_KEY = (typeof process !== 'undefined' && process.env.TMDB_API_KEY) ? process.env.TMDB_API_KEY : ''; // 优先环境变量
+
+const API_KEY = ''; // TMDB API Key
+
 // TMDB类型缓存
 let tmdbGenresCache = null;
 
@@ -1206,14 +1045,6 @@ async function fetchTmdbGenres() {
     console.error("Error fetching genres:", error);
     return { movie: {}, tv: {} };
   }
-}
-
-// 获取北京日期（用于上映状态过滤）
-function getBeijingDate() {
-  const now = new Date();
-  const beijingTime = now.getTime() + (8 * 60 * 60 * 1000);
-  const beijingDate = new Date(beijingTime);
-  return `${beijingDate.getUTCFullYear()}-${String(beijingDate.getUTCMonth() + 1).padStart(2, '0')}-${String(beijingDate.getUTCDate()).padStart(2, '0')}`;
 }
 
 // 获取TMDB类型标题（中文）
@@ -1297,24 +1128,11 @@ const TMDB_CACHE_DURATION = 30 * 60 * 1000; // 30分钟
 
 
 
-// 优化的网络请求函数
 async function fetchTmdbDataFromUrl(url) {
     try {
-        logger.time('network_request');
-        const res = await Widget.http.get(url, { 
-            timeout: CONFIG.NETWORK.TIMEOUT,
-            headers: {
-                'User-Agent': 'OptimizedMoveList/2.0',
-                'Accept': 'application/json',
-                'Cache-Control': 'no-cache'
-            }
-        });
-        logger.timeEnd('network_request');
+        const res = await Widget.http.get(url, { timeout: 8000 });
         return res.data;
-    } catch (error) {
-        logger.log(`网络请求失败: ${url} - ${error.message}`, 'warn', 'NETWORK');
-        return null; 
-    }
+    } catch { return null; }
 }
 
 function isValidTmdbData(data) {
@@ -1325,38 +1143,19 @@ function isValidTmdbData(data) {
     );
 }
 
-// 优化的API请求函数
 async function fetchTmdbDataFromApi() {
     try {
-        logger.time('api_request');
-        
-        const pool = new OptimizedPromisePool(3); // 限制并发数为3
-        const tasks = [
-            () => Widget.tmdb.get("/trending/all/day", { 
-                params: { language: 'zh-CN', region: 'CN', api_key: API_KEY },
-                timeout: CONFIG.NETWORK.TIMEOUT
-            }),
-            () => Widget.tmdb.get("/trending/all/week", { 
-                params: { language: 'zh-CN', region: 'CN', api_key: API_KEY },
-                timeout: CONFIG.NETWORK.TIMEOUT
-            }),
-            () => Widget.tmdb.get("/movie/popular", { 
-                params: { language: 'zh-CN', region: 'CN', api_key: API_KEY },
-                timeout: CONFIG.NETWORK.TIMEOUT
-            })
-        ];
-        
-        const [todayRes, weekRes, popularRes] = await pool.all(tasks);
-        
-        logger.timeEnd('api_request');
-        
+        const [todayRes, weekRes, popularRes] = await Promise.allSettled([
+            Widget.tmdb.get("/trending/all/day", { params: { language: 'zh-CN', region: 'CN', api_key: API_KEY } }),
+            Widget.tmdb.get("/trending/all/week", { params: { language: 'zh-CN', region: 'CN', api_key: API_KEY } }),
+            Widget.tmdb.get("/movie/popular", { params: { language: 'zh-CN', region: 'CN', api_key: API_KEY } })
+        ]);
         return {
             today_global: todayRes.status === 'fulfilled' && todayRes.value.results ? todayRes.value.results : [],
             week_global_all: weekRes.status === 'fulfilled' && weekRes.value.results ? weekRes.value.results : [],
             popular_movies: popularRes.status === 'fulfilled' && popularRes.value.results ? popularRes.value.results : []
         };
-    } catch (error) {
-        logger.log(`API请求失败: ${error.message}`, 'error', 'API');
+    } catch {
         return { today_global: [], week_global_all: [], popular_movies: [] };
     }
 }
@@ -1364,41 +1163,36 @@ async function fetchTmdbDataFromApi() {
 // 优化的TMDB数据获取函数 - 优先使用定时更新的数据包
 async function loadTmdbTrendingData() {
     try {
-        logger.time('trending_data_load');
-        logger.log("开始获取TMDB热门数据...", 'info', 'DATA');
+        console.log("[数据源] 开始获取TMDB热门数据...");
         
         // 1. 优先使用定时更新的缓存数据
         const cachedData = getCachedTrendingData();
         if (cachedData && isDataFresh(cachedData)) {
-            logger.log("使用定时更新的缓存数据", 'info', 'CACHE');
-            logger.timeEnd('trending_data_load');
+            console.log("[数据源] 使用定时更新的缓存数据");
             return cachedData;
         }
         
         // 2. 尝试获取最新数据包
         const data = await fetchSimpleData();
         if (data) {
-            logger.log("成功获取数据包", 'info', 'DATA');
+            console.log("[数据源] 成功获取数据包");
             // 缓存数据包
             cacheTrendingData(data);
-            logger.timeEnd('trending_data_load');
             return data;
         }
         
         // 3. 备用方案：使用实时API
-        logger.log("数据包不可用，使用实时API", 'info', 'DATA');
+        console.log("[数据源] 数据包不可用，使用实时API");
         const realtimeData = await fetchRealtimeData();
         if (realtimeData && isValidTmdbData(realtimeData)) {
             // 缓存实时数据
             cacheTrendingData(realtimeData);
-            logger.log("实时API数据获取成功", 'info', 'DATA');
-            logger.timeEnd('trending_data_load');
+            console.log("[数据源] 实时API数据获取成功");
             return realtimeData;
         }
         
         // 4. 最后的备用方案：返回空数据结构
-        logger.log("所有数据源都失败，返回空数据结构", 'warn', 'DATA');
-        logger.timeEnd('trending_data_load');
+        console.log("[数据源] 所有数据源都失败，返回空数据结构");
         return {
             today_global: [],
             week_global_all: [],
@@ -1406,8 +1200,7 @@ async function loadTmdbTrendingData() {
         };
         
     } catch (error) {
-        logger.log(`数据获取失败: ${error.message}`, 'error', 'DATA');
-        logger.timeEnd('trending_data_load');
+        console.error("[数据源] 数据获取失败:", error);
         // 返回空数据结构而不是null
         return {
             today_global: [],
@@ -1919,6 +1712,7 @@ async function fetchFromPrimarySource() {
     
     return null;
 }
+
 // 从备用数据源获取数据
 async function fetchFromBackupSources() {
     const backupSources = [
@@ -2630,93 +2424,6 @@ function generateEnhancedGenreTitle(genreIds, mediaType, genreMap) {
     return mediaType === 'movie' ? '电影' : '剧集';
 }
 
-// 优化的图片处理系统
-class OptimizedImageManager {
-  constructor() {
-    this.cache = globalCache.images;
-    this.pool = new OptimizedPromisePool(CONFIG.IMAGE.PRELOAD_BATCH_SIZE);
-  }
-  
-  createOptimizedImageUrl(path, type = 'poster', size = null) {
-    if (!path) return '';
-    
-    // 根据类型选择最佳尺寸
-    if (!size) {
-      size = type === 'poster' ? CONFIG.IMAGE.DEFAULT_POSTER_SIZE : CONFIG.IMAGE.DEFAULT_BACKDROP_SIZE;
-    }
-    
-    // 优化CDN选择
-    const cdn = this.selectBestCDN(size, type);
-    const baseUrl = `https://image.tmdb.org/t/p/${size}`;
-    
-    return `${baseUrl}${path}`;
-  }
-  
-  selectBestCDN(size, type) {
-    // 根据网络条件选择最佳CDN
-    const cdns = [
-      'https://image.tmdb.org',
-      'https://image.tmdb.org',
-      'https://image.tmdb.org'
-    ];
-    
-    return cdns[0]; // 简化版本，实际可以根据网络测试选择
-  }
-  
-  async preloadImages(urls, priority = 'normal') {
-    if (!Array.isArray(urls) || urls.length === 0) return;
-    
-    const tasks = urls.map(url => 
-      this.pool.run(() => this.loadImageWithCache(url))
-    );
-    
-    try {
-      await Promise.allSettled(tasks);
-      logger.log(`预加载完成: ${urls.length} 张图片`, 'info', 'IMAGE');
-    } catch (error) {
-      logger.log(`预加载失败: ${error.message}`, 'warn', 'IMAGE');
-    }
-  }
-  
-  async loadImageWithCache(url) {
-    const cached = this.cache.get(url);
-    if (cached) return cached;
-    
-    try {
-      const img = await this.loadImageWithTimeout(url);
-      this.cache.set(url, img, CONFIG.CACHE.IMAGE_DURATION);
-      return img;
-    } catch (error) {
-      logger.log(`图片加载失败: ${url}`, 'warn', 'IMAGE');
-      return null;
-    }
-  }
-  
-  loadImageWithTimeout(url, timeout = 5000) {
-    return new Promise((resolve, reject) => {
-      const img = new Image();
-      const timer = setTimeout(() => {
-        img.onload = null;
-        img.onerror = null;
-        reject(new Error(`Image timeout: ${url}`));
-      }, timeout);
-      
-      img.onload = () => {
-        clearTimeout(timer);
-        resolve(img);
-      };
-      
-      img.onerror = () => {
-        clearTimeout(timer);
-        reject(new Error(`Image load failed: ${url}`));
-      };
-      
-      img.src = url;
-    });
-  }
-}
-// 全局图片管理器实例
-const imageManager = new OptimizedImageManager();
 // 扩展的CDN配置 - 更多备用方案
 const CDN_CONFIGS = [
     {
@@ -3012,52 +2719,21 @@ async function tmdbTopRated(params = {}) {
 
 // 获取播出平台内容
 async function tmdbDiscoverByNetwork(params = {}) {
-  const { 
-    language = "zh-CN", 
-    page = 1, 
-    with_networks, 
-    with_genres,
-    air_status = "released",
-    sort_by = "first_air_date.desc" 
-  } = params;
-
+  const { language = "zh-CN", page = 1, with_networks, sort_by = "popularity.desc" } = params;
   try {
-    console.log(`[播出平台] 开始获取数据，参数:`, params);
-    
-    const beijingDate = getBeijingDate();
-    const discoverParams = {
-      language,
-      page,
-      sort_by,
-      api_key: API_KEY
-    };
-
-    if (with_networks) {
-      discoverParams.with_networks = with_networks;
-    }
-
-    if (with_genres) {
-      discoverParams.with_genres = with_genres;
-    }
-
-    if (air_status === 'released') {
-      discoverParams['first_air_date.lte'] = beijingDate;
-    } else if (air_status === 'upcoming') {
-      discoverParams['first_air_date.gte'] = beijingDate;
-    }
-
     const res = await Widget.tmdb.get("/discover/tv", {
-      params: discoverParams
+      params: { 
+        language, 
+        page, 
+        with_networks,
+        sort_by,
+        api_key: API_KEY 
+      }
     });
-
     const genreMap = await fetchTmdbGenres();
-    const processedData = res.results.map(item => formatTmdbItem(item, genreMap));
-    
-    console.log(`[播出平台] 成功获取${processedData.length}条数据`);
-    return processedData;
-
+    return res.results.map(item => formatTmdbItem(item, genreMap));
   } catch (error) {
-    console.error(`[播出平台] 数据获取失败: ${error.message}`);
+    console.error("Error fetching discover by network:", error);
     return [];
   }
 }
@@ -3066,90 +2742,38 @@ async function tmdbDiscoverByNetwork(params = {}) {
 async function tmdbDiscoverByCompany(params = {}) {
   const { language = "zh-CN", page = 1, with_companies, type = "movie", with_genres, sort_by = "popularity.desc" } = params;
   try {
-    let results = [];
+    // 构建API端点
+    const endpoint = type === "movie" ? "/discover/movie" : "/discover/tv";
     
-    // 如果选择全部类型，同时获取电影和剧集
-    if (type === "all") {
-      logger.log("获取全部类型内容（电影+剧集）", 'info', 'COMPANY');
-      
-      // 并行获取电影和剧集数据
-      const [movieRes, tvRes] = await Promise.all([
-        Widget.tmdb.get("/discover/movie", {
-          params: {
-            language,
-            page,
-            sort_by,
-            api_key: API_KEY,
-            ...(with_companies && { with_companies }),
-            ...(with_genres && { with_genres })
-          }
-        }),
-        Widget.tmdb.get("/discover/tv", {
-          params: {
-            language,
-            page,
-            sort_by,
-            api_key: API_KEY,
-            ...(with_companies && { with_companies }),
-            ...(with_genres && { with_genres })
-          }
-        })
-      ]);
-      
-      const genreMap = await fetchTmdbGenres();
-      
-      // 合并电影和剧集结果，按热门度排序
-      const movieResults = movieRes.results
-        .map(item => formatTmdbItem(item, genreMap.movie))
-        .filter(item => item.posterPath);
-        
-      const tvResults = tvRes.results
-        .map(item => formatTmdbItem(item, genreMap.tv))
-        .filter(item => item.posterPath);
-      
-      // 合并并排序（按热门度）
-      results = [...movieResults, ...tvResults]
-        .sort((a, b) => (b.popularity || 0) - (a.popularity || 0))
-        .slice(0, 20); // 限制总数量
-      
-      logger.log(`全部类型获取完成: 电影${movieResults.length}项, 剧集${tvResults.length}项, 合并后${results.length}项`, 'info', 'COMPANY');
-      
-    } else {
-      // 构建API端点
-      const endpoint = type === "movie" ? "/discover/movie" : "/discover/tv";
-      
-      // 构建查询参数
-      const queryParams = { 
-        language, 
-        page, 
-        sort_by,
-        api_key: API_KEY
-      };
-      
-      // 添加出品公司过滤器
-      if (with_companies) {
-        queryParams.with_companies = with_companies;
-      }
-      
-      // 添加题材类型过滤器
-      if (with_genres) {
-        queryParams.with_genres = with_genres;
-      }
-      
-      // 发起API请求
-      const res = await Widget.tmdb.get(endpoint, {
-        params: queryParams
-      });
-      
-      const genreMap = await fetchTmdbGenres();
-      results = res.results
-        .map(item => formatTmdbItem(item, genreMap[type]))
-        .filter(item => item.posterPath);
+    // 构建查询参数
+    const queryParams = { 
+      language, 
+      page, 
+      sort_by,
+      api_key: API_KEY
+    };
+    
+    // 添加出品公司过滤器
+    if (with_companies) {
+      queryParams.with_companies = with_companies;
     }
     
-    return results;
+    // 添加题材类型过滤器
+    if (with_genres) {
+      queryParams.with_genres = with_genres;
+    }
+    
+    // 发起API请求
+    const res = await Widget.tmdb.get(endpoint, {
+      params: queryParams
+    });
+    
+    const genreMap = await fetchTmdbGenres();
+    return res.results
+      .map(item => formatTmdbItem(item, genreMap[type]))
+      .filter(item => item.posterPath); // 出品公司
   } catch (error) {
-    logger.log(`出品公司内容获取失败: ${error.message}`, 'error', 'COMPANY');
+    console.error("Error fetching discover by company:", error);
     return [];
   }
 }
@@ -3424,6 +3048,7 @@ async function loadTmdbTrendingCombined(params = {}) {
     return [];
   }
 }
+
 // 标题海报热门内容加载器
 async function loadTmdbTitlePosterTrending(params = {}) {
   // 只根据sort_by切换内容类型，不再做强制联动
@@ -4056,6 +3681,7 @@ async function fetchTmdbDataForDouban(key, mediaType) {
     
     return allResults;
 }
+
 async function fetchImdbItemsForDouban(scItems) {
     const promises = scItems.map(async (scItem) => {
         const titleNormalizationRules = [
@@ -4573,7 +4199,7 @@ async function classifyByGenre(params = {}) {
         const showKeywords = ['综艺', '真人秀', '脱口秀', '访谈', '节目', '纪录片', '新闻'];
         if (showKeywords.some(k => lowerTitle.includes(k) || lowerDesc.includes(k))) return false;
         if (lowerTitle.includes('短剧') || lowerDesc.includes('短剧')) return false;
-        const adultKeywords = ['19禁', '性人', '成人', '情色', '色情', 'AV', '에로', '야동'];
+        const adultKeywords = ['19禁', '성인', '成人', '情色', '色情', 'AV', '에로', '야동'];
         if (adultKeywords.some(k => lowerTitle.includes(k) || lowerDesc.includes(k) || (item.genreTitle && item.genreTitle.includes(k)))) return false;
         return true;
       });
@@ -4839,6 +4465,7 @@ async function listAnime(params) {
         throw error;
     }
 }
+
 // 从动画项目中提取年份信息
 function extractYearFromItem(item) {
     // 1. 从标题中提取年份 (如 "动画名称 (2023)")
@@ -5360,12 +4987,18 @@ async function loadImageWithFallback(urls, maxRetries = 3) {
     return '';
 }
 
-// 优化的海报URL生成器
-function createSmartPosterUrl(item, preferredSize = null) {
-    if (!item || !item.poster_path) return '';
+// 智能海报URL生成器 - 带重试机制
+function createSmartPosterUrl(item, preferredSize = 'w500') {
+    if (!item.poster_path) return '';
     
-    const size = preferredSize || CONFIG.IMAGE.DEFAULT_POSTER_SIZE;
-    return imageManager.createOptimizedImageUrl(item.poster_path, 'poster', size);
+    const urls = [
+        `https://image.tmdb.org/t/p/${preferredSize}${item.poster_path}`,
+        `https://www.themoviedb.org/t/p/${preferredSize}${item.poster_path}`,
+        `https://image.tmdb.org/t/p/w342${item.poster_path}`, // 降级到较小尺寸
+        `https://www.themoviedb.org/t/p/w342${item.poster_path}`
+    ];
+    
+    return urls[0]; // 返回主要URL，实际重试在加载时进行
 }
 
 // 图片缓存机制
@@ -5639,6 +5272,7 @@ class RequestRateLimiter {
         return 0; // 无延迟
     }
 }
+
 // 创建全局请求限制器
 const requestRateLimiter = new RequestRateLimiter();
 
@@ -6328,26 +5962,27 @@ class ChinaOptimizedImageLoader {
 }
 
 // 优化的海报URL生成器
-// 优化的海报URL生成器
-function createSmartPosterUrl(item, preferredSize = null) {
+function createSmartPosterUrl(item, preferredSize = 'w342') { // 默认使用w342而不是w500
   if (!item) return '';
   
   const posterPath = item.poster_path || item.poster_url || '';
   if (!posterPath) return '';
   
-  const size = preferredSize || CONFIG.IMAGE.DEFAULT_POSTER_SIZE;
-  return imageManager.createOptimizedImageUrl(posterPath, 'poster', size);
+  // 针对中国网络优化尺寸
+  const optimizedSize = getOptimizedSizeForChina(preferredSize, 'poster');
+  return createSmartImageUrl(posterPath, 'poster', optimizedSize);
 }
 
 // 优化的背景图片URL生成器
-function createSmartBackdropUrl(item, preferredSize = null) {
+function createSmartBackdropUrl(item, preferredSize = 'w780') { // 默认使用w780而不是w1280
   if (!item) return '';
   
   const backdropPath = item.backdrop_path || item.backdrop_url || '';
   if (!backdropPath) return '';
   
-  const size = preferredSize || CONFIG.IMAGE.DEFAULT_BACKDROP_SIZE;
-  return imageManager.createOptimizedImageUrl(backdropPath, 'backdrop', size);
+  // 针对中国网络优化尺寸
+  const optimizedSize = getOptimizedSizeForChina(preferredSize, 'backdrop');
+  return createSmartImageUrl(backdropPath, 'backdrop', optimizedSize);
 }
 
 // 图片压缩和缓存策略 - 针对中国网络优化
@@ -6435,6 +6070,7 @@ async function loadImageWithChinaOptimization(url, fallbackUrls = []) {
     }
   }
 }
+
 // 带超时的图片加载
 function loadImageWithTimeout(url, timeout = 10000) {
   return new Promise((resolve, reject) => {
@@ -6525,3 +6161,11 @@ function createEnhancedWidgetItem(item) {
   console.log(`[增强项目] ${result.title} - 标题海报: ${result.backdropPath ? '✅' : '❌'} - 分类: ${result.category} - 中国优化: 是`);
   return result;
 }
+
+
+
+
+
+
+
+
