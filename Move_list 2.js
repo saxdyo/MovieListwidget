@@ -1570,7 +1570,6 @@ function createSimpleWidgetItem(item) {
         childItems: []
     };
 }
-
 // 保留原有的复杂函数作为备用，但使用简化的版本作为主要实现
 
 // 简化的趋势数据生成器（备用方案）
@@ -2359,7 +2358,6 @@ async function processEnhancedMediaItems(items, genreMap, forceType = null) {
             };
         });
 }
-
 // 增强的中文标题选择器
 function pickEnhancedChineseTitle(item) {
     const candidates = [
@@ -3048,7 +3046,6 @@ async function loadTmdbTrendingCombined(params = {}) {
     return [];
   }
 }
-
 // 标题海报热门内容加载器
 async function loadTmdbTitlePosterTrending(params = {}) {
   // 只根据sort_by切换内容类型，不再做强制联动
@@ -3681,7 +3678,6 @@ async function fetchTmdbDataForDouban(key, mediaType) {
     
     return allResults;
 }
-
 async function fetchImdbItemsForDouban(scItems) {
     const promises = scItems.map(async (scItem) => {
         const titleNormalizationRules = [
@@ -4199,7 +4195,7 @@ async function classifyByGenre(params = {}) {
         const showKeywords = ['综艺', '真人秀', '脱口秀', '访谈', '节目', '纪录片', '新闻'];
         if (showKeywords.some(k => lowerTitle.includes(k) || lowerDesc.includes(k))) return false;
         if (lowerTitle.includes('短剧') || lowerDesc.includes('短剧')) return false;
-        const adultKeywords = ['19禁', '성인', '成人', '情色', '色情', 'AV', '에로', '야동'];
+        const adultKeywords = ['19禁', '性人', '成人', '情色', '色情', 'AV', '에로', '야동'];
         if (adultKeywords.some(k => lowerTitle.includes(k) || lowerDesc.includes(k) || (item.genreTitle && item.genreTitle.includes(k)))) return false;
         return true;
       });
@@ -4465,7 +4461,6 @@ async function listAnime(params) {
         throw error;
     }
 }
-
 // 从动画项目中提取年份信息
 function extractYearFromItem(item) {
     // 1. 从标题中提取年份 (如 "动画名称 (2023)")
@@ -5201,7 +5196,6 @@ async function loadImageWithSmartHeaders(urls, maxRetries = 3) {
     console.warn('[智能加载] 所有URL都加载失败');
     return '';
 }
-
 // 请求频率限制器
 class RequestRateLimiter {
     constructor() {
@@ -5965,6 +5959,11 @@ class ChinaOptimizedImageLoader {
 function createSmartPosterUrl(item, preferredSize = 'w342') { // 默认使用w342而不是w500
   if (!item) return '';
   
+  // 优先使用外部提供的 logo_url（完整 URL）
+  if (item && item.logo_url) {
+      return item.logo_url;
+  }
+  
   const posterPath = item.poster_path || item.poster_url || '';
   if (!posterPath) return '';
   
@@ -5984,7 +5983,6 @@ function createSmartBackdropUrl(item, preferredSize = 'w780') { // 默认使用w
   const optimizedSize = getOptimizedSizeForChina(preferredSize, 'backdrop');
   return createSmartImageUrl(backdropPath, 'backdrop', optimizedSize);
 }
-
 // 图片压缩和缓存策略 - 针对中国网络优化
 class ChinaImageOptimizer {
   constructor() {
@@ -6161,11 +6159,3 @@ function createEnhancedWidgetItem(item) {
   console.log(`[增强项目] ${result.title} - 标题海报: ${result.backdropPath ? '✅' : '❌'} - 分类: ${result.category} - 中国优化: 是`);
   return result;
 }
-
-
-
-
-
-
-
-
